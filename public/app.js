@@ -27,21 +27,38 @@ let S = {
 const D = () => S.daily[today()] || (S.daily[today()] = { water: 0, steps: 0 });
 const saveDaily = () => store.set("daily", S.daily);
 
-/* ═══ BILAN ═══ */
+/* ═══ BILAN ═══
+   IMPORTANT : les valeurs de `o` restent en FR (identifiants figés que
+   buildProgram/phaseFor testent). Seul l'AFFICHAGE est traduit via `ok` (clés i18n).
+   labelOf() convertit une valeur stockée → texte affiché dans la langue courante. */
 const OBJ = ["Développer mes fessiers 🍑", "Prendre du muscle", "Perdre du gras", "Performance sportive ⚽", "Me sentir mieux"];
+const OBJ_K = ["o.fessiers", "o.muscle", "o.gras", "o.perf", "o.bien"];
+/* table valeur FR → clé i18n, pour retrouver le libellé traduit d'une valeur stockée */
+const VAL2KEY = {
+  "Développer mes fessiers 🍑": "o.fessiers", "Prendre du muscle": "o.muscle", "Perdre du gras": "o.gras",
+  "Performance sportive ⚽": "o.perf", "Me sentir mieux": "o.bien",
+  "Je débute": "o.debute", "J'ai déjà pratiqué": "o.deja", "Je m'entraîne régulièrement": "o.regulier", "Niveau avancé": "o.avance",
+  "2": "o.2", "3": "o.3", "4": "o.4", "5 ou +": "o.5plus",
+  "En salle": "o.salle", "À la maison": "o.maison", "Les deux": "o.deux",
+  "Aucun": "o.aucun", "Dos sensible": "o.dos", "Genoux": "o.genoux", "Épaules": "o.epaules",
+  "Moins de 6 h": "o.sleep6-", "6-7 h": "o.sleep67", "7-8 h": "o.sleep78", "Plus de 8 h": "o.sleep8+",
+  "Coupure / vacances": "o.coupure", "Pré-saison": "o.presaison", "En saison": "o.saison", "Pas de compétition": "o.nocomp",
+  "14 km/h (4'20)": "o.p14", "13 km/h (4'40)": "o.p13", "12 km/h (5'00)": "o.p12", "11 km/h ou moins": "o.p11",
+};
+function labelOf(val) { const k = VAL2KEY[val]; return k ? t(k) : val; }
 function questions(a) {
   const q = [
-    { k: "prenom", type: "text", q: "Comment tu t'appelles ?", ph: "Ton prénom" },
-    { k: "objectif", q: "Ton objectif principal ?", o: OBJ },
-    { k: "niveau", q: "Où tu en es ?", o: ["Je débute", "J'ai déjà pratiqué", "Je m'entraîne régulièrement", "Niveau avancé"] },
-    { k: "freq", q: "Combien de séances par semaine ?", o: ["2", "3", "4", "5 ou +"] },
-    { k: "materiel", q: "Où t'entraînes-tu ?", o: ["En salle", "À la maison", "Les deux"] },
-    { k: "sante", q: "Un point de vigilance santé ?", o: ["Aucun", "Dos sensible", "Genoux", "Épaules"] },
-    { k: "sommeil", q: "Tu dors combien ?", o: ["Moins de 6 h", "6-7 h", "7-8 h", "Plus de 8 h"] },
+    { k: "prenom", type: "text", q: t("q.prenom"), ph: t("q.prenom.ph") },
+    { k: "objectif", q: t("q.objectif"), o: OBJ },
+    { k: "niveau", q: t("q.niveau"), o: ["Je débute", "J'ai déjà pratiqué", "Je m'entraîne régulièrement", "Niveau avancé"] },
+    { k: "freq", q: t("q.freq"), o: ["2", "3", "4", "5 ou +"] },
+    { k: "materiel", q: t("q.materiel"), o: ["En salle", "À la maison", "Les deux"] },
+    { k: "sante", q: t("q.sante"), o: ["Aucun", "Dos sensible", "Genoux", "Épaules"] },
+    { k: "sommeil", q: t("q.sommeil"), o: ["Moins de 6 h", "6-7 h", "7-8 h", "Plus de 8 h"] },
   ];
   if (a.objectif === "Performance sportive ⚽") q.splice(3, 0,
-    { k: "periode", q: "Tu es dans quelle période ?", o: ["Coupure / vacances", "Pré-saison", "En saison", "Pas de compétition"] },
-    { k: "allure", q: "Ton allure de footing ?", o: ["14 km/h (4'20)", "13 km/h (4'40)", "12 km/h (5'00)", "11 km/h ou moins"] });
+    { k: "periode", q: t("q.periode"), o: ["Coupure / vacances", "Pré-saison", "En saison", "Pas de compétition"] },
+    { k: "allure", q: t("q.allure"), o: ["14 km/h (4'20)", "13 km/h (4'40)", "12 km/h (5'00)", "11 km/h ou moins"] });
   return q;
 }
 
@@ -300,18 +317,18 @@ function coachMessages(P) {
 
   /* 1. Douleur au check-in — priorité absolue */
   if (ci?.corps === "🔴 Une douleur")
-    msgs.push({ col: "var(--ko)", t: `${prenom}, une douleur n'est pas un détail. On ne s'entraîne pas dessus. Si elle persiste : professionnel de santé — et préviens Moustapha, il adaptera.` });
+    msgs.push({ col: "var(--ko)", t: tf("cm.pain", prenom) });
 
   /* 2. Semaine de deload */
   if (P?.deload)
-    msgs.push({ col: "var(--ok)", t: `Cette semaine est légère — c'est le programme, pas une erreur. C'est pendant la récupération que le corps construit. Ne rajoute rien.` });
+    msgs.push({ col: "var(--ok)", t: t("cm.deload") });
 
   /* 3. Longue absence */
   const lastIso = [...S.history].reverse().find(h => h.iso)?.iso;
   if (lastIso) {
     const jours = Math.floor((Date.now() - new Date(lastIso)) / 864e5);
     if (jours >= 7)
-      msgs.push({ col: "var(--gold)", t: `${jours} jours sans séance. Aucune culpabilité — ça arrive à tout le monde. On repart PLUS PETIT, pas en rattrapant : une séance courte aujourd'hui vaut mieux qu'une séance parfaite jamais faite.` });
+      msgs.push({ col: "var(--gold)", t: tf("cm.absence", jours) });
   }
 
   /* 4. Stagnation sur un exercice (3 dernières charges plates ou en baisse) */
@@ -320,19 +337,19 @@ function coachMessages(P) {
     if (g.pts.length >= 3) {
       const last3 = g.pts.slice(-3);
       if (last3[2] <= last3[0])
-        { msgs.push({ col: "var(--gold)", t: `${n} : la charge ne bouge plus depuis 3 séances. Avant de forcer, vérifie le sommeil et l'assiette. Si ça continue → une semaine légère, puis on repart −10 %. C'est comme ça qu'on débloque.` }); break; }
+        { msgs.push({ col: "var(--gold)", t: tf("cm.stagne", n) }); break; }
     }
   }
 
   /* 5. Progression à célébrer */
   const best = Object.entries(gains).filter(([, g]) => g.d > 0).sort((a, b) => b[1].d - a[1].d)[0];
   if (best)
-    msgs.push({ col: "var(--ok)", t: `+${best[1].d.toFixed(1).replace(".", ",")} kg sur ${best[0]} depuis le début. C'est ça, la vraie progression — pas la balance. Continue. 👊` });
+    msgs.push({ col: "var(--ok)", t: tf("cm.progress", best[1].d.toFixed(1).replace(".", ","), best[0]) });
 
   /* 6. Objectif de la semaine atteint */
   const target = parseInt(S.profile?.freq) || 3;
   if (sessionsThisWeek() >= target)
-    msgs.push({ col: "var(--ok)", t: `${sessionsThisWeek()}/${target} séances cette semaine — objectif atteint. La régularité, c'est LE truc que la plupart des gens n'ont pas. Toi, tu l'as.` });
+    msgs.push({ col: "var(--ok)", t: tf("cm.weekgoal", sessionsThisWeek(), target) });
 
   /* 7. Changement de phase cette semaine */
   const lastW = store.get("lastSeenWeek", -1);
@@ -340,26 +357,33 @@ function coachMessages(P) {
   if (w !== lastW && P?.phase && !P.repos) {
     store.set("lastSeenWeek", w);
     if (lastW >= 0)
-      msgs.unshift({ col: "var(--gold)", t: `Nouvelle semaine, nouvelle phase : ${P.phase.split("— ")[1] || P.phase}. ${P.phaseTip || ""}` });
+      msgs.unshift({ col: "var(--gold)", t: tf("cm.phase", (P.phase.split("— ")[1] || P.phase), (P.phaseTip || "")) });
   }
 
   return msgs.slice(0, 2);
 }
 
-/* ═══ CHECK-IN ═══ */
+/* ═══ CHECK-IN ═══
+   Valeurs `o` en FR = identifiants (lus par verdict/scoreForme). Affichage via CI_LABEL. */
 const CI_Q = [
-  { k: "sommeil", q: "Ton sommeil cette nuit ?", o: ["😴 Bon (7 h+)", "🙂 Correct", "😵 Mauvais (<6 h)"] },
-  { k: "energie", q: "Ton énergie là, maintenant ?", o: ["⚡ Haute", "🙂 Normale", "🪫 Faible"] },
-  { k: "corps", q: "Ton corps ?", o: ["✅ Frais", "😬 Courbatures fortes", "🔴 Une douleur"] },
+  { k: "sommeil", qk: "ci.sommeil", o: ["😴 Bon (7 h+)", "🙂 Correct", "😵 Mauvais (<6 h)"] },
+  { k: "energie", qk: "ci.energie", o: ["⚡ Haute", "🙂 Normale", "🪫 Faible"] },
+  { k: "corps", qk: "ci.corps", o: ["✅ Frais", "😬 Courbatures fortes", "🔴 Une douleur"] },
 ];
+const CI_LABEL = {
+  "😴 Bon (7 h+)": "ci.s.bon", "🙂 Correct": "ci.s.ok", "😵 Mauvais (<6 h)": "ci.s.bad",
+  "⚡ Haute": "ci.e.high", "🙂 Normale": "ci.e.norm", "🪫 Faible": "ci.e.low",
+  "✅ Frais": "ci.c.fresh", "😬 Courbatures fortes": "ci.c.sore", "🔴 Une douleur": "ci.c.pain",
+};
+const ciLabel = (v) => CI_LABEL[v] ? t(CI_LABEL[v]) : v;
 function verdict(ci) {
-  if (ci.corps === "🔴 Une douleur") return { v: "REPORTER", col: "var(--ko)", msg: "Une douleur, ce n'est pas une courbature. On ne s'entraîne pas dessus. Si elle persiste : professionnel de santé, et préviens Moustapha." };
+  if (ci.corps === "🔴 Une douleur") return { v: "REPORTER", col: "var(--ko)", msg: t("v.pain") };
   let score = 0;
   if (ci.sommeil === "😵 Mauvais (<6 h)") score++;
   if (ci.energie === "🪫 Faible") score++;
   if (ci.corps === "😬 Courbatures fortes") score++;
-  if (score >= 2) return { v: "ALLÉGER", col: "var(--gold)", msg: "Aujourd'hui : −1 série par exercice, garde 1-2 reps de plus en réserve. Une séance allégée vaut mieux qu'une séance sautée." };
-  return { v: "MAINTENIR", col: "var(--ok)", msg: "Tu es opérationnel. Séance normale — vas-y." };
+  if (score >= 2) return { v: "ALLÉGER", col: "var(--gold)", msg: t("v.ease") };
+  return { v: "MAINTENIR", col: "var(--ok)", msg: t("v.go") };
 }
 
 /* ═══ BADGES ═══ */
@@ -382,26 +406,41 @@ function badges() {
 
 /* ═══ COACH LOCAL ═══ */
 function localCoach(txt) {
-  const t = txt.toLowerCase();
-  if (/(douleur|mal au|mal à|blessé|blessure|lancinant|pique)/.test(t))
-    return "Stop. Une douleur — pas une courbature — c'est un signal, pas un obstacle à contourner. On ne s'entraîne pas dessus.\n\nSi elle est vive ou qu'elle persiste : professionnel de santé (médecin ou kiné). Et préviens Moustapha, il ajustera ton programme.\n\nJe ne te proposerai pas d'exercice de remplacement pour « passer autour » — ce serait t'exposer.";
-  if (/(calorie|maigrir vite|perdre vite|jeûne|jeune intermittent|déficit|se peser|balance|poids)/.test(t))
-    return "Pour tout ce qui touche aux chiffres alimentaires, tu passes par Moustapha directement — c'est lui qui connaît ta situation.\n\nCe que je peux te dire sans risque : protéines à chaque repas, la moitié de l'assiette en légumes, des glucides à ta faim, de l'eau. Et la balance : 1×/semaine maximum. La force stable en salle, c'est ça, la vraie victoire.";
-  if (/(motiv|envie de rien|flemme|démotivé|nul|abandonner|arrêter)/.test(t))
-    return "Ce que tu ressens est normal — la motivation, ça va, ça vient. C'est pour ça qu'on ne compte pas dessus : on compte sur la régularité.\n\nAujourd'hui, vise la version minimale : viens, fais l'échauffement et le premier exercice. Si après ça tu veux rentrer, tu rentres — et ça comptera quand même.\n\nEt si c'est plus lourd qu'une baisse de motivation, parles-en à Moustapha. Il est là pour ça aussi.";
-  if (/(rpe|difficulté|c'était dur)/.test(t))
-    return "Le RPE, c'est ta note d'effort sur 10 :\n\n· 6-7 = solide, il restait 3-4 reps\n· 8 = il restait 2 reps\n· 9 = il restait 1 rep\n· 10 = rien dans le réservoir\n\nNote-le après chaque exercice : c'est lui qui me dit si on monte la charge ou si on consolide. Un 10 partout n'est PAS l'objectif — la plupart du travail se fait à 7-8.";
-  if (/(courbature|douleurs? musculaires?)/.test(t))
-    return "Courbature = normal, surtout après du nouveau ou du volume. Ça passe en 24-72 h.\n\nCe qui aide : bouger léger (marche, vélo doux), boire, dormir. Ce qui n'aide pas : ne plus bouger du tout.\n\n⚠️ La différence avec une douleur : la courbature est diffuse et des deux côtés. Une douleur précise, d'un seul côté, qui pique ou qui lance → repos et avis pro.";
-  if (/(échauffement|echauffement|chauffe)/.test(t))
-    return "L'échauffement n'est jamais optionnel — c'est lui qui prépare tes articulations et ton système nerveux.\n\nOuvre l'onglet Séance : ton rituel d'échauffement est en haut, adapté à ton protocole. 10-15 minutes qui protègent tout le reste.";
-  if (/(deload|semaine légère|semaine legere|pourquoi léger)/.test(t))
-    return "La semaine légère (deload) est VOLONTAIRE. Le muscle ne se construit pas pendant la séance — il se construit pendant la récupération.\n\nBaisser une semaine permet d'encaisser le bloc suivant plus fort. Ne rajoute rien cette semaine : c'est le programme.";
-  if (/(repos|combien de temps entre|récup)/.test(t))
-    return "Entre les séries : 60-90 s en hypertrophie, 2-3 min sur le lourd. Entre deux séances qui chargent les mêmes muscles lourdement : 48 h minimum.\n\nEt le vrai outil de récupération, c'est le sommeil : 7-8 h. Aucun complément ne remplace ça.";
-  if (/(eau|hydrat|boire)/.test(t))
-    return "Vise 2-3 L d'eau par jour, répartis. Le compteur de l'accueil est là pour ça — 6-8 verres, c'est déjà très bien.\n\nSigne simple : des urines claires. Et plus s'il fait chaud ou si tu transpires beaucoup.";
-  return "Je suis la version embarquée du coach — je réponds aux questions courantes (échauffement, courbatures, repos, RPE, motivation, deload…).\n\nPour une question précise sur TON programme, ta nutrition ou quelque chose qui t'inquiète : Moustapha directement. C'est lui, le vrai coach — moi je suis son assistant. 💬";
+  const lc = txt.toLowerCase();
+  const EN = LANG === "en";
+  const R = {
+    pain: ["Stop. Une douleur — pas une courbature — c'est un signal, pas un obstacle à contourner. On ne s'entraîne pas dessus.\n\nSi elle est vive ou qu'elle persiste : professionnel de santé (médecin ou kiné). Et préviens Moustapha, il ajustera ton programme.\n\nJe ne te proposerai pas d'exercice de remplacement pour « passer autour » — ce serait t'exposer.",
+      "Stop. Pain — not soreness — is a signal, not an obstacle to work around. You don't train through it.\n\nIf it's sharp or it lasts: a healthcare professional (doctor or physio). And tell Moustapha, he'll adjust your program.\n\nI won't offer a replacement exercise to \"work around\" it — that would put you at risk."],
+    food: ["Pour tout ce qui touche aux chiffres alimentaires, tu passes par Moustapha directement — c'est lui qui connaît ta situation.\n\nCe que je peux te dire sans risque : protéines à chaque repas, la moitié de l'assiette en légumes, des glucides à ta faim, de l'eau. Et la balance : 1×/semaine maximum. La force stable en salle, c'est ça, la vraie victoire.",
+      "For anything involving food numbers, go through Moustapha directly — he knows your situation.\n\nWhat I can safely say: protein at every meal, half the plate veggies, carbs to your appetite, water. And the scale: once a week max. Stable strength in the gym — that's the real win."],
+    motiv: ["Ce que tu ressens est normal — la motivation, ça va, ça vient. C'est pour ça qu'on ne compte pas dessus : on compte sur la régularité.\n\nAujourd'hui, vise la version minimale : viens, fais l'échauffement et le premier exercice. Si après ça tu veux rentrer, tu rentres — et ça comptera quand même.\n\nEt si c'est plus lourd qu'une baisse de motivation, parles-en à Moustapha. Il est là pour ça aussi.",
+      "What you feel is normal — motivation comes and goes. That's why we don't rely on it: we rely on consistency.\n\nToday, aim for the minimal version: show up, do the warm-up and the first exercise. If you want to go home after that, you go — and it still counts.\n\nAnd if it's heavier than a motivation dip, talk to Moustapha. He's there for that too."],
+    rpe: ["Le RPE, c'est ta note d'effort sur 10 :\n\n· 6-7 = solide, il restait 3-4 reps\n· 8 = il restait 2 reps\n· 9 = il restait 1 rep\n· 10 = rien dans le réservoir\n\nNote-le après chaque exercice : c'est lui qui me dit si on monte la charge ou si on consolide. Un 10 partout n'est PAS l'objectif — la plupart du travail se fait à 7-8.",
+      "RPE is your effort rating out of 10:\n\n· 6-7 = solid, 3-4 reps left\n· 8 = 2 reps left\n· 9 = 1 rep left\n· 10 = nothing left in the tank\n\nLog it after each exercise: it tells me whether to add load or consolidate. A 10 everywhere is NOT the goal — most of the work happens at 7-8."],
+    sore: ["Courbature = normal, surtout après du nouveau ou du volume. Ça passe en 24-72 h.\n\nCe qui aide : bouger léger (marche, vélo doux), boire, dormir. Ce qui n'aide pas : ne plus bouger du tout.\n\n⚠️ La différence avec une douleur : la courbature est diffuse et des deux côtés. Une douleur précise, d'un seul côté, qui pique ou qui lance → repos et avis pro.",
+      "Soreness = normal, especially after something new or high volume. It fades in 24-72 h.\n\nWhat helps: light movement (walking, easy cycling), drinking, sleeping. What doesn't: not moving at all.\n\n⚠️ The difference from pain: soreness is diffuse and on both sides. Sharp pain, on one side, that stings or shoots → rest and a professional opinion."],
+    warmup: ["L'échauffement n'est jamais optionnel — c'est lui qui prépare tes articulations et ton système nerveux.\n\nOuvre l'onglet Séance : ton rituel d'échauffement est en haut, adapté à ton protocole. 10-15 minutes qui protègent tout le reste.",
+      "The warm-up is never optional — it prepares your joints and your nervous system.\n\nOpen the Workout tab: your warm-up routine is at the top, tailored to your protocol. 10-15 minutes that protect everything else."],
+    deload: ["La semaine légère (deload) est VOLONTAIRE. Le muscle ne se construit pas pendant la séance — il se construit pendant la récupération.\n\nBaisser une semaine permet d'encaisser le bloc suivant plus fort. Ne rajoute rien cette semaine : c'est le programme.",
+      "The light week (deload) is INTENTIONAL. Muscle isn't built during the session — it's built during recovery.\n\nEasing off for a week lets you hit the next block harder. Don't add anything this week: it's the plan."],
+    rest: ["Entre les séries : 60-90 s en hypertrophie, 2-3 min sur le lourd. Entre deux séances qui chargent les mêmes muscles lourdement : 48 h minimum.\n\nEt le vrai outil de récupération, c'est le sommeil : 7-8 h. Aucun complément ne remplace ça.",
+      "Between sets: 60-90 s for hypertrophy, 2-3 min on heavy work. Between two sessions that load the same muscles heavily: 48 h minimum.\n\nAnd the real recovery tool is sleep: 7-8 h. No supplement replaces that."],
+    water: ["Vise 2-3 L d'eau par jour, répartis. Le compteur de l'accueil est là pour ça — 6-8 verres, c'est déjà très bien.\n\nSigne simple : des urines claires. Et plus s'il fait chaud ou si tu transpires beaucoup.",
+      "Aim for 2-3 L of water a day, spread out. The home counter is there for that — 6-8 glasses is already great.\n\nSimple sign: clear urine. And more if it's hot or you sweat a lot."],
+    fallback: ["Je suis la version embarquée du coach — je réponds aux questions courantes (échauffement, courbatures, repos, RPE, motivation, deload…).\n\nPour une question précise sur TON programme, ta nutrition ou quelque chose qui t'inquiète : Moustapha directement. C'est lui, le vrai coach — moi je suis son assistant. 💬",
+      "I'm the built-in version of the coach — I answer common questions (warm-up, soreness, rest, RPE, motivation, deload…).\n\nFor a specific question about YOUR program, your nutrition or something worrying you: Moustapha directly. He's the real coach — I'm his assistant. 💬"],
+  };
+  const pick = (k) => R[k][EN ? 1 : 0];
+  if (/(douleur|mal au|mal à|blessé|blessure|lancinant|pique|pain|hurt|injur)/.test(lc)) return pick("pain");
+  if (/(calorie|maigrir vite|perdre vite|jeûne|jeune intermittent|déficit|se peser|balance|poids|weight|scale|fast|deficit|fasting|diet)/.test(lc)) return pick("food");
+  if (/(motiv|envie de rien|flemme|démotivé|nul|abandonner|arrêter|not motivated|give up|quit|lazy)/.test(lc)) return pick("motiv");
+  if (/(rpe|difficulté|c'était dur|how hard)/.test(lc)) return pick("rpe");
+  if (/(courbature|douleurs? musculaires?|sore|doms)/.test(lc)) return pick("sore");
+  if (/(échauffement|echauffement|chauffe|warm.?up)/.test(lc)) return pick("warmup");
+  if (/(deload|semaine légère|semaine legere|pourquoi léger|light week)/.test(lc)) return pick("deload");
+  if (/(repos|combien de temps entre|récup|rest|recover)/.test(lc)) return pick("rest");
+  if (/(eau|hydrat|boire|water|drink)/.test(lc)) return pick("water");
+  return pick("fallback");
 }
 async function askCoach(txt) {
   S.chat.push({ role: "user", content: txt });
@@ -426,24 +465,24 @@ async function askCoach(txt) {
 
 /* ═══ UI ═══ */
 const TABS = [
-  { id: "home", ico: "🏠", l: "Accueil" },
-  { id: "prog", ico: "🏋️", l: "Programme" },
-  { id: "coach", ico: "💬", l: "Coach", center: true },
-  { id: "suivi", ico: "📈", l: "Progression" },
-  { id: "profil", ico: "👤", l: "Profil" },
+  { id: "home", ico: "🏠", lk: "tab.home" },
+  { id: "prog", ico: "🏋️", lk: "tab.prog" },
+  { id: "coach", ico: "💬", lk: "tab.coach", center: true },
+  { id: "suivi", ico: "📈", lk: "tab.suivi" },
+  { id: "profil", ico: "👤", lk: "tab.profil" },
 ];
-const TAB_ORDER = TABS.map(t => t.id);
+const TAB_ORDER = TABS.map(tb => tb.id);
 
 function render() {
   const P = S.profile ? buildProgram(S.profile) : null;
   $("#topRight").innerHTML = P
-    ? `<div style="cursor:pointer" onclick="go('seance')"><div class="n">🔥 Séance</div><div class="s">tracker ›</div></div>`
+    ? `<div style="cursor:pointer" onclick="go('seance')"><div class="n">🔥 ${t("seance.tab")}</div><div class="s">${t("tracker")}</div></div>`
     : "";
-  $("#tabbar").innerHTML = TABS.map(t => t.center
-    ? `<button class="tab center ${S.tab === t.id ? "on" : ""}" onclick="go('${t.id}')">
-        <span class="cbtn">${t.ico}</span><span class="lb">${t.l}</span></button>`
-    : `<button class="tab ${S.tab === t.id ? "on" : ""}" onclick="go('${t.id}')">
-        <span class="ico">${t.ico}</span><span class="lb">${t.l}</span><span class="dot"></span></button>`).join("");
+  $("#tabbar").innerHTML = TABS.map(tb => tb.center
+    ? `<button class="tab center ${S.tab === tb.id ? "on" : ""}" onclick="go('${tb.id}')">
+        <span class="cbtn">${tb.ico}</span><span class="lb">${t(tb.lk)}</span></button>`
+    : `<button class="tab ${S.tab === tb.id ? "on" : ""}" onclick="go('${tb.id}')">
+        <span class="ico">${tb.ico}</span><span class="lb">${t(tb.lk)}</span><span class="dot"></span></button>`).join("");
 
   const sc = $("#screen");
   sc.className = "screen"; void sc.offsetWidth;
@@ -454,6 +493,7 @@ function render() {
   else if (S.tab === "prog") sc.innerHTML = viewProg(P);
   else if (S.tab === "seance") sc.innerHTML = viewSeance(P);
   else if (S.tab === "coach") sc.innerHTML = viewCoach();
+  else if (S.tab === "nutri") sc.innerHTML = window.viewNutri();
   else if (S.tab === "suivi") sc.innerHTML = viewSuivi();
   if (S.tab === "coach") setTimeout(() => { const b = $("#chatBox"); if (b) b.scrollTop = b.scrollHeight; }, 40);
 }
@@ -485,7 +525,7 @@ function viewHome(P) {
   const sf = scoreForme();
   const neatGoal = S.profile.objectif === "Perdre du gras" ? 10000 : 8000;
   const heure = new Date().getHours();
-  const salut = heure < 12 ? "Bonjour" : heure < 18 ? "Salut" : "Bonsoir";
+  const salut = heure < 12 ? t("hi.morning") : heure < 18 ? t("hi.day") : t("hi.evening");
   const target = parseInt(S.profile.freq) || 3;
   const msgs = coachMessages(P);
 
@@ -497,16 +537,16 @@ function viewHome(P) {
           stroke-dasharray="389" stroke-dashoffset="${389 * (1 - sf.s / 100)}"
           style="transform-origin:center;transform:rotate(-90deg);transition:stroke-dashoffset 1s cubic-bezier(.22,.9,.3,1)"/></svg>
         <div class="scorenum"><div style="font-family:Oswald;font-weight:700;font-size:40px;color:${sf.col};line-height:1">${sf.s}</div>
-          <div style="font-size:8.5px;color:var(--muted);letter-spacing:.14em;text-transform:uppercase;margin-top:3px">Forme · ${sf.lab}</div></div>
+          <div style="font-size:8.5px;color:var(--muted);letter-spacing:.14em;text-transform:uppercase;margin-top:3px">${t("home.score")} · ${sf.lab}</div></div>
       </div>
       ${(() => { const v = verdict(ci); return `<div style="text-align:center;margin:-4px 0 12px">
-        <span class="badge" style="color:${v.col};border:1.5px solid ${v.col};font-size:11px;padding:6px 14px">Séance du jour : ${v.v}</span></div>`; })()}`
+        <span class="badge" style="color:${v.col};border:1.5px solid ${v.col};font-size:11px;padding:6px 14px">${t("home.session")} : ${t("verdict."+v.v)}</span></div>`; })()}`
     : (() => {
       const q = CI_Q[S.ciStep];
       return `<div class="card gold glow anim-item">
-        <div class="eyebrow" style="margin-top:0">Check-in du jour (${S.ciStep + 1}/3) — 20 secondes</div>
-        <div style="font-family:Oswald;font-weight:600;font-size:17px;text-transform:uppercase;margin-bottom:11px">${q.q}</div>
-        ${q.o.map(o => `<div class="choice" style="padding:12px 14px;font-size:14px" onclick="ciPick('${q.k}',\`${o}\`)">${o}<span class="chk">✓</span></div>`).join("")}
+        <div class="eyebrow" style="margin-top:0">${t("home.checkin")} (${S.ciStep + 1}/3) — ${t("home.checkin.sub")}</div>
+        <div style="font-family:Oswald;font-weight:600;font-size:17px;text-transform:uppercase;margin-bottom:11px">${t(q.qk)}</div>
+        ${q.o.map(o => `<div class="choice" style="padding:12px 14px;font-size:14px" onclick="ciPick('${q.k}',\`${o}\`)">${ciLabel(o)}<span class="chk">✓</span></div>`).join("")}
       </div>`;
     })();
 
@@ -519,18 +559,18 @@ function viewHome(P) {
         <div style="width:30px;height:30px;border-radius:9px;flex:none;background:linear-gradient(135deg,var(--gold),var(--gold-dim));display:flex;align-items:center;justify-content:center;font-family:Oswald;font-weight:700;color:#1a1206;font-size:14px">M</div>
         <div style="font-size:13px;line-height:1.6;padding-top:2px">${m.t}</div></div></div>`).join("")}
     <div class="statgrid anim-item" style="animation-delay:.14s">
-      <div class="stat"><div class="v" style="color:var(--gold)">${sessionsThisWeek()}/${target}</div><div class="l">Séances cette semaine</div></div>
-      <div class="stat"><div class="v" style="color:var(--ok)">${S.history.length}</div><div class="l">Total séances</div></div>
+      <div class="stat"><div class="v" style="color:var(--gold)">${sessionsThisWeek()}/${target}</div><div class="l">${t("home.week")}</div></div>
+      <div class="stat"><div class="v" style="color:var(--ok)">${S.history.length}</div><div class="l">${t("home.total")}</div></div>
     </div>
     <div class="card anim-item" style="animation-delay:.18s">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-        <div style="font-weight:600;font-size:14px">💧 Hydratation</div>
+        <div style="font-weight:600;font-size:14px">${t("home.hydra")}</div>
         <div style="font-family:Oswald;color:var(--gold)">${d.water || 0}/8</div></div>
       <div style="display:flex;gap:5px">${Array.from({length:8},(_,i)=>`<div onclick="setWater(${i+1})" style="flex:1;height:26px;border-radius:7px;cursor:pointer;transition:all .2s;background:${i<(d.water||0)?"var(--blue)":"var(--panel2)"};border:1px solid ${i<(d.water||0)?"var(--blue)":"var(--line)"}"></div>`).join("")}</div>
     </div>
     <div class="card anim-item" style="animation-delay:.22s">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-        <div style="font-weight:600;font-size:14px">🚶 Pas du jour</div>
+        <div style="font-weight:600;font-size:14px">${t("home.steps")}</div>
         <div style="font-family:Oswald;color:${(d.steps||0)>=neatGoal?"var(--ok)":"var(--gold)"}">${(d.steps||0).toLocaleString("fr-FR")} / ${neatGoal.toLocaleString("fr-FR")}</div></div>
       <div style="height:7px;background:var(--panel2);border-radius:4px;overflow:hidden;margin-bottom:9px">
         <div style="height:100%;width:${Math.min((d.steps||0)/neatGoal*100,100)}%;background:${(d.steps||0)>=neatGoal?"var(--ok)":"var(--gold)"};border-radius:4px;transition:width .5s"></div></div>
@@ -540,8 +580,8 @@ function viewHome(P) {
         <button class="btn s" style="padding:10px;font-size:11px" onclick="addSteps(-1000)">−1 000</button>
       </div>
     </div>
-    <button class="btn p anim-item" style="animation-delay:.26s" onclick="go('seance')">🔥 Lancer ma séance</button>
-    <div style="text-align:center;font-family:Oswald;font-size:11px;letter-spacing:.14em;color:var(--gold);text-transform:uppercase;margin-top:18px">« Discipline today, results tomorrow »</div>`;
+    <button class="btn p anim-item" style="animation-delay:.26s" onclick="go('seance')">${t("home.launch")}</button>
+    <div style="text-align:center;font-family:Oswald;font-size:11px;letter-spacing:.14em;color:var(--gold);text-transform:uppercase;margin-top:18px">${t("motto")}</div>`;
 }
 window.ciPick = (k, o) => {
   S.ciTmp[k] = o;
@@ -563,17 +603,25 @@ function viewBilan() {
     body = `<input class="input anim-item" placeholder="${q.ph}" value="${S.txt || ""}" oninput="S.txt=this.value;checkNext()">`;
   } else {
     body = q.o.map((o, i) =>
-      `<div class="choice anim-item ${S.bilanAns[q.k] === o ? "sel" : ""}" style="animation-delay:${i * 55}ms" onclick="pick('${q.k}',${i})">${o}<span class="chk">✓</span></div>`).join("");
+      `<div class="choice anim-item ${S.bilanAns[q.k] === o ? "sel" : ""}" style="animation-delay:${i * 55}ms" onclick="pick('${q.k}',${i})">${labelOf(o)}<span class="chk">✓</span></div>`).join("");
   }
-  return `<div class="h1">Ton <em>bilan</em></div>
-    <div class="sub">Question ${S.bilanIdx + 1} / ${QS.length}</div>
+  return `<div class="h1">${t("bilan.title")}</div>
+    <div class="sub">${t("bilan.q")} ${S.bilanIdx + 1} / ${QS.length}</div>
+    ${S.bilanIdx === 0 ? langToggle() : ""}
     <div class="progress-dots">${dots}</div>
     <div style="font-family:Oswald;font-weight:600;font-size:19px;text-transform:uppercase;margin:6px 0 14px" class="anim-item">${q.q}</div>
     ${body}
     <div class="row" style="margin-top:20px">
-      ${S.bilanIdx > 0 ? `<button class="btn s" onclick="bPrev()">Retour</button>` : ""}
-      <button class="btn p" id="nextBtn" ${valOK(q) ? "" : "disabled"} onclick="bNext()">${S.bilanIdx >= QS.length - 1 ? "✓ Terminer" : "Suivant"}</button>
+      ${S.bilanIdx > 0 ? `<button class="btn s" onclick="bPrev()">${t("bilan.back")}</button>` : ""}
+      <button class="btn p" id="nextBtn" ${valOK(q) ? "" : "disabled"} onclick="bNext()">${S.bilanIdx >= QS.length - 1 ? t("bilan.finish") : t("bilan.next")}</button>
     </div>`;
+}
+/* Sélecteur de langue FR / EN */
+function langToggle() {
+  return `<div class="langtoggle anim-item">
+    <button class="langbtn ${LANG === "fr" ? "on" : ""}" onclick="setLang('fr')">🇫🇷 FR</button>
+    <button class="langbtn ${LANG === "en" ? "on" : ""}" onclick="setLang('en')">🇬🇧 EN</button>
+  </div>`;
 }
 function valOK(q) { return q.type === "text" ? (S.txt || "").trim() : S.bilanAns[q.k]; }
 window.checkNext = () => { const QS = questions(S.bilanAns); $("#nextBtn").disabled = !valOK(QS[S.bilanIdx]); };
@@ -595,20 +643,25 @@ window.bNext = () => {
 function viewProfile(P) {
   const rows = questions(S.profile).map(q =>
     `<div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--line);font-size:13.5px">
-      <span style="color:var(--muted)">${q.q.replace(/\s*\?$/, "")}</span>
-      <span style="font-weight:600;text-align:right">${S.profile[q.k] || "—"}</span></div>`).join("");
-  return `<div class="h1">Ton <em>profil</em></div>
-    <div class="sub">Semaine ${weekNum() + 1} de ton parcours · mémorisé sur ton téléphone</div>
+      <span style="color:var(--muted)">${q.q.replace(/\s*[?？]$/, "")}</span>
+      <span style="font-weight:600;text-align:right">${S.profile[q.k] ? labelOf(S.profile[q.k]) : "—"}</span></div>`).join("");
+  return `<div class="h1">${t("pf.title")}</div>
+    <div class="sub">${t("pf.week")} ${weekNum() + 1} ${t("pf.ofjourney")}</div>
     <div class="card gold anim-item">
       <div style="display:flex;align-items:center;gap:10px;padding-bottom:12px;border-bottom:1px solid var(--line);margin-bottom:6px">
         <div style="font-size:26px">${P.icon}</div>
-        <div><div style="font-family:Oswald;font-weight:700;font-size:15px;color:var(--gold)">PROTOCOLE ${P.proto}</div>
-        <div style="font-size:11px;color:var(--muted);margin-top:2px">${P.officiel ? "✅ Méthode officielle" : "🔶 À valider par le coach"}</div></div>
+        <div><div style="font-family:Oswald;font-weight:700;font-size:15px;color:var(--gold)">${t("prog.proto")} ${P.proto}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px">${P.officiel ? t("prog.official") : t("prog.tovalidate")}</div></div>
       </div>${rows}</div>
-    <button class="btn s anim-item" onclick="if(confirm('Refaire le bilan ? Ton historique est conservé, mais le cycle repart à la semaine 1.')){S.profile=null;store.del('profile');S.bilanAns={};S.bilanIdx=0;render()}">↺ Refaire le bilan</button>
+    <div class="eyebrow">${t("lang.label")}</div>
+    ${langToggle()}
+    <button class="btn s anim-item" style="margin-top:12px" onclick="redoBilan()">${t("pf.redo")}</button>
     <div style="text-align:center;font-size:10px;color:#4c4c52;margin-top:16px;line-height:1.6">
-      ⚠️ Douleur = stop + professionnel de santé.<br>Pré-programmes à valider par le coach · pas un avis médical.</div>`;
+      ${t("pf.footer")}</div>`;
 }
+window.redoBilan = () => {
+  if (confirm(t("pf.redo.confirm"))) { S.profile = null; store.del("profile"); S.bilanAns = {}; S.bilanIdx = 0; render(); }
+};
 
 /* ── ROADMAP ── */
 function roadmapHTML(p) {
@@ -616,17 +669,17 @@ function roadmapHTML(p) {
   if (!cyc) {
     const periods = ["Coupure / vacances", "Pré-saison", "En saison"];
     const cur = p.periode;
-    return `<div class="eyebrow">🗺️ Ta saison</div><div class="roadmap">
+    return `<div class="eyebrow">${t("prog.season")}</div><div class="roadmap">
       ${periods.map(x => `<div class="phasechip ${x === cur ? "cur" : ""}">${x}</div>`).join('<div class="arrow">›</div>')}
     </div>
-    <div style="font-size:11px;color:var(--muted);margin:-4px 0 12px">Le passage d'une période à l'autre se décide avec le coach — pas automatiquement.</div>`;
+    <div style="font-size:11px;color:var(--muted);margin:-4px 0 12px">${t("prog.season.foot")}</div>`;
   }
   const w = weekNum() % cyc.length;
-  return `<div class="eyebrow">🗺️ Ton cycle — où tu en es</div><div class="roadmap">
+  return `<div class="eyebrow">${t("prog.roadmap")}</div><div class="roadmap">
     ${cyc.map((c, i) => `<div class="phasechip ${i < w ? "done" : ""} ${i === w ? "cur" : ""}">
       <div style="font-size:8px;opacity:.7">S${i + 1}</div>${c.n}${i < w ? " ✓" : ""}</div>`).join("")}
   </div>
-  <div style="font-size:11px;color:var(--muted);margin:-4px 0 12px">La phase suivante démarre lundi prochain. Si une semaine s'est mal passée, dis-le au coach — on ajuste, on n'enchaîne pas bêtement.</div>`;
+  <div style="font-size:11px;color:var(--muted);margin:-4px 0 12px">${t("prog.roadmap.foot")}</div>`;
 }
 
 /* ── PROGRAMME ── */
@@ -651,14 +704,18 @@ function viewProg(P) {
   return `
     <div class="card gold glow anim-item" style="text-align:center;margin-top:18px">
       <div style="font-size:28px">${P.icon}</div>
-      <div style="font-family:Oswald;font-weight:700;font-size:17px;color:var(--gold);text-transform:uppercase;margin-top:5px">PROTOCOLE ${P.proto}</div>
-      <div style="font-family:Oswald;font-weight:700;font-size:21px;text-transform:uppercase;margin-top:9px">${P.phase || ""}</div>
+      <div style="font-family:Oswald;font-weight:700;font-size:17px;color:var(--gold);text-transform:uppercase;margin-top:5px">${t("prog.proto")} ${P.proto}</div>
+      <div style="font-family:Oswald;font-weight:700;font-size:21px;text-transform:uppercase;margin-top:9px;cursor:pointer" onclick="if(P.phase)openPhase(\`${P.phase}\`)">${P.phase || ""}${P.phase?" ⓘ":""}</div>
       <div style="font-family:Oswald;font-size:13.5px;color:var(--gold);margin-top:5px">${P.stats || ""}</div>
-      ${P.deload ? `<div class="badge" style="background:rgba(78,208,122,.12);color:var(--ok);border:1px solid var(--ok);margin-top:9px">SEMAINE LÉGÈRE — C'EST VOLONTAIRE</div>` : ""}
+      ${P.deload ? `<div class="badge" style="background:rgba(78,208,122,.12);color:var(--ok);border:1px solid var(--ok);margin-top:9px">${t("prog.deload.badge")}</div>` : ""}
       ${P.officiel ? "" : `<div style="font-size:10px;color:var(--muted);margin-top:7px">🔶 À valider par le coach</div>`}
     </div>
+    <div class="row" style="margin-bottom:11px">
+      ${cycleFor(S.profile)?`<button class="btn s" style="padding:11px;font-size:11px" onclick="openWeekPicker()">📅 ${t("prog.week")} ${weekNum()%cycleFor(S.profile).length+1}</button>`:""}
+      <button class="btn s" style="padding:11px;font-size:11px" onclick="go('nutri')">${t("prog.assiette")}</button>
+    </div>
     ${roadmapHTML(S.profile)}
-    ${P.phaseTip ? `<div class="card anim-item" style="border-left:3px solid var(--gold)"><div style="font-size:13px;line-height:1.6">📅 <b>Cette semaine :</b> ${P.phaseTip}</div></div>` : ""}
+    ${P.phaseTip ? `<div class="card anim-item" style="border-left:3px solid var(--gold)"><div style="font-size:13px;line-height:1.6">📅 <b>${t("prog.thisweek")} :</b> ${P.phaseTip}</div></div>` : ""}
     <div class="card anim-item" style="border-left:3px solid var(--gold)">
       <div style="font-size:13.5px;line-height:1.6">${P.cle}</div></div>
     ${P.neat ? `<div class="card anim-item" style="border-left:3px solid var(--ok)"><div style="font-size:13.5px">${P.neat}</div></div>` : ""}
@@ -667,7 +724,7 @@ function viewProg(P) {
         <div style="font-family:Oswald;font-weight:700;font-size:18px;${d.crit ? "color:var(--ko)" : ""}">${d.d}</div>
         <div style="font-family:Oswald;font-size:10.5px;color:var(--gold);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">${d.f}</div>
         ${d.ex.map(e => `<div class="exline">
-          <div style="flex:1"><div style="font-weight:600;font-size:13.5px">${e.n}
+          <div style="flex:1"><div style="font-weight:600;font-size:13.5px"><span style="cursor:pointer;border-bottom:1px dotted var(--gold-line)" onclick="openEx(\`${e.n}\`)">${e.n}</span>
             ${SRA[e.c] ? `<span class="badge" style="color:${e.c === "S" ? "var(--ko)" : e.c === "A" ? "var(--gold)" : "var(--ok)"};border:1px solid currentColor;margin-left:5px;font-size:8px;padding:2px 5px">${e.c}</span>` : ""}</div>
             <div style="font-size:10.5px;color:var(--muted);margin-top:2px">${e.note}${e.drop ? ' · <span style="color:var(--gold)">DROP SET</span>' : ""}</div></div>
           <div style="font-family:Oswald;font-size:12.5px;color:var(--gold);white-space:nowrap">${e.s}×${e.r}</div>
@@ -676,22 +733,22 @@ function viewProg(P) {
       </div>`).join("")}
     ${uf > 0 ? `<div class="card gold anim-item">
       <div style="display:flex;justify-content:space-between;font-size:13.5px;margin-bottom:9px">
-        <span style="color:var(--muted)">Volume hebdo</span><b style="color:var(--gold)">${uf.toFixed(1)} UF</b></div>
+        <span style="color:var(--muted)">${t("prog.volume")}</span><b style="color:var(--gold)">${uf.toFixed(1)} UF</b></div>
       <div style="height:7px;background:var(--panel2);border-radius:4px;overflow:hidden">
         <div style="height:100%;width:${pct}%;background:${col};border-radius:4px;transition:width .8s"></div></div>
       <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:6px">
-        <span>0</span><span>zone ${P.zone[0]}-${P.zone[1]}</span><span>50</span></div></div>` : ""}
+        <span>0</span><span>${t("prog.zone")} ${P.zone[0]}-${P.zone[1]}</span><span>50</span></div></div>` : ""}
     <div class="card anim-item"><div class="eyebrow" style="margin-top:0">🍽️ ${N.t}</div>
       ${N.pts.map(x => `<div style="font-size:12.5px;line-height:1.6;color:var(--muted);padding:4px 0">${x}</div>`).join("")}
       <div style="font-size:10.5px;color:#4c4c52;margin-top:8px">Repères généraux — pour un plan personnalisé, vois avec Moustapha.</div></div>
-    <button class="btn p anim-item" onclick="go('seance')">🔥 Lancer la séance</button>
-    <div style="text-align:center;font-size:10px;color:#4c4c52;margin-top:12px">Pré-programme · à valider par le coach · pas un avis médical</div>`;
+    <button class="btn p anim-item" onclick="go('seance')">${t("prog.launch")}</button>
+    <div style="text-align:center;font-size:10px;color:#4c4c52;margin-top:12px">${t("prog.footer")}</div>`;
 }
 
 /* ── SÉANCE (RPE + notes) ── */
 function viewSeance(P) {
-  if (!P) return emptyState("🔥", "Fais ton bilan", "Puis lance ta première séance.", "profil");
-  if (P.repos) return emptyState("🛑", "Repos imposé", "Pas de séance à tracker. C'est volontaire — le repos fait partie du programme.");
+  if (!P) return emptyState("🔥", t("s.empty.t"), t("s.empty.s"), "profil");
+  if (P.repos) return emptyState("🛑", t("s.repos.t"), t("s.repos.s"));
   if (S.dayIdx >= P.days.length) S.dayIdx = 0;
   const day = P.days[S.dayIdx];
   const ci = D().checkin;
@@ -708,8 +765,8 @@ function viewSeance(P) {
       const lv = parseFloat(String(lastLoad).replace(",", "."));
       let sug = null, sugTxt = "";
       if (lastFull && !isNaN(lv) && !P.deload) {
-        if (lastRpe && lastRpe >= 9.5) { sug = lv; sugTxt = `RPE ${lastRpe} la dernière fois → même charge, consolide`; }
-        else { sug = lv + (e.c === "S" ? 5 : 2.5); sugTxt = `toutes séries faites${lastRpe ? " · RPE " + lastRpe : ""} → vise <b>${String(sug).replace(".", ",")} kg</b>`; }
+        if (lastRpe && lastRpe >= 9.5) { sug = lv; sugTxt = `RPE ${lastRpe} → ${t("s.consolidate")}`; }
+        else { sug = lv + (e.c === "S" ? 5 : 2.5); sugTxt = `${t("s.allsets")}${lastRpe ? " · RPE " + lastRpe : ""} → ${t("s.aim")} <b>${String(sug).replace(".", ",")} kg</b>`; }
       }
       return { n: e.n, sets: alleger ? Math.max(2, e.s - 1) : e.s, done: 0, load: lastLoad, sug, sugTxt, lastLoad, rpe: null, note: "" };
     }) };
@@ -725,8 +782,8 @@ function viewSeance(P) {
       ${P.days.map((d, i) => `<button class="btn ${i === S.dayIdx ? "p" : "s"}" style="padding:10px 6px;font-size:10.5px;min-width:78px;flex:1"
         onclick="S.dayIdx=${i};S.session=null;render()">${d.d}</button>`).join("")}</div>
     ${v && v.v !== "MAINTENIR" ? `<div class="card anim-item" style="margin-top:12px;border:1.5px solid ${v.col}">
-      <div style="font-family:Oswald;font-weight:700;color:${v.col};text-transform:uppercase;font-size:14px">${v.v === "REPORTER" ? "🔴 Check-in : REPORTER" : "🟡 Check-in : séance allégée"}</div>
-      <div style="font-size:12px;color:var(--muted);margin-top:5px;line-height:1.55">${v.v === "REPORTER" ? "Ton corps a parlé ce matin. Reporter n'est pas abandonner." : "−1 série par exercice appliquée automatiquement. Garde de la réserve."}</div></div>` : ""}
+      <div style="font-family:Oswald;font-weight:700;color:${v.col};text-transform:uppercase;font-size:14px">${v.v === "REPORTER" ? t("s.checkin.reporter") : t("s.checkin.alleger")}</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:5px;line-height:1.55">${v.v === "REPORTER" ? t("s.reporter.msg") : t("s.alleger.msg")}</div></div>` : ""}
     <div style="font-family:Oswald;font-weight:700;font-size:19px;text-transform:uppercase;margin-top:14px;${day.crit ? "color:var(--ko)" : ""}" class="anim-item">${day.d} — ${day.f}</div>
     <div class="card anim-item" style="margin-top:11px;cursor:pointer" onclick="S.warmOpen=!S.warmOpen;render()">
       <div style="display:flex;justify-content:space-between;align-items:center">
@@ -736,18 +793,18 @@ function viewSeance(P) {
     </div>
     <div style="height:6px;background:var(--panel2);border-radius:4px;margin-top:6px;overflow:hidden">
       <div style="height:100%;width:${nb / total * 100}%;background:var(--gold);border-radius:4px;transition:width .4s"></div></div>
-    <div style="font-size:10.5px;color:var(--muted);margin-top:6px">${nb}/${total} séries</div>
+    <div style="font-size:10.5px;color:var(--muted);margin-top:6px">${nb}/${total} ${t("s.sets")}</div>
     ${day.ex.map((e, i) => {
       const st = S.session.st[i];
       const exDone = st.done >= st.sets;
       return `<div class="card anim-item" style="animation-delay:${i * 60}ms${exDone ? ";border-color:rgba(78,208,122,.4)" : ""}">
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
-          <div style="flex:1"><div style="font-weight:600;font-size:14.5px">${exDone ? "✅ " : ""}${e.n}</div>
+          <div style="flex:1"><div style="font-weight:600;font-size:14.5px">${exDone ? "✅ " : ""}<span style="cursor:pointer;border-bottom:1px dotted var(--gold-line)" onclick="openEx(\`${e.n}\`)">${e.n}</span></div>
             <div style="font-size:11px;color:var(--muted);margin-top:2px">${st.sets} × ${e.r}${e.rir !== "-" ? " · RIR " + e.rir : ""}${e.drop && !P.deload ? ' · <span style="color:var(--gold)">DROP SET</span>' : ""}</div></div>
           ${SRA[e.c] ? `<input class="kg-input" placeholder="kg" inputmode="decimal" value="${st.load}" oninput="S.session.st[${i}].load=this.value">` : ""}
         </div>
-        ${st.sug ? `<div style="font-size:11.5px;color:var(--ok);background:rgba(78,208,122,.07);border-radius:8px;padding:7px 10px;margin-bottom:8px">💡 Dernière fois : ${st.lastLoad} kg, ${st.sugTxt}</div>`
-          : st.lastLoad ? `<div style="font-size:11px;color:var(--muted);margin-bottom:8px">Dernière fois : ${st.lastLoad} kg</div>` : ""}
+        ${st.sug ? `<div style="font-size:11.5px;color:var(--ok);background:rgba(78,208,122,.07);border-radius:8px;padding:7px 10px;margin-bottom:8px">💡 ${t("s.lasttime")} : ${st.lastLoad} kg, ${st.sugTxt}</div>`
+          : st.lastLoad ? `<div style="font-size:11px;color:var(--muted);margin-bottom:8px">${t("s.lasttime")} : ${st.lastLoad} kg</div>` : ""}
         <div style="font-size:11.5px;color:var(--muted);margin-bottom:10px">💡 ${e.note}</div>
         <div style="display:flex;gap:7px;flex-wrap:wrap">
           ${Array.from({ length: st.sets }, (_, k) =>
@@ -755,19 +812,19 @@ function viewSeance(P) {
         </div>
         ${exDone && e.rir !== "-" ? `
         <div style="margin-top:11px;padding-top:11px;border-top:1px solid var(--line)">
-          <div style="font-size:11px;color:var(--muted);margin-bottom:7px">C'était dur comment ? (RPE)</div>
+          <div style="font-size:11px;color:var(--muted);margin-bottom:7px">${t("s.rpe.q")}</div>
           <div style="display:flex;gap:6px">
             ${[7, 8, 9, 10].map(r => `<button class="rpechip ${st.rpe === r ? "sel" : ""}" onclick="setRpe(${i},${r})">${r}</button>`).join("")}
           </div>
-          <input class="input" placeholder="Note (optionnel) : sensation, douleur, matériel…" value="${st.note || ""}"
+          <input class="input" placeholder="${t("s.note.ph")}" value="${st.note || ""}"
             style="padding:10px;font-size:12.5px;margin-top:8px" oninput="S.session.st[${i}].note=this.value">
         </div>` : ""}
       </div>`;
     }).join("")}
     ${fini ? `<div class="card gold anim-item" style="text-align:center">
-      <div style="font-family:Oswald;font-weight:700;font-size:20px;text-transform:uppercase">Séance terminée 🔥</div>
-      <div style="font-size:12.5px;color:var(--muted);margin:9px 0 14px;line-height:1.55">Charges, RPE et notes seront rechargés la prochaine fois.</div>
-      <button class="btn p" onclick="saveSession()">💾 Enregistrer</button></div>` : ""}`;
+      <div style="font-family:Oswald;font-weight:700;font-size:20px;text-transform:uppercase">${t("s.done")}</div>
+      <div style="font-size:12.5px;color:var(--muted);margin:9px 0 14px;line-height:1.55">${t("s.done.sub")}</div>
+      <button class="btn p" onclick="saveSession()">${t("s.save")}</button></div>` : ""}`;
 }
 window.setRpe = (i, r) => { const st = S.session.st[i]; st.rpe = st.rpe === r ? null : r; render(); };
 
@@ -821,8 +878,8 @@ function drawRest() {
     w.innerHTML = `<div class="timer-ring">
       <svg width="190" height="190"><circle class="track" cx="95" cy="95" r="54"/>
       <circle class="fill" id="ringFill" cx="95" cy="95" r="54"/></svg>
-      <div class="timer-num"><div class="t" id="restNum"></div><div class="l">Repos — respire</div></div></div>
-      <button class="btn p" style="max-width:200px;margin-top:26px" onclick="stopRest()">Passer</button>`;
+      <div class="timer-num"><div class="t" id="restNum"></div><div class="l">${t("s.rest")}</div></div></div>
+      <button class="btn p" style="max-width:200px;margin-top:26px" onclick="stopRest()">${t("s.skip")}</button>`;
     document.body.appendChild(w);
   }
   $("#restNum").textContent = S.rest + "s";
@@ -831,20 +888,27 @@ function drawRest() {
 window.stopRest = () => { clearInterval(S.restTimer); S.rest = null; $("#restWrap")?.remove(); };
 
 /* ── COACH ── */
-const CHIPS = ["Échauffement ?", "Courbatures ?", "C'est quoi le RPE ?", "Pas motivé", "C'est quoi le deload ?"];
+/* chips : [requête envoyée au coach (FR, déclencheurs), clé i18n du label affiché] */
+const CHIPS = [
+  ["Échauffement ?", "chip.warmup"],
+  ["Courbatures ?", "chip.sore"],
+  ["C'est quoi le RPE ?", "chip.rpe"],
+  ["Pas motivé", "chip.motiv"],
+  ["C'est quoi le deload ?", "chip.deload"],
+];
 function viewCoach() {
-  return `<div class="h1" style="padding-top:14px">Ton <em>coach</em></div>
-    <div class="sub">Questions courantes ici. Pour la douleur, la nutrition ou le moral → Moustapha directement.</div>
+  return `<div class="h1" style="padding-top:14px">${t("coach.title")}</div>
+    <div class="sub">${t("coach.sub")}</div>
     <div id="chatBox" class="chatbox">
-      ${S.chat.length === 0 ? `<div style="text-align:center;color:var(--muted);font-size:12.5px;padding:26px 10px;line-height:1.6">Pose-moi une question sur ta séance,<br>ou choisis un sujet ⤵</div>` : ""}
+      ${S.chat.length === 0 ? `<div style="text-align:center;color:var(--muted);font-size:12.5px;padding:26px 10px;line-height:1.6">${t("coach.empty")}</div>` : ""}
       ${S.chat.map(m => `<div class="bubble ${m.role === "user" ? "me" : ""}">${m.content.replace(/\n/g, "<br>")}</div>`).join("")}
       ${S.chatBusy ? `<div class="bubble" style="animation:pulse 1.2s infinite">…</div>` : ""}
     </div>
     <div style="display:flex;gap:6px;overflow-x:auto;padding:8px 0">
-      ${CHIPS.map(c => `<button class="chip" onclick="askCoach(\`${c}\`)">${c}</button>`).join("")}
+      ${CHIPS.map(c => `<button class="chip" onclick="askCoach(\`${c[0]}\`)">${t(c[1])}</button>`).join("")}
     </div>
     <div class="row" style="margin-top:4px">
-      <input class="input" id="chatIn" placeholder="Écris au coach…" style="flex:1;padding:13px"
+      <input class="input" id="chatIn" placeholder="${t("coach.placeholder")}" style="flex:1;padding:13px"
         onkeydown="if(event.key==='Enter'&&this.value.trim()){askCoach(this.value.trim());this.value=''}">
       <button class="btn p" style="width:64px;flex:none" onclick="const i=$('#chatIn');if(i.value.trim()){askCoach(i.value.trim());i.value=''}">➤</button>
     </div>`;
@@ -860,15 +924,16 @@ function viewSuivi() {
   const rpes = S.history.flatMap(h => h.ex.map(e => e.rpe).filter(Boolean));
   const avgRpe = rpes.length ? (rpes.reduce((a, b) => a + b, 0) / rpes.length).toFixed(1) : null;
 
-  return `<div class="h1">Ta <em>progression</em></div>
-    <div class="sub">${S.history.length} séance${S.history.length > 1 ? "s" : ""} · semaine ${weekNum() + 1}${avgRpe ? " · RPE moyen " + avgRpe : ""}</div>
+  return `<div class="h1">${t("sv.title")}</div>
+    <div class="sub">${S.history.length} ${t("sv.sessions")}${S.history.length > 1 ? (LANG==="en"?"s":"s") : ""} · ${t("pf.week").toLowerCase()} ${weekNum() + 1}${avgRpe ? " · " + t("sv.rpeavg") + " " + avgRpe : ""}</div>
 
-    <div class="eyebrow" style="margin-top:8px">🏅 Badges</div>
+    <div class="eyebrow" style="margin-top:8px">${t("sv.badges")}</div>
     <div class="badgegrid anim-item">
       ${B.map(b => `<div class="badgecard ${b.got ? "got" : ""}"><div style="font-size:22px">${b.e}</div><div style="font-size:9px;margin-top:4px;line-height:1.3">${b.t}</div></div>`).join("")}
     </div>
 
-    ${Object.keys(gains).length ? `<div class="eyebrow">Progression des charges</div>` : ""}
+    ${window.cyclesCompare?window.cyclesCompare():""}
+    ${Object.keys(gains).length ? `<div class="eyebrow">${t("sv.charges")}</div>` : ""}
     ${Object.entries(gains).map(([n, g], ci) => {
       const pts = g.pts, d = g.d;
       const max = Math.max(...pts) * 1.15;
@@ -884,27 +949,27 @@ function viewSuivi() {
     }).join("")}
 
     ${bienEtre ? `<div class="card anim-item" style="border-left:3px solid var(--ok)">
-      <div style="font-size:13px;line-height:1.6">🌿 Ici, on ne suit <b>pas le poids</b> — c'est le protocole. Ce qu'on regarde : ton énergie, ton sommeil, et le fait que tu reviennes. Et tu reviens. 👊</div></div>`
-    : `<div class="eyebrow">📏 Mensurations</div>
+      <div style="font-size:13px;line-height:1.6">${t("sv.bien")}</div></div>`
+    : `<div class="eyebrow">${t("sv.measures")}</div>
     <div class="card anim-item">
-      ${S.profile?.objectif === "Perdre du gras" ? `<div style="font-size:11px;color:var(--muted);margin-bottom:9px">⚖️ 1× par semaine max, à jeun, même jour. La balance ment — la tendance sur un mois, elle, dit vrai.</div>` : ""}
+      ${S.profile?.objectif === "Perdre du gras" ? `<div style="font-size:11px;color:var(--muted);margin-bottom:9px">${t("sv.scale.warn")}</div>` : ""}
       <div class="row">
-        <input class="input" id="mPoids" placeholder="Poids (kg)" inputmode="decimal" style="padding:12px;font-size:14px">
-        <input class="input" id="mHanches" placeholder="Hanches (cm)" inputmode="decimal" style="padding:12px;font-size:14px">
+        <input class="input" id="mPoids" placeholder="${t("sv.weight.ph")}" inputmode="decimal" style="padding:12px;font-size:14px">
+        <input class="input" id="mHanches" placeholder="${t("sv.hips.ph")}" inputmode="decimal" style="padding:12px;font-size:14px">
       </div>
-      <button class="btn s" style="margin-top:9px;padding:12px" onclick="addMeasure()">＋ Enregistrer</button>
+      <button class="btn s" style="margin-top:9px;padding:12px" onclick="addMeasure()">${t("sv.save")}</button>
       ${m.length ? `<div style="margin-top:11px">${[...m].reverse().slice(0, 6).map(x =>
         `<div style="display:flex;justify-content:space-between;font-size:12.5px;padding:6px 0;border-bottom:1px solid var(--line)">
           <span style="color:var(--muted)">${x.date}</span><span>${x.poids ? x.poids + " kg" : ""} ${x.hanches ? "· " + x.hanches + " cm" : ""}</span></div>`).join("")}</div>` : ""}
     </div>`}
 
-    <div class="eyebrow">Historique</div>
+    <div class="eyebrow">${t("sv.history")}</div>
     ${S.history.length ? [...S.history].reverse().map((h, i) => `<div class="card anim-item" style="animation-delay:${i * 45}ms">
       <div style="display:flex;align-items:center">
         <div style="flex:1"><div style="font-weight:600;font-size:13.5px">${h.day}</div>
         <div style="font-size:11px;color:var(--muted);margin-top:2px">${h.focus}${(() => { const withNote = h.ex.filter(e => e.note); return withNote.length ? " · 📝 " + withNote.map(e => e.note).join(" · ") : ""; })()}</div></div>
         <div style="font-family:Oswald;font-size:11px;color:var(--gold)">${h.date}</div></div></div>`).join("")
-    : `<div style="font-size:12.5px;color:var(--muted)">Termine une séance : elle apparaîtra ici.</div>`}`;
+    : `<div style="font-size:12.5px;color:var(--muted)">${t("sv.empty")}</div>`}`;
 }
 window.addMeasure = () => {
   const p = $("#mPoids").value.trim(), h = $("#mHanches").value.trim();
@@ -924,4 +989,3 @@ function emptyState(ico, t, s, goTab) {
   </div>`;
 }
 
-render();
