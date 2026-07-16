@@ -270,6 +270,47 @@ color:var(--muted);cursor:pointer;transition:all .18s}
 .langbtn:active{transform:scale(.95)}
 .langbtn.on{background:rgba(242,178,51,.1);border-color:var(--gold);color:var(--gold)}
 
+
+/* ═══ Modules Synergy ═══ */
+/* calendrier roadmap */
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.cal-head{margin-bottom:6px}
+.cal-head div{text-align:center;font-family:Oswald;font-size:10px;color:var(--muted);text-transform:uppercase}
+.cal-cell{aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+border-radius:9px;font-size:12.5px;position:relative;color:var(--ink)}
+.cal-cell.empty{visibility:hidden}
+.cal-cell.today{background:var(--gold);color:#1a1206;font-weight:700}
+.cal-dot{width:5px;height:5px;border-radius:50%;position:absolute;bottom:5px}
+.cal-cell.today .cal-dot{display:none}
+.cal-legend{display:flex;flex-wrap:wrap;gap:8px 14px;margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
+.cal-leg{display:flex;align-items:center;gap:6px;font-family:Oswald;font-size:10.5px;text-transform:uppercase;color:var(--muted)}
+.cal-legdot{width:16px;height:4px;border-radius:2px;flex:none}
+
+/* fil d'activités */
+.act-row{display:flex;align-items:center;gap:11px;padding:9px 0;border-bottom:1px solid var(--line)}
+.act-row:last-child{border:none}
+.act-ico{width:36px;height:36px;border-radius:11px;flex:none;display:flex;align-items:center;
+justify-content:center;font-size:16px;border:1.5px solid;background:var(--panel2)}
+
+/* semaine */
+.wk-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
+.wk-day{display:flex;flex-direction:column;align-items:center;gap:4px;padding:9px 2px;
+border-radius:11px;background:var(--panel2);border:1px solid var(--line)}
+.wk-day.today{border-color:var(--gold);background:rgba(242,178,51,.08)}
+.wk-day.future{opacity:.4}
+.wk-lb{font-family:Oswald;font-size:10px;color:var(--muted);text-transform:uppercase}
+.wk-num{font-family:Oswald;font-weight:600;font-size:14px}
+.wk-mark{font-size:14px;height:18px}
+.wk-mark.on{animation:pop .4s}
+
+/* photos */
+.photo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+.photo-item{position:relative;aspect-ratio:3/4;border-radius:11px;overflow:hidden;cursor:pointer;
+border:1px solid var(--line)}
+.photo-item img{width:100%;height:100%;object-fit:cover;display:block}
+.photo-date{position:absolute;bottom:0;left:0;right:0;padding:5px 7px;font-size:10px;
+background:linear-gradient(transparent,rgba(0,0,0,.75));color:#fff;font-weight:600}
+
 </style>
 </head>
 <body>
@@ -298,6 +339,7 @@ color:var(--muted);cursor:pointer;transition:all .18s}
 <script src="exdb.js"></script>
 <script src="app.js"></script>
 <script src="modules.js"></script>
+<script src="synergy.js"></script>
 <script>
 if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').catch(()=>{});}
 window.addEventListener('load',()=>setTimeout(()=>document.getElementById('splash').classList.add('off'),900));

@@ -244,6 +244,3 @@ window.nutriAns = (k, o) => {
   else { store.set("nutriScreen", { ...tmp }); S.nutriStep = 0; S.nutriTmp = {}; }
   render();
 };
-
-/* Premier rendu, une fois tous les modules chargés */
-render();

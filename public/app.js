@@ -653,6 +653,7 @@ function viewProfile(P) {
         <div><div style="font-family:Oswald;font-weight:700;font-size:15px;color:var(--gold)">${t("prog.proto")} ${P.proto}</div>
         <div style="font-size:11px;color:var(--muted);margin-top:2px">${P.officiel ? t("prog.official") : t("prog.tovalidate")}</div></div>
       </div>${rows}</div>
+    ${window.smsButton ? `<div style="margin-top:4px">${window.smsButton(false)}</div>` : ""}
     <div class="eyebrow">${t("lang.label")}</div>
     ${langToggle()}
     <button class="btn s anim-item" style="margin-top:12px" onclick="redoBilan()">${t("pf.redo")}</button>
@@ -714,7 +715,7 @@ function viewProg(P) {
       ${cycleFor(S.profile)?`<button class="btn s" style="padding:11px;font-size:11px" onclick="openWeekPicker()">📅 ${t("prog.week")} ${weekNum()%cycleFor(S.profile).length+1}</button>`:""}
       <button class="btn s" style="padding:11px;font-size:11px" onclick="go('nutri')">${t("prog.assiette")}</button>
     </div>
-    ${roadmapHTML(S.profile)}
+    ${cycleFor(S.profile) ? window.roadmapCalendar() : roadmapHTML(S.profile)}
     ${P.phaseTip ? `<div class="card anim-item" style="border-left:3px solid var(--gold)"><div style="font-size:13px;line-height:1.6">📅 <b>${t("prog.thisweek")} :</b> ${P.phaseTip}</div></div>` : ""}
     <div class="card anim-item" style="border-left:3px solid var(--gold)">
       <div style="font-size:13.5px;line-height:1.6">${P.cle}</div></div>
@@ -899,6 +900,10 @@ const CHIPS = [
 function viewCoach() {
   return `<div class="h1" style="padding-top:14px">${t("coach.title")}</div>
     <div class="sub">${t("coach.sub")}</div>
+    <div class="card anim-item" style="border-left:3px solid var(--gold);margin-bottom:14px">
+      <div style="font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:11px">${t("sms.hint")}</div>
+      ${window.smsButton ? window.smsButton(false) : ""}
+    </div>
     <div id="chatBox" class="chatbox">
       ${S.chat.length === 0 ? `<div style="text-align:center;color:var(--muted);font-size:12.5px;padding:26px 10px;line-height:1.6">${t("coach.empty")}</div>` : ""}
       ${S.chat.map(m => `<div class="bubble ${m.role === "user" ? "me" : ""}">${m.content.replace(/\n/g, "<br>")}</div>`).join("")}
@@ -927,10 +932,15 @@ function viewSuivi() {
   return `<div class="h1">${t("sv.title")}</div>
     <div class="sub">${S.history.length} ${t("sv.sessions")}${S.history.length > 1 ? (LANG==="en"?"s":"s") : ""} · ${t("pf.week").toLowerCase()} ${weekNum() + 1}${avgRpe ? " · " + t("sv.rpeavg") + " " + avgRpe : ""}</div>
 
+    ${window.weekTable ? window.weekTable() : ""}
+    ${window.activityFeed ? window.activityFeed() : ""}
+
     <div class="eyebrow" style="margin-top:8px">${t("sv.badges")}</div>
     <div class="badgegrid anim-item">
       ${B.map(b => `<div class="badgecard ${b.got ? "got" : ""}"><div style="font-size:22px">${b.e}</div><div style="font-size:9px;margin-top:4px;line-height:1.3">${b.t}</div></div>`).join("")}
     </div>
+
+    ${window.photosBlock ? window.photosBlock() : ""}
 
     ${window.cyclesCompare?window.cyclesCompare():""}
     ${Object.keys(gains).length ? `<div class="eyebrow">${t("sv.charges")}</div>` : ""}
