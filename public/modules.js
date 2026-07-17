@@ -74,6 +74,9 @@ window.openEx = (name) => {
     </div>
     <div class="ex-sec"><div class="ex-sec-t">${t("ex.alt")}</div><p>${e.alternatives}</p></div>
 
+    ${e.video ? `<a href="${e.video}" target="_blank" rel="noopener" class="btn p" style="display:block;text-align:center;text-decoration:none;margin-bottom:6px">${t("ex.video")}</a>
+    <div style="text-align:center;font-size:10px;color:#4c4c52;margin-bottom:10px">${t("ex.video.note")}</div>` : ""}
+
     <div style="text-align:center;font-size:10px;color:#4c4c52;margin-top:14px;line-height:1.6">
       ${t("ex.footer")}</div>
   </div>`;

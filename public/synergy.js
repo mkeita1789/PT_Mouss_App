@@ -26,55 +26,129 @@ function phaseColor(i) {
   const cols = ["#F2B233", "#8B7CF6", "#4ED07A", "#4AA3FF", "#E5484D", "#F2B233"];
   return cols[i % cols.length];
 }
+/* mois affiché dans la roadmap (offset par rapport au mois courant) */
+if (typeof S !== "undefined" && S.rmOffset === undefined) S.rmOffset = 0;
+
 window.roadmapCalendar = function () {
   const cyc = cycleFor(S.profile);
   if (!cyc || !S.profile?.start) return "";
   const start = new Date(S.profile.start);
   const now = new Date();
-  const months = LANG === "en"
-    ? t("month.full").split(",")
-    : t("month.full").split(",");
+  const months = t("month.full").split(",");
   const dayLabels = LANG === "en" ? ["M","T","W","T","F","S","S"] : ["L","M","M","J","V","S","D"];
 
-  /* Quelle phase pour une date donnée ? */
   const phaseAt = (date) => {
     const w = Math.floor((date - start) / (7 * 864e5));
     if (w < 0) return null;
     return w % cyc.length;
   };
 
-  /* Génère un mois (celui de la date courante) */
-  const y = now.getFullYear(), m = now.getMonth();
-  const first = new Date(y, m, 1);
-  const startDay = (first.getDay() + 6) % 7; // lundi = 0
+  /* ─ Barre de progression du cycle ─ */
+  const wAbs = Math.max(0, Math.floor((now - start) / (7 * 864e5)));
+  const wInCycle = wAbs % cyc.length;
+  const pct = Math.round((wInCycle + 1) / cyc.length * 100);
+  /* jours avant la prochaine phase */
+  const nextPhaseIdx = (wInCycle + 1) % cyc.length;
+  const daysToNext = 7 - Math.floor((now - start) / 864e5) % 7;
+  const isLast = wInCycle === cyc.length - 1;
+  const progressBlock = `
+    <div style="margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;font-size:11.5px;margin-bottom:6px">
+        <span style="color:var(--muted)">${t("rm.cycleProgress")}</span>
+        <b style="color:var(--gold)">${tf("rm.weekOf", wInCycle + 1, cyc.length)}</b>
+      </div>
+      <div style="height:8px;background:var(--panel2);border-radius:5px;overflow:hidden">
+        <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,var(--gold),var(--gold-dim));border-radius:5px;transition:width .8s cubic-bezier(.22,.9,.3,1)"></div>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-top:7px;text-align:center">
+        ${isLast ? t("rm.lastPhase") : tf("rm.nextPhase", cyc[nextPhaseIdx].n, daysToNext)}
+      </div>
+    </div>`;
+
+  /* ─ Mois affiché (avec offset navigable) ─ */
+  const disp = new Date(now.getFullYear(), now.getMonth() + (S.rmOffset || 0), 1);
+  const y = disp.getFullYear(), m = disp.getMonth();
+  const startDay = (disp.getDay() + 6) % 7;
   const daysInMonth = new Date(y, m + 1, 0).getDate();
-  const todayD = now.getDate();
+
+  const sessionByIso = {};
+  S.history.forEach(h => { if (h.iso) sessionByIso[h.iso.slice(0, 10)] = h; });
 
   let cells = "";
   for (let i = 0; i < startDay; i++) cells += `<div class="cal-cell empty"></div>`;
   for (let d = 1; d <= daysInMonth; d++) {
     const date = new Date(y, m, d);
+    const iso = date.toISOString().slice(0, 10);
     const ph = phaseAt(date);
-    const isToday = d === todayD;
+    const isToday = date.toDateString() === now.toDateString();
+    const hasSession = !!sessionByIso[iso];
     const col = ph !== null ? phaseColor(ph) : "transparent";
-    cells += `<div class="cal-cell ${isToday ? "today" : ""}">
+    cells += `<div class="cal-cell ${isToday ? "today" : ""} ${ph !== null ? "clickable" : ""}" ${ph !== null ? `onclick="rmDay('${iso}')"` : ""}>
       <span>${d}</span>
-      ${ph !== null ? `<div class="cal-dot" style="background:${col}"></div>` : ""}
+      ${hasSession ? `<div class="cal-fire">🔥</div>` : ph !== null ? `<div class="cal-dot" style="background:${col}"></div>` : ""}
     </div>`;
   }
 
-  /* Légende : les phases du cycle avec leur couleur */
-  const legend = cyc.map((c, i) => `<div class="cal-leg">
-    <span class="cal-legdot" style="background:${phaseColor(i)}"></span>${c.n}</div>`).join("");
+  /* ─ Légende cliquable (chaque phase ouvre son explication) ─ */
+  const legend = cyc.map((c, i) => `<div class="cal-leg clickable" onclick="openPhase('${c.n}')">
+    <span class="cal-legdot" style="background:${phaseColor(i)}"></span>${c.n}
+    ${i === wInCycle ? ' <span style="color:var(--gold)">●</span>' : ""}</div>`).join("");
 
   return `<div class="card anim-item">
     <div class="eyebrow" style="margin-top:0">${t("sy.roadmap")}</div>
-    <div style="text-align:center;font-family:Oswald;font-weight:600;font-size:16px;text-transform:uppercase;margin-bottom:12px">
-      ${months[m]} ${y}</div>
+    ${progressBlock}
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <button class="cal-nav" onclick="rmMonth(-1)">‹</button>
+      <div style="font-family:Oswald;font-weight:600;font-size:16px;text-transform:uppercase">${months[m]} ${y}</div>
+      <button class="cal-nav" onclick="rmMonth(1)">›</button>
+    </div>
     <div class="cal-grid cal-head">${dayLabels.map(l => `<div>${l}</div>`).join("")}</div>
     <div class="cal-grid">${cells}</div>
     <div class="cal-legend">${legend}</div>
+    <div style="font-size:10.5px;color:#5c5c62;text-align:center;margin-top:10px">${t("rm.tapHint")}</div>
   </div>`;
+};
+
+/* navigation entre les mois */
+window.rmMonth = (dir) => { S.rmOffset = (S.rmOffset || 0) + dir; render(); };
+
+/* taper un jour → journal de bord de ce jour */
+window.rmDay = (iso) => {
+  const h = S.history.find(x => x.iso && x.iso.slice(0, 10) === iso);
+  const dd = S.daily[iso];
+  const date = new Date(iso + "T12:00:00");
+  const dateStr = date.toLocaleDateString(LANG === "en" ? "en-US" : "fr-FR", { weekday: "long", day: "numeric", month: "long" });
+  const isFuture = date > new Date();
+
+  let body;
+  if (isFuture) {
+    body = `<div style="text-align:center;color:var(--muted);font-size:13px;padding:20px 0">📅 ${t("rm.future")}</div>`;
+  } else if (h) {
+    const loads = h.ex.filter(e => e.load && e.load !== "—");
+    body = `<div class="card gold" style="margin-top:4px">
+        <div style="font-family:Oswald;font-weight:700;font-size:15px;color:var(--ok)">✅ ${tf("rm.sessionDone", h.day, h.focus)}</div>
+      </div>
+      ${loads.length ? `<div class="ex-sec" style="margin-top:12px"><div class="ex-sec-t">${t("rm.loads")}</div>
+        ${loads.map(e => `<div class="ex-row"><span class="ex-k">${e.n}</span><span class="ex-v">${e.load} kg${e.rpe ? " · RPE " + e.rpe : ""}</span></div>`).join("")}
+      </div>` : ""}
+      ${h.ex.some(e => e.note) ? `<div class="ex-sec"><div class="ex-sec-t">📝</div>${h.ex.filter(e => e.note).map(e => `<p style="font-size:12.5px">${e.n} : ${e.note}</p>`).join("")}</div>` : ""}`;
+  } else if (dd?.checkin) {
+    body = `<div class="card" style="margin-top:4px"><div style="font-size:13px;color:var(--muted)">${t("rm.checkinDay")} : ${ciLabel(dd.checkin.sommeil)} · ${ciLabel(dd.checkin.energie)} · ${ciLabel(dd.checkin.corps)}</div></div>
+      <div style="text-align:center;color:var(--muted);font-size:12.5px;padding:14px 0">${t("rm.restDay")}</div>`;
+  } else {
+    body = `<div style="text-align:center;color:var(--muted);font-size:13px;padding:20px 0">${t("rm.noSession")}</div>`;
+  }
+
+  const back = document.createElement("div");
+  back.className = "modal-back";
+  back.onclick = (ev) => { if (ev.target === back) back.remove(); };
+  back.innerHTML = `<div class="modal">
+    <button class="modal-x" onclick="this.closest('.modal-back').remove()">✕</button>
+    <div class="modal-h" style="font-size:19px">${tf("rm.dayLog", dateStr)}</div>
+    ${body}
+  </div>`;
+  document.body.appendChild(back);
+  if (navigator.vibrate) navigator.vibrate(15);
 };
 
 /* ═══ 2. FIL D'ACTIVITÉS ═══ */
