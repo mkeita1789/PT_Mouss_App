@@ -1,4 +1,4 @@
-const CACHE = "ptmouss-v7";
+const CACHE = "ptmouss-v8";
 const FILES = ["./", "./index.html", "./app.js", "./i18n.js", "./exdb.js", "./modules.js", "./synergy.js", "./manifest.json", "./icon-192.png", "./icon-512.png"];
 
 self.addEventListener("install", (e) => {

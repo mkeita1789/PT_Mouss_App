@@ -9,7 +9,7 @@
 /* ═══ BOUTON SMS COACH ═══
    👉 REMPLACE le numéro ci-dessous par TON numéro, format international sans espaces.
       France : "+33612345678"  ·  Suède : "+46701234567" */
-const COACH_PHONE = "+33XXXXXXXXX";
+const COACH_PHONE = "+33652595527";
 window.smsCoach = function () {
   const prenom = S.profile?.prenom || "";
   const body = encodeURIComponent(tf("sms.prefill", prenom));
