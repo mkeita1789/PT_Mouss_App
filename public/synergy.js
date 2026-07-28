@@ -129,7 +129,7 @@ window.rmDay = (iso) => {
         <div style="font-family:Oswald;font-weight:700;font-size:15px;color:var(--ok)">✅ ${tf("rm.sessionDone", h.day, h.focus)}</div>
       </div>
       ${loads.length ? `<div class="ex-sec" style="margin-top:12px"><div class="ex-sec-t">${t("rm.loads")}</div>
-        ${loads.map(e => `<div class="ex-row"><span class="ex-k">${e.n}</span><span class="ex-v">${e.load} kg${e.rpe ? " · RPE " + e.rpe : ""}</span></div>`).join("")}
+        ${loads.map(e => `<div class="ex-row"><span class="ex-k">${e.n}</span><span class="ex-v">${e.load} kg${e.amrap ? " · " + e.amrap + " reps" : ""}</span></div>`).join("")}
       </div>` : ""}
       ${h.ex.some(e => e.note) ? `<div class="ex-sec"><div class="ex-sec-t">📝</div>${h.ex.filter(e => e.note).map(e => `<p style="font-size:12.5px">${e.n} : ${e.note}</p>`).join("")}</div>` : ""}`;
   } else if (dd?.checkin) {
@@ -310,6 +310,3 @@ window.delPhoto = function (id) {
   document.querySelector(".modal-back")?.remove();
   render();
 };
-
-/* Premier rendu, une fois tous les modules chargés */
-render();

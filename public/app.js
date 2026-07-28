@@ -415,8 +415,8 @@ function localCoach(txt) {
       "For anything involving food numbers, go through Moustapha directly — he knows your situation.\n\nWhat I can safely say: protein at every meal, half the plate veggies, carbs to your appetite, water. And the scale: once a week max. Stable strength in the gym — that's the real win."],
     motiv: ["Ce que tu ressens est normal — la motivation, ça va, ça vient. C'est pour ça qu'on ne compte pas dessus : on compte sur la régularité.\n\nAujourd'hui, vise la version minimale : viens, fais l'échauffement et le premier exercice. Si après ça tu veux rentrer, tu rentres — et ça comptera quand même.\n\nEt si c'est plus lourd qu'une baisse de motivation, parles-en à Moustapha. Il est là pour ça aussi.",
       "What you feel is normal — motivation comes and goes. That's why we don't rely on it: we rely on consistency.\n\nToday, aim for the minimal version: show up, do the warm-up and the first exercise. If you want to go home after that, you go — and it still counts.\n\nAnd if it's heavier than a motivation dip, talk to Moustapha. He's there for that too."],
-    rpe: ["Le RPE, c'est ta note d'effort sur 10 :\n\n· 6-7 = solide, il restait 3-4 reps\n· 8 = il restait 2 reps\n· 9 = il restait 1 rep\n· 10 = rien dans le réservoir\n\nNote-le après chaque exercice : c'est lui qui me dit si on monte la charge ou si on consolide. Un 10 partout n'est PAS l'objectif — la plupart du travail se fait à 7-8.",
-      "RPE is your effort rating out of 10:\n\n· 6-7 = solid, 3-4 reps left\n· 8 = 2 reps left\n· 9 = 1 rep left\n· 10 = nothing left in the tank\n\nLog it after each exercise: it tells me whether to add load or consolidate. A 10 everywhere is NOT the goal — most of the work happens at 7-8."],
+    rpe: ["Tu n'as rien à calculer — c'est mon boulot.\n\nTu fais tes séries normalement. Sur la DERNIÈRE, tu vas au maximum de reps PROPRES, et tu me donnes ce nombre. C'est tout.\n\nÀ partir de là je déduis ton niveau d'effort réel et je calcule ta charge pour la prochaine fois : si tu dépasses largement la cible, on monte ; si tu es juste dessus, on garde ; si tu n'y arrives pas, on redescend.\n\n⚠️ Une seule règle : une rep moche ne compte pas. Dès que l'amplitude diminue ou que la technique casse, tu arrêtes.",
+      "You don't calculate anything — that's my job.\n\nDo your sets normally. On the LAST one, go for as many CLEAN reps as you can, and tell me that number. That's it.\n\nFrom there I work out your real effort level and set your load for next time: well past the target, we go up; right on it, we hold; short of it, we come down.\n\n⚠️ One rule: an ugly rep doesn't count. The moment range drops or form breaks, you stop."],
     sore: ["Courbature = normal, surtout après du nouveau ou du volume. Ça passe en 24-72 h.\n\nCe qui aide : bouger léger (marche, vélo doux), boire, dormir. Ce qui n'aide pas : ne plus bouger du tout.\n\n⚠️ La différence avec une douleur : la courbature est diffuse et des deux côtés. Une douleur précise, d'un seul côté, qui pique ou qui lance → repos et avis pro.",
       "Soreness = normal, especially after something new or high volume. It fades in 24-72 h.\n\nWhat helps: light movement (walking, easy cycling), drinking, sleeping. What doesn't: not moving at all.\n\n⚠️ The difference from pain: soreness is diffuse and on both sides. Sharp pain, on one side, that stings or shoots → rest and a professional opinion."],
     warmup: ["L'échauffement n'est jamais optionnel — c'est lui qui prépare tes articulations et ton système nerveux.\n\nOuvre l'onglet Séance : ton rituel d'échauffement est en haut, adapté à ton protocole. 10-15 minutes qui protègent tout le reste.",
@@ -554,6 +554,8 @@ function viewHome(P) {
     <div class="h1">${salut}, <em>${S.profile.prenom || ""}</em></div>
     <div class="sub">${P?.phase || P?.proto || ""}</div>
     ${ring}
+    ${window.rituelCard ? window.rituelCard() : ""}
+    ${window.bilanCard ? window.bilanCard() : ""}
     ${msgs.map((m, i) => `<div class="card anim-item" style="animation-delay:${.06 + i * .06}s;border-left:3px solid ${m.col}">
       <div style="display:flex;gap:10px">
         <div style="width:30px;height:30px;border-radius:9px;flex:none;background:linear-gradient(135deg,var(--gold),var(--gold-dim));display:flex;align-items:center;justify-content:center;font-family:Oswald;font-weight:700;color:#1a1206;font-size:14px">M</div>
@@ -653,7 +655,8 @@ function viewProfile(P) {
         <div><div style="font-family:Oswald;font-weight:700;font-size:15px;color:var(--gold)">${t("prog.proto")} ${P.proto}</div>
         <div style="font-size:11px;color:var(--muted);margin-top:2px">${P.officiel ? t("prog.official") : t("prog.tovalidate")}</div></div>
       </div>${rows}</div>
-    ${window.smsButton ? `<div style="margin-top:4px">${window.smsButton(false)}</div>` : ""}
+    ${window.voirBilan ? `<button class="btn s" style="margin-top:4px" onclick="voirBilan(0)">${t("bil.menu")}</button>` : ""}
+    ${window.smsButton ? `<div style="margin-top:9px">${window.smsButton(false)}</div>` : ""}
     <div class="eyebrow">${t("lang.label")}</div>
     ${langToggle()}
     <button class="btn s anim-item" style="margin-top:12px" onclick="redoBilan()">${t("pf.redo")}</button>
@@ -758,18 +761,32 @@ function viewSeance(P) {
 
   if (!S.session || S.session.d !== day.d) {
     const last = [...S.history].reverse().find(h => h.day === day.d);
+    const phNow = phaseFor(S.profile);
     S.session = { d: day.d, st: day.ex.map(e => {
       const prev = last?.ex.find(x => x.n === e.n);
       const lastLoad = prev?.load && prev.load !== "—" ? prev.load : "";
-      const lastFull = prev && prev.sets >= e.s;
-      const lastRpe = prev?.rpe || null;
       const lv = parseFloat(String(lastLoad).replace(",", "."));
-      let sug = null, sugTxt = "";
-      if (lastFull && !isNaN(lv) && !P.deload) {
-        if (lastRpe && lastRpe >= 9.5) { sug = lv; sugTxt = `RPE ${lastRpe} → ${t("s.consolidate")}`; }
-        else { sug = lv + (e.c === "S" ? 5 : 2.5); sugTxt = `${t("s.allsets")}${lastRpe ? " · RPE " + lastRpe : ""} → ${t("s.aim")} <b>${String(sug).replace(".", ",")} kg</b>`; }
+      const cible = window.targetReps ? window.targetReps(e.r) : null;
+      let sug = null, sugTxt = "", phaseShift = false;
+
+      const phaseChanged = last?.phase && phNow?.n && last.phase !== phNow.n;
+
+      if (phaseChanged && prev?.amrap && !isNaN(lv) && window.chargePourPhase) {
+        /* Nouvelle phase → on recalcule depuis SON maximum estimé */
+        const c = window.chargePourPhase(lv, prev.amrap, phNow.pct, e.c);
+        if (c) {
+          sug = c.next; phaseShift = true;
+          sugTxt = tf("phase.newLoad", phNow.n, c.pct, String(c.next).replace(".", ","));
+        }
       }
-      return { n: e.n, sets: alleger ? Math.max(2, e.s - 1) : e.s, done: 0, load: lastLoad, sug, sugTxt, lastLoad, rpe: null, note: "" };
+      if (!sug && prev?.amrap && cible && !isNaN(lv)) {
+        /* Même phase → progression fine par l'AMRAP */
+        const r = window.amrapNext(prev.amrap, cible, lv, e.c, P.deload);
+        if (r) { sug = r.next; sugTxt = window.amrapText(r, lv); }
+      }
+      return { n: e.n, sets: alleger ? Math.max(2, e.s - 1) : e.s, done: 0,
+        load: sug && sug !== lv ? String(sug).replace(".", ",") : lastLoad,
+        sug, sugTxt, phaseShift, lastLoad, amrap: null, cible, note: "" };
     }) };
   }
 
@@ -804,21 +821,41 @@ function viewSeance(P) {
             <div style="font-size:11px;color:var(--muted);margin-top:2px">${st.sets} × ${e.r}${e.rir !== "-" ? " · RIR " + e.rir : ""}${e.drop && !P.deload ? ' · <span style="color:var(--gold)">DROP SET</span>' : ""}</div></div>
           ${SRA[e.c] ? `<input class="kg-input" placeholder="kg" inputmode="decimal" value="${st.load}" oninput="S.session.st[${i}].load=this.value">` : ""}
         </div>
-        ${st.sug ? `<div style="font-size:11.5px;color:var(--ok);background:rgba(78,208,122,.07);border-radius:8px;padding:7px 10px;margin-bottom:8px">💡 ${t("s.lasttime")} : ${st.lastLoad} kg, ${st.sugTxt}</div>`
+        ${st.sug ? (st.phaseShift
+          ? `<div style="font-size:11.5px;color:var(--gold);background:rgba(245,184,65,.08);border-left:3px solid var(--gold);border-radius:8px;padding:9px 11px;margin-bottom:8px">
+              <div>🔄 ${st.sugTxt}</div>
+              <div style="color:var(--muted);font-size:10.5px;margin-top:4px;line-height:1.5">${t("phase.why")}</div></div>`
+          : `<div style="font-size:11.5px;color:var(--ok);background:rgba(70,213,131,.07);border-radius:8px;padding:7px 10px;margin-bottom:8px">💡 ${t("s.lasttime")} : ${st.lastLoad} kg, ${st.sugTxt}</div>`)
           : st.lastLoad ? `<div style="font-size:11px;color:var(--muted);margin-bottom:8px">${t("s.lasttime")} : ${st.lastLoad} kg</div>` : ""}
         <div style="font-size:11.5px;color:var(--muted);margin-bottom:10px">💡 ${e.note}</div>
         <div style="display:flex;gap:7px;flex-wrap:wrap">
           ${Array.from({ length: st.sets }, (_, k) =>
             `<button class="setbtn ${k < st.done ? "done" : ""}" onclick="tick(${i},${k})">${k + 1}</button>`).join("")}
         </div>
-        ${exDone && e.rir !== "-" ? `
+        ${exDone && e.rir !== "-" && st.cible ? `
         <div style="margin-top:11px;padding-top:11px;border-top:1px solid var(--line)">
-          <div style="font-size:11px;color:var(--muted);margin-bottom:7px">${t("s.rpe.q")}</div>
-          <div style="display:flex;gap:6px">
-            ${[7, 8, 9, 10].map(r => `<button class="rpechip ${st.rpe === r ? "sel" : ""}" onclick="setRpe(${i},${r})">${r}</button>`).join("")}
+          <div style="font-size:12px;font-weight:600;margin-bottom:3px">${t("amrap.q")}</div>
+          <div style="font-size:10.5px;color:var(--muted);margin-bottom:8px">${t("amrap.hint")}</div>
+          <div style="display:flex;gap:7px;align-items:center">
+            <button class="rpechip" style="flex:none;width:44px" onclick="setAmrap(${i},-1)">−</button>
+            <input class="kg-input" style="flex:1;width:auto" inputmode="numeric" placeholder="${st.cible}"
+              value="${st.amrap ?? ""}" oninput="setAmrapVal(${i},this.value)">
+            <button class="rpechip" style="flex:none;width:44px" onclick="setAmrap(${i},1)">+</button>
           </div>
+          ${(() => {
+            if (!st.amrap) return "";
+            const lv = parseFloat(String(st.load).replace(",", "."));
+            if (isNaN(lv)) return "";
+            const r = window.amrapNext(st.amrap, st.cible, lv, e.c, P.deload);
+            if (!r) return "";
+            const col = r.verdict === "MONTER" ? "var(--ok)" : r.verdict === "BAISSER" ? "var(--ko)" : "var(--gold)";
+            return `<div style="margin-top:9px;background:var(--panel2);border-left:3px solid ${col};border-radius:10px;padding:10px 12px">
+              <div style="font-size:12.5px;color:${col};font-weight:600">${t("amrap.next")} : ${window.amrapText(r, lv)}</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:4px;line-height:1.5">${t("amrap.why." + r.raison)}</div>
+            </div>`;
+          })()}
           <input class="input" placeholder="${t("s.note.ph")}" value="${st.note || ""}"
-            style="padding:10px;font-size:12.5px;margin-top:8px" oninput="S.session.st[${i}].note=this.value">
+            style="padding:10px;font-size:12.5px;margin-top:9px" oninput="S.session.st[${i}].note=this.value">
         </div>` : ""}
       </div>`;
     }).join("")}
@@ -827,7 +864,17 @@ function viewSeance(P) {
       <div style="font-size:12.5px;color:var(--muted);margin:9px 0 14px;line-height:1.55">${t("s.done.sub")}</div>
       <button class="btn p" onclick="saveSession()">${t("s.save")}</button></div>` : ""}`;
 }
-window.setRpe = (i, r) => { const st = S.session.st[i]; st.rpe = st.rpe === r ? null : r; render(); };
+window.setAmrap = (i, d) => {
+  const st = S.session.st[i];
+  const base = st.amrap ?? st.cible ?? 0;
+  st.amrap = Math.max(0, base + d);
+  render();
+};
+window.setAmrapVal = (i, v) => {
+  const n = parseInt(v, 10);
+  S.session.st[i].amrap = isNaN(n) ? null : Math.max(0, n);
+  render();
+};
 
 window.tick = (i, k) => {
   const st = S.session.st[i];
@@ -839,8 +886,9 @@ window.tick = (i, k) => {
 window.saveSession = () => {
   const P = buildProgram(S.profile);
   const day = P.days[S.dayIdx];
-  S.history.push({ date: new Date().toLocaleDateString("fr-FR"), iso: new Date().toISOString(), day: day.d, focus: day.f,
-    ex: S.session.st.map(s => ({ n: s.n, load: s.load || "—", sets: s.done, rpe: s.rpe, note: s.note || "" })) });
+  const _ph = phaseFor(S.profile);
+  S.history.push({ date: new Date().toLocaleDateString("fr-FR"), iso: new Date().toISOString(), day: day.d, focus: day.f, phase: _ph?.n || null,
+    ex: S.session.st.map(s => ({ n: s.n, load: s.load || "—", sets: s.done, amrap: s.amrap, cible: s.cible, note: s.note || "" })) });
   store.set("history", S.history);
   S.session = null;
   celebrate();
@@ -926,7 +974,12 @@ function viewSuivi() {
   const gains = loadGains();
   const B = badges();
   const m = S.measures;
-  const rpes = S.history.flatMap(h => h.ex.map(e => e.rpe).filter(Boolean));
+  const rpes = S.history.flatMap(h => h.ex.map(e => {
+    if (!e.amrap || !e.cible) return null;
+    const lv = parseFloat(String(e.load).replace(",", "."));
+    const r = window.amrapNext ? window.amrapNext(e.amrap, e.cible, isNaN(lv) ? 50 : lv, "A", false) : null;
+    return r ? r.rpe : null;
+  }).filter(Boolean));
   const avgRpe = rpes.length ? (rpes.reduce((a, b) => a + b, 0) / rpes.length).toFixed(1) : null;
 
   return `<div class="h1">${t("sv.title")}</div>
@@ -984,7 +1037,7 @@ function viewSuivi() {
 window.addMeasure = () => {
   const p = $("#mPoids").value.trim(), h = $("#mHanches").value.trim();
   if (!p && !h) return;
-  S.measures.push({ date: new Date().toLocaleDateString("fr-FR"), poids: p, hanches: h });
+  S.measures.push({ date: new Date().toLocaleDateString("fr-FR"), ts: Date.now(), poids: p, hanches: h });
   store.set("measures", S.measures);
   if (navigator.vibrate) navigator.vibrate(40);
   render();

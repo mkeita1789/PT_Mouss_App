@@ -1,5 +1,5 @@
-const CACHE = "ptmouss-v12";
-const FILES = ["./", "./index.html", "./app.js", "./i18n.js", "./exdb.js", "./modules.js", "./synergy.js", "./manifest.json", "./icon-192.png", "./icon-512.png"];
+const CACHE = "ptmouss-v17";
+const FILES = ["./", "./index.html", "./app.js", "./amrap.js", "./i18n.js", "./exdb.js", "./modules.js", "./synergy.js", "./bilan.js", "./manifest.json", "./icon-192.png", "./icon-512.png"];
 
 self.addEventListener("install", (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(FILES)));
