@@ -11,11 +11,10 @@
       France : "+33612345678"  ·  Suède : "+46701234567" */
 const COACH_PHONE = "+33652595527";
 window.smsCoach = function () {
+  /* WhatsApp : canal principal du coach */
   const prenom = S.profile?.prenom || "";
   const body = encodeURIComponent(tf("sms.prefill", prenom));
-  const num = COACH_PHONE.replace(/[^+0-9]/g, "");
-  const sep = /iphone|ipad|ipod/i.test(navigator.userAgent) ? "&" : "?";
-  window.location.href = "sms:" + num + sep + "body=" + body;
+  window.open("https://wa.me/" + COACH_PHONE.replace(/[^0-9]/g, "") + "?text=" + body, "_blank");
 };
 window.smsButton = function (compact) {
   return `<button class="btn ${compact ? "s" : "p"}" onclick="smsCoach()">${t("sms.coach")}</button>`;
