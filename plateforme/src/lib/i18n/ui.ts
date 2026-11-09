@@ -7,7 +7,7 @@ export const UI_FR = {
   langue: "Langue",
   theme: { titre: "Couleurs", aide: "Choisis l'ambiance de ton appli. Elle change tout de suite, sur ce téléphone.", noms: { or: "Or", rose: "Rose", lilas: "Lilas", peche: "Pêche", blush: "Blush" } },
   /* Navigation */
-  nav: { accueil: "Accueil", programme: "Programme", seance: "Séance", progression: "Progression", profil: "Profil", coach: "Coach", mesClients: "Mes clients", coaching: "Coaching", deconnexion: "Se déconnecter", coachRole: "Coach", clientRole: "Client", monProfil: "Mon profil" },
+  nav: { accueil: "Accueil", programme: "Programme", seance: "Séance", progression: "Progression", profil: "Profil", coach: "Coach", mesClients: "Mes clients", coaching: "Coaching", deconnexion: "Se déconnecter", coachRole: "Coach", clientRole: "Client", monProfil: "Mon profil", entrainement: "Entraînement", outils: "Outils", exercices: "Exercices", chrono: "Chrono" },
   /* Connexion */
   auth: {
     citation: ["Discipline today, ", "results tomorrow."],
@@ -238,6 +238,54 @@ export const UI_FR = {
     ecart: (j: number) => `${j} jour${s(j)} d'écart`,
     coachTitre: "Photos de progression", coachAucune: "Pas de photo partagée.",
   },
+  /* Espace entraînement (menu des outils) */
+  entrainement: {
+    titre: "Entraînement",
+    lede: "Ton programme, tes séances et tes outils, au même endroit.",
+    monEntrainement: "Mon entraînement", outils: "Outils",
+    programme: "Mon programme en cours", programmeSous: (phase: string) => phase,
+    programmeSansBilan: "Fais ton bilan pour le recevoir",
+    seanceJour: "Séance du jour", seanceJourSous: (d: string) => d,
+    libre: "Séance libre", libreSous: "Note un entraînement hors programme",
+    historique: "Séances précédentes", historiqueSous: (n: number) => `${n} séance${s(n)} enregistrée${s(n)}`,
+    exercices: "Exercices", exercicesSous: (n: number) => `${n} fiches avec vidéo et technique`,
+    chrono: "Chronomètre", chronoSous: "Avec les temps de chaque tour",
+    minuteur: "Minuteur", minuteurSous: "Repos, gainage, intervalles",
+    photos: "Photos de progression", photosSous: "Privé · toi et ton coach",
+  },
+  /* Bibliothèque d'exercices */
+  exos: {
+    titre: "Exercices", lede: "Toutes les fiches du coach : technique, erreurs à éviter, variantes et vidéo.",
+    chercher: "Chercher un exercice", tous: "Tous", monProgramme: "Mon programme",
+    aucun: "Aucun exercice ne correspond.", video: "Vidéo", dansProgramme: "Dans ton programme",
+    groupes: { "Fessiers": "Fessiers", "Jambes": "Jambes", "Chaîne postérieure": "Chaîne postérieure", "Dos": "Dos", "Pectoraux": "Pectoraux", "Épaules": "Épaules", "Bras": "Bras", "Tronc": "Tronc", "Explosivité": "Explosivité" } as Record<string, string>,
+  },
+  /* Chronomètre et minuteur */
+  chrono: {
+    titre: "Chrono", chrono: "Chronomètre", minuteur: "Minuteur",
+    demarrer: "Démarrer", pause: "Pause", reprendre: "Reprendre", tour: "Tour", reinitialiser: "Réinitialiser",
+    tours: "Tours", effacer: "Effacer", aucunTour: "Touche « Tour » pendant le chrono pour noter chaque série ou chaque tour.",
+    tourN: (n: number) => `Tour ${n}`, meilleur: "le plus rapide", plusLent: "le plus lent",
+    simple: "Simple", intervalles: "Intervalles",
+    travail: "Effort", repos: "Repos", nbTours: "Tours", total: "Total",
+    preset: "Raccourcis", tabata: "Tabata 20/10 × 8",
+    phaseTravail: "Effort", phaseRepos: "Repos", tourSur: (a: number, b: number) => `Tour ${a} / ${b}`,
+    termine: "Terminé ! Bien joué 💪", ecranAllume: "L'écran reste allumé pendant le minuteur.",
+  },
+  /* Séance libre */
+  libre: {
+    titre: "Séance libre", lede: "Note un entraînement fait en dehors de ton programme. Il apparaîtra dans ton historique et tes courbes de charges.",
+    nom: "Nom de la séance", nomPlaceholder: "ex. Haut du corps, cours collectif…",
+    ajouterExo: "Ajouter un exercice", choisir: "Choisis un exercice", autre: "Autre exercice",
+    autrePlaceholder: "Nom de l'exercice", ajouter: "Ajouter",
+    serie: "Série", kg: "kg", reps: "reps", ajouterSerie: "+ Série", retirer: "Retirer",
+    vide: "Ajoute ton premier exercice pour commencer.",
+    enregistrer: "Enregistrer la séance", enregistrement: "Enregistrement…",
+    erreurVide: "Ajoute au moins un exercice avec une série.",
+    erreur: "Impossible d'enregistrer la séance. Réessaie.",
+    brouillon: "Ta séance est gardée sur ce téléphone tant que tu ne l'as pas enregistrée.",
+    defaut: "Séance libre",
+  },
   /* Import de l'ancienne appli */
   importer: {
     surCeTel: "Ton historique sur ce téléphone",
@@ -269,7 +317,7 @@ export type TextesUI = typeof UI_FR;
 export const UI_EN: TextesUI = {
   langue: "Language",
   theme: { titre: "Colours", aide: "Pick the look of your app. It changes right away, on this phone.", noms: { or: "Gold", rose: "Pink", lilas: "Lilac", peche: "Peach", blush: "Blush" } },
-  nav: { accueil: "Home", programme: "Program", seance: "Workout", progression: "Progress", profil: "Profile", coach: "Coach", mesClients: "My clients", coaching: "Coaching", deconnexion: "Log out", coachRole: "Coach", clientRole: "Client", monProfil: "My profile" },
+  nav: { accueil: "Home", programme: "Program", seance: "Workout", progression: "Progress", profil: "Profile", coach: "Coach", mesClients: "My clients", coaching: "Coaching", deconnexion: "Log out", coachRole: "Coach", clientRole: "Client", monProfil: "My profile", entrainement: "Training", outils: "Tools", exercices: "Exercises", chrono: "Timer" },
   auth: {
     citation: ["Discipline today, ", "results tomorrow."],
     points: [
@@ -487,6 +535,50 @@ export const UI_EN: TextesUI = {
     erreur: "The photo couldn't be saved. Try again.",
     ecart: (j: number) => `${j} day${s(j)} apart`,
     coachTitre: "Progress photos", coachAucune: "No photos shared.",
+  },
+  entrainement: {
+    titre: "Training",
+    lede: "Your program, your workouts and your tools, all in one place.",
+    monEntrainement: "My training", outils: "Tools",
+    programme: "My current program", programmeSous: (phase: string) => phase,
+    programmeSansBilan: "Complete your assessment to get it",
+    seanceJour: "Today's workout", seanceJourSous: (d: string) => d,
+    libre: "Free workout", libreSous: "Log a session outside your program",
+    historique: "Past workouts", historiqueSous: (n: number) => `${n} workout${n > 1 ? "s" : ""} logged`,
+    exercices: "Exercises", exercicesSous: (n: number) => `${n} guides with video and technique`,
+    chrono: "Stopwatch", chronoSous: "With split times for each lap",
+    minuteur: "Timer", minuteurSous: "Rest, planks, intervals",
+    photos: "Progress photos", photosSous: "Private · you and your coach",
+  },
+  exos: {
+    titre: "Exercises", lede: "All your coach's guides: technique, mistakes to avoid, variations and video.",
+    chercher: "Search an exercise", tous: "All", monProgramme: "My program",
+    aucun: "No exercise matches.", video: "Video", dansProgramme: "In your program",
+    groupes: { "Fessiers": "Glutes", "Jambes": "Legs", "Chaîne postérieure": "Posterior chain", "Dos": "Back", "Pectoraux": "Chest", "Épaules": "Shoulders", "Bras": "Arms", "Tronc": "Core", "Explosivité": "Power" } as Record<string, string>,
+  },
+  chrono: {
+    titre: "Timer", chrono: "Stopwatch", minuteur: "Timer",
+    demarrer: "Start", pause: "Pause", reprendre: "Resume", tour: "Lap", reinitialiser: "Reset",
+    tours: "Laps", effacer: "Clear", aucunTour: "Tap « Lap » while the stopwatch runs to time each set or round.",
+    tourN: (n: number) => `Lap ${n}`, meilleur: "fastest", plusLent: "slowest",
+    simple: "Simple", intervalles: "Intervals",
+    travail: "Work", repos: "Rest", nbTours: "Rounds", total: "Total",
+    preset: "Shortcuts", tabata: "Tabata 20/10 × 8",
+    phaseTravail: "Work", phaseRepos: "Rest", tourSur: (a: number, b: number) => `Round ${a} / ${b}`,
+    termine: "Done! Well played 💪", ecranAllume: "The screen stays on while the timer runs.",
+  },
+  libre: {
+    titre: "Free workout", lede: "Log a workout done outside your program. It will show in your history and load charts.",
+    nom: "Workout name", nomPlaceholder: "e.g. Upper body, group class…",
+    ajouterExo: "Add an exercise", choisir: "Pick an exercise", autre: "Other exercise",
+    autrePlaceholder: "Exercise name", ajouter: "Add",
+    serie: "Set", kg: "kg", reps: "reps", ajouterSerie: "+ Set", retirer: "Remove",
+    vide: "Add your first exercise to start.",
+    enregistrer: "Save workout", enregistrement: "Saving…",
+    erreurVide: "Add at least one exercise with one set.",
+    erreur: "Couldn't save the workout. Please try again.",
+    brouillon: "Your workout is kept on this phone until you save it.",
+    defaut: "Free workout",
   },
   importer: {
     surCeTel: "Your history on this phone",

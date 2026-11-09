@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getBilan, getUtilisateur, jourParis } from "@/lib/data";
 import { CHECKIN_Q, OBJECTIFS, phaseFor, questionsBilan } from "@/lib/coaching/programme";
 import { parseKg } from "@/lib/coaching/amrap";
+import { JOUR_LIBRE } from "@/lib/coaching/seance";
 import type { Bilan, Categorie, Checkin } from "@/lib/coaching/types";
 import { ui } from "@/lib/i18n";
 import { getLang } from "@/lib/i18n/serveur";
@@ -129,6 +130,65 @@ export async function enregistrerSeance(payload: {
   if (errEx) {
     await supabase.from("seances").delete().eq("id", seance.id);
     return { erreur: T.seance.erreurExercices };
+  }
+  revalidatePath("/", "layout");
+  return {};
+}
+
+/* ─── Séance libre (hors programme) ─── */
+
+export type SerieLibre = { kg: string; reps: string };
+export type ExerciceLibre = { nom: string; series: SerieLibre[] };
+
+export async function enregistrerSeanceLibre(payload: { nom: string; exercices: ExerciceLibre[] }): Promise<{ erreur?: string }> {
+  const user = await getUtilisateur();
+  const T = ui(await getLang());
+
+  /* On ne garde que les séries renseignées (charge ou répétitions) */
+  const exercices = (payload.exercices ?? [])
+    .slice(0, 20)
+    .map((e) => ({
+      nom: String(e.nom ?? "").trim().slice(0, 80),
+      series: (e.series ?? []).slice(0, 20).map((s) => {
+        const kg = parseKg(String(s.kg ?? ""));
+        const reps = Math.round(Number(String(s.reps ?? "").replace(",", ".")));
+        return { kg: kg !== null && kg >= 0 && kg <= 1000 ? kg : null, reps: reps > 0 && reps <= 200 ? reps : null };
+      }).filter((s) => s.kg !== null || s.reps !== null),
+    }))
+    .filter((e) => e.nom && e.series.length);
+  if (!exercices.length) return { erreur: T.libre.erreurVide };
+
+  const supabase = await createClient();
+  const { data: seance, error } = await supabase
+    .from("seances")
+    .insert({ user_id: user.id, jour_code: JOUR_LIBRE, focus: String(payload.nom ?? "").trim().slice(0, 80) || T.libre.defaut, phase: null, allegee: false })
+    .select("id")
+    .single();
+  if (error || !seance) return { erreur: T.libre.erreur };
+
+  const lang = await getLang();
+  const fmt = (n: number) => String(n).replace(".", lang === "en" ? "." : ",");
+  const lignes = exercices.map((e, i) => {
+    const kgs = e.series.map((s) => s.kg).filter((k): k is number => k !== null);
+    return {
+      seance_id: seance.id,
+      user_id: user.id,
+      position: i,
+      nom: e.nom,
+      categorie: "-" as const,
+      charge_kg: kgs.length ? Math.max(...kgs) : null,
+      series: e.series.length,
+      amrap: null,
+      cible: null,
+      /* Détail des séries : « 40 kg × 12 · 45 kg × 10 » */
+      note: e.series.map((s) => [s.kg !== null ? `${fmt(s.kg)} kg` : "", s.reps !== null ? `× ${s.reps}` : ""].filter(Boolean).join(" ")).join(" · ").slice(0, 500),
+    };
+  });
+
+  const { error: errEx } = await supabase.from("seance_exercices").insert(lignes);
+  if (errEx) {
+    await supabase.from("seances").delete().eq("id", seance.id);
+    return { erreur: T.libre.erreur };
   }
   revalidatePath("/", "layout");
   return {};

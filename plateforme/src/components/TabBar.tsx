@@ -11,17 +11,28 @@ type Lien = { href: string; ico: NomIcone; lb: string };
 const liens = (T: TextesUI) => ({
   CLIENT: [
     { href: "/", ico: "accueil", lb: T.nav.accueil },
-    { href: "/programme", ico: "programme", lb: T.nav.programme },
+    { href: "/entrainement", ico: "outils", lb: T.nav.entrainement },
     { href: "/seance", ico: "seance", lb: T.nav.seance },
     { href: "/suivi", ico: "suivi", lb: T.nav.progression },
     { href: "/profil", ico: "profil", lb: T.nav.profil },
   ] as Lien[],
   COACH: { href: "/coach", ico: "coach", lb: T.nav.coach } as Lien,
+  /* Ordinateur : accès direct, en plus du menu Entraînement */
+  OUTILS: [
+    { href: "/programme", ico: "programme", lb: T.nav.programme },
+    { href: "/exercices", ico: "livre", lb: T.nav.exercices },
+    { href: "/chrono", ico: "chrono", lb: T.nav.chrono },
+  ] as Lien[],
 });
+
+/* Le menu Entraînement reste allumé sur les pages qu'il regroupe */
+const SOUS_ENTRAINEMENT = ["/programme", "/exercices", "/chrono"];
 
 function useActif() {
   const path = usePathname();
-  return (href: string) => (href === "/" ? path === "/" : path === href || path.startsWith(href + "/"));
+  const dans = (href: string) => path === href || path.startsWith(href + "/");
+  return (href: string, menu = true) =>
+    href === "/" ? path === "/" : dans(href) || (menu && href === "/entrainement" && SOUS_ENTRAINEMENT.some(dans));
 }
 
 /** Barre du bas (mobile) — la séance au centre, en évidence */
@@ -53,9 +64,9 @@ export function TabBar({ coach }: { coach: boolean }) {
 export function SideNav({ coach }: { coach: boolean }) {
   const actif = useActif();
   const { T } = useLang();
-  const { CLIENT, COACH } = liens(T);
+  const { CLIENT, COACH, OUTILS } = liens(T);
   const item = (t: Lien) => (
-    <Link key={t.href} href={t.href} className={`nav-item ${actif(t.href) ? "on" : ""}`} aria-current={actif(t.href) ? "page" : undefined}>
+    <Link key={t.href} href={t.href} className={`nav-item ${actif(t.href, false) ? "on" : ""}`} aria-current={actif(t.href, false) ? "page" : undefined}>
       <Icon nom={t.ico} />
       {t.lb}
     </Link>
@@ -63,6 +74,10 @@ export function SideNav({ coach }: { coach: boolean }) {
   return (
     <>
       <nav className="side-nav" aria-label={T.nav.programme}>{CLIENT.map(item)}</nav>
+      <nav className="side-nav" aria-label={T.nav.outils}>
+        <div className="side-label">{T.nav.outils}</div>
+        {OUTILS.map(item)}
+      </nav>
       {coach && (
         <nav className="side-nav" aria-label={T.nav.coach}>
           <div className="side-label">{T.nav.coaching}</div>

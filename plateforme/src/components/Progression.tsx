@@ -1,4 +1,5 @@
 import { chargesParExercice, type SeanceFaite } from "@/lib/data";
+import { JOUR_LIBRE } from "@/lib/coaching/seance";
 import { amrapNext } from "@/lib/coaching/amrap";
 import { Icon } from "./Icon";
 import { locale, nombre, tc, ui, type Lang } from "@/lib/i18n";
@@ -107,7 +108,7 @@ export function HistoriqueSeances({ historique, limite = 20, lang }: { historiqu
                 </span>
                 <span className="row-main">
                   <span className="row-title" style={{ display: "block" }}>
-                    <span className="num" style={{ fontSize: 16, letterSpacing: ".02em" }}>{tc(lang, s.jour_code)}</span>
+                    <span className="num" style={{ fontSize: 16, letterSpacing: ".02em" }}>{s.jour_code === JOUR_LIBRE ? T.libre.defaut.toUpperCase() : tc(lang, s.jour_code)}</span>
                     <span className="ink-2" style={{ fontWeight: 400 }}> · {tc(lang, s.focus)}</span>
                   </span>
                   <span className="row-sub" style={{ display: "block" }}>
@@ -125,7 +126,7 @@ export function HistoriqueSeances({ historique, limite = 20, lang }: { historiqu
                     const rate = e.amrap !== null && e.cible !== null && e.amrap < e.cible;
                     return (
                       <tr key={e.position}>
-                        <td>{tc(lang, e.nom)}{e.note && <div className="row-sub">« {e.note} »</div>}</td>
+                        <td>{tc(lang, e.nom)}{e.note && <div className="row-sub">{s.jour_code === JOUR_LIBRE ? e.note : `« ${e.note} »`}</div>}</td>
                         <td>{e.series}</td>
                         <td className="num">{e.charge_kg !== null ? `${fmt(e.charge_kg)} kg` : "—"}</td>
                         <td className={rate ? "ko" : undefined}>{e.amrap !== null ? `${e.amrap}${e.cible ? `/${e.cible}` : ""}` : "—"}</td>

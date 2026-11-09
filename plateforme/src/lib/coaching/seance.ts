@@ -26,10 +26,14 @@ export type LigneSeance = {
   suivi: boolean; // exercice chargé (S/A/P) → saisie de charge + AMRAP
 };
 
-/** Jour du programme suggéré : celui qui suit la dernière séance faite */
+/** Code des séances libres (hors programme) : ignorées pour le jour suivant et les charges */
+export const JOUR_LIBRE = "LIBRE";
+
+/** Jour du programme suggéré : celui qui suit la dernière séance du programme */
 export function indexJourSuivant(days: Jour[], historique: { jour_code: string }[]): number {
   if (!days.length) return 0;
-  const i = days.findIndex((d) => d.d === historique[0]?.jour_code);
+  const derniere = historique.find((h) => h.jour_code !== JOUR_LIBRE);
+  const i = days.findIndex((d) => d.d === derniere?.jour_code);
   return i >= 0 ? (i + 1) % days.length : 0;
 }
 

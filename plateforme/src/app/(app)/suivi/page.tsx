@@ -59,7 +59,7 @@ export default async function Page() {
         </section>
       )}
 
-      <section className="section">
+      <section className="section" id="historique" style={{ scrollMarginTop: 80 }}>
         <div className="section-head"><h2 className="section-title">{T.suivi.historique}</h2><span className="section-note">{T.suivi.toucheDetail}</span></div>
         <HistoriqueSeances historique={historique} lang={lang} />
       </section>

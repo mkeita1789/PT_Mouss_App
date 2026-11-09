@@ -598,3 +598,46 @@ details.session[open] .chev { transform: rotate(90deg); }
 @media (min-width: 760px) { .photo-grid { grid-template-columns: repeat(4, 1fr); } }
 .photo-cell img, .photo-vide { width: 100%; aspect-ratio: 3 / 4; object-fit: cover; display: block; border-radius: var(--r-md); background: var(--surface-3); }
 .photo-cell figcaption { display: flex; justify-content: space-between; align-items: center; gap: 6px; margin-top: 6px; font-size: 12.5px; color: var(--ink-2); }
+
+/* ═══ ENTRAÎNEMENT : menu, bibliothèque, chrono, séance libre ═══ */
+.menu-liste { padding: 6px 8px; }
+.menu-item { display: flex; align-items: center; gap: 14px; width: 100%; padding: 12px 10px; border-radius: var(--r-md); text-align: left; transition: background 0.2s; }
+.menu-item + .menu-item { border-top: 1px solid var(--line); border-radius: 0; }
+.menu-item:hover { background: var(--surface-2); border-radius: var(--r-md); }
+.menu-ico { width: 46px; height: 46px; border-radius: 50%; flex: none; display: grid; place-items: center; background: var(--surface-3); color: var(--gold); border: 1px solid var(--line); }
+.menu-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.menu-titre { font-weight: 600; font-size: 15.5px; }
+.menu-sous { font-size: 13px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.recherche { display: flex; align-items: center; gap: 10px; height: 48px; padding: 0 14px; border-radius: var(--r-md); background: var(--surface-2); border: 1px solid var(--line-strong); }
+.recherche:focus-within { border-color: var(--gold); }
+.recherche input { flex: 1; min-width: 0; height: 100%; background: none; border: none; outline: none; font-size: 15px; }
+.puces { display: flex; gap: 8px; overflow-x: auto; padding: 12px 0 2px; scrollbar-width: none; }
+.puces::-webkit-scrollbar { display: none; }
+.puce { flex: none; padding: 7px 14px; border-radius: 999px; font-size: 13.5px; color: var(--ink-2); background: var(--surface-2); border: 1px solid var(--line-strong); transition: background 0.2s, color 0.2s, border-color 0.2s; }
+.puce.on { background: var(--gold); border-color: var(--gold); color: var(--gold-ink); font-weight: 600; }
+
+.chrono-cadran { text-align: center; padding: 38px 16px 30px; }
+.chrono-temps { font-size: clamp(64px, 20vw, 104px); line-height: 1; letter-spacing: 0.01em; }
+.chrono-cs { font-size: 0.42em; color: var(--muted); margin-left: 4px; }
+.chrono-boutons { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px; }
+.chrono-boutons .btn { height: 58px; font-size: 16px; }
+.minuteur { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 24px 16px; transition: border-color 0.3s; }
+.minuteur.en-repos { border-color: rgba(76, 195, 138, 0.4); }
+.minuteur-ring { width: 220px; height: 220px; }
+.minuteur-ring .ring-center .num { font-size: 60px; }
+.pas { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 0; }
+.pas-ctl { display: flex; align-items: center; gap: 12px; }
+.pas-ctl .num { min-width: 62px; text-align: center; font-size: 22px; }
+.pas-ctl .btn { width: 40px; padding: 0; }
+
+.libre-series { display: grid; gap: 8px; }
+.libre-serie { display: grid; grid-template-columns: 62px 1fr auto 1fr 32px; align-items: center; gap: 8px; }
+.libre-champ { position: relative; display: block; }
+.libre-champ .input { height: 44px; padding-right: 40px; text-align: center; font-size: 17px; }
+.libre-champ span { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font-size: 12px; color: var(--muted); pointer-events: none; }
+.libre-suppr { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; color: var(--muted); background: var(--surface-2); }
+.libre-choix { max-height: 320px; overflow-y: auto; margin-top: 10px; }
+.libre-autre { display: flex; gap: 8px; }
+.libre-autre .input { flex: 1; min-width: 0; }
+.dot-prog { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--gold); margin-left: 8px; vertical-align: middle; }
