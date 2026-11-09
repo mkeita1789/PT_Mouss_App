@@ -1,6 +1,7 @@
 -- ═══════════════════════════════════════════════
 -- PT Mouss IA — schéma initial
 -- À coller dans Supabase → SQL Editor → Run (une seule fois).
+-- (Déjà appliqué sur le projet Supabase « ptmouss ».)
 --
 -- Principe de sécurité (Row Level Security) :
 --   • un client ne lit / n'écrit QUE ses propres lignes ;
@@ -34,7 +35,10 @@ create trigger on_auth_user_created
   for each row execute function public.handle_new_user();
 
 -- Le coach est-il l'utilisateur connecté ? (security definer : évite la récursion RLS)
-create function public.is_coach()
+-- Rangée dans un schéma privé : non exposée par l'API REST.
+create schema if not exists private;
+grant usage on schema private to authenticated;
+create function private.is_coach()
 returns boolean
 language sql
 stable
@@ -103,7 +107,7 @@ alter table public.seance_exercices  enable row level security;
 -- Profils : chacun lit le sien, le coach lit tout ; on ne modifie que son prénom
 create policy "profil: lecture" on public.profiles
   for select to authenticated
-  using (id = (select auth.uid()) or (select public.is_coach()));
+  using (id = (select auth.uid()) or (select private.is_coach()));
 create policy "profil: modification du sien" on public.profiles
   for update to authenticated
   using (id = (select auth.uid()))
@@ -118,7 +122,7 @@ begin
   foreach t in array array['bilans', 'checkins', 'seances', 'seance_exercices'] loop
     execute format(
       'create policy "%1$s: lecture" on public.%1$I for select to authenticated
-         using (user_id = (select auth.uid()) or (select public.is_coach()))', t);
+         using (user_id = (select auth.uid()) or (select private.is_coach()))', t);
     execute format(
       'create policy "%1$s: ajout" on public.%1$I for insert to authenticated
          with check (user_id = (select auth.uid()))', t);
@@ -147,6 +151,12 @@ $$;
 create trigger seance_ex_owner
   before insert or update on public.seance_exercices
   for each row execute function public.check_seance_owner();
+
+-- Fonctions internes : non appelables directement via l'API
+revoke execute on function public.handle_new_user() from public, anon, authenticated;
+revoke execute on function public.check_seance_owner() from public, anon, authenticated;
+revoke execute on function private.is_coach() from public, anon;
+grant execute on function private.is_coach() to authenticated;
 
 -- ═══ Devenir coach (à lancer UNE fois, avec TON email, après t'être inscrit) ═══
 -- update public.profiles set role = 'coach'
