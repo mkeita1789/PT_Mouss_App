@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { Avatar } from "@/components/Avatar";
 import { Icon } from "@/components/Icon";
-import { exigerCoach, getCheckinsRecents, getClients, getSeancesTousClients } from "@/lib/data";
+import { exigerCoach, getActivites, getCheckinsRecents, getClients, getSeancesTousClients } from "@/lib/data";
+import { FilActivite } from "@/components/FilActivite";
 import { alertesCoach, joursDepuis } from "@/lib/coaching/alertes";
 import { lundiCourant, phaseFor } from "@/lib/coaching/programme";
 import { tc, ui } from "@/lib/i18n";
@@ -15,7 +16,7 @@ export default async function Page() {
   const coach = await exigerCoach();
   const lang = await getLang();
   const T = ui(lang);
-  const [clients, seances, checkins] = await Promise.all([getClients(coach.id), getSeancesTousClients(), getCheckinsRecents(7)]);
+  const [clients, seances, checkins, activites] = await Promise.all([getClients(coach.id), getSeancesTousClients(), getCheckinsRecents(7), getActivites(6)]);
   const lundi = lundiCourant();
 
   const lignes = clients.map((c) => {
@@ -50,6 +51,8 @@ export default async function Page() {
         <div className="stat"><div className="stat-value">{seancesSemaine}</div><div className="stat-label">{T.coach.seancesSemaine}</div></div>
         <div className="stat"><div className={`stat-value ${urgents ? "ko" : aSuivre ? "gold" : "ok"}`}>{aSuivre}</div><div className="stat-label">{urgents ? T.coach.dontUrgents(urgents) : T.coach.aSuivre}</div></div>
       </div>
+
+      {clients.length > 0 && <FilActivite activites={activites} lang={lang} />}
 
       <section className="section">
         {!clients.length ? (

@@ -110,6 +110,15 @@ export const demo = {
           { id: "m1", texte: "Bienvenue dans le programme ! Pense à faire ton check-in avant chaque séance.", cree_le: iso(20), coach: { prenom: "Moustapha", avatar: AVATARS[COACH] } },
         ]
       : [],
+  activites: () => {
+    const il = (min: number) => new Date(Date.now() - min * 60000).toISOString();
+    const c = (id: string) => ({ id, prenom: PROFILS[id]?.prenom ?? "", avatar: AVATARS[id] ?? null });
+    return [
+      { id: "a3", type: "debut" as const, jour_code: "PUSH", detail: "PUSH · Haut du corps", cree_le: il(6), client: c(JOUEUR) },
+      { id: "a2", type: "fin" as const, jour_code: "DAY 1", detail: "DAY 1 · Glutes Heavy · 4 exercices · 52 min", cree_le: il(95), client: c(CLIENTE) },
+      { id: "a1", type: "debut" as const, jour_code: "DAY 1", detail: "DAY 1 · Glutes Heavy", cree_le: il(147), client: c(CLIENTE) },
+    ];
+  },
   photos: (id: string) =>
     id === CLIENTE && process.env.PTMOUSS_DEMO_ACCORD !== "0"
       ? (["face", "profil", "dos"] as const).flatMap((vue, i) => [

@@ -6,6 +6,8 @@ import { getBilan, getUtilisateur, jourParis } from "@/lib/data";
 import { CHECKIN_Q, OBJECTIFS, phaseFor, questionsBilan } from "@/lib/coaching/programme";
 import { parseKg } from "@/lib/coaching/amrap";
 import { JOUR_LIBRE } from "@/lib/coaching/seance";
+import { minutesDepuisDebut, notifierCoach } from "@/lib/activite";
+import { tc } from "@/lib/i18n";
 import type { Bilan, Categorie, Checkin } from "@/lib/coaching/types";
 import { ui } from "@/lib/i18n";
 import { getLang } from "@/lib/i18n/serveur";
@@ -131,8 +133,35 @@ export async function enregistrerSeance(payload: {
     await supabase.from("seances").delete().eq("id", seance.id);
     return { erreur: T.seance.erreurExercices };
   }
+
+  /* Prévenir le coach : « Inès a terminé sa séance — DAY 1 · Glutes Heavy · 4 exercices · 52 min » */
+  const jourCode = String(payload.jour_code).slice(0, 40);
+  const duree = await minutesDepuisDebut(user.id, jourCode);
+  const faits = lignes.filter((l) => l.series > 0).length;
+  await notifierCoach(user, "fin", jourCode, (lang) => {
+    const N = ui(lang).notifs;
+    return [jourCode, tc(lang, payload.focus), N.exos(faits), duree ? N.duree(duree) : ""].filter(Boolean).join(" · ");
+  });
+
   revalidatePath("/", "layout");
   return {};
+}
+
+/** Première série cochée : le coach est prévenu que la séance commence (une fois) */
+export async function signalerDebut(jourCode: string, focus: string): Promise<void> {
+  const user = await getUtilisateur();
+  const code = String(jourCode ?? "").slice(0, 40);
+  if (!code) return;
+  const supabase = await createClient();
+  const { count } = await supabase
+    .from("activites")
+    .select("id", { count: "exact", head: true })
+    .eq("client_id", user.id)
+    .eq("type", "debut")
+    .eq("jour_code", code)
+    .gt("cree_le", new Date(Date.now() - 3 * 3600e3).toISOString());
+  if (count) return;
+  await notifierCoach(user, "debut", code, (lang) => [code, tc(lang, String(focus ?? "").slice(0, 80))].filter(Boolean).join(" · "));
 }
 
 /* ─── Séance libre (hors programme) ─── */
@@ -190,6 +219,8 @@ export async function enregistrerSeanceLibre(payload: { nom: string; exercices: 
     await supabase.from("seances").delete().eq("id", seance.id);
     return { erreur: T.libre.erreur };
   }
+  const titre = String(payload.nom ?? "").trim().slice(0, 80);
+  await notifierCoach(user, "libre", JOUR_LIBRE, (lg) => [titre || ui(lg).libre.defaut, ui(lg).notifs.exos(lignes.length)].join(" · "));
   revalidatePath("/", "layout");
   return {};
 }

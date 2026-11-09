@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
-import { enregistrerSeance } from "@/app/(app)/actions";
+import { enregistrerSeance, signalerDebut } from "@/app/(app)/actions";
 import { FicheExercice } from "./FicheExercice";
 import { Icon } from "./Icon";
 import { amrapNext, amrapTexte, parseKg, raisonTexte } from "@/lib/coaching/amrap";
@@ -114,6 +114,18 @@ export function SeanceTracker(props: {
   const total = jour.lignes.reduce((a, l) => a + l.sets, 0);
   const faites = etats.reduce((a, e) => a + e.done, 0);
   const fini = faites >= total;
+
+  /* Première série cochée : le coach est prévenu que la séance commence (une seule fois par jour) */
+  useEffect(() => {
+    if (!charge.current || faites === 0) return;
+    const cle = `ptmouss.debut.${jour.d}`;
+    const aujourdhui = new Date().toDateString();
+    try {
+      if (localStorage.getItem(cle) === aujourdhui) return;
+      localStorage.setItem(cle, aujourdhui);
+    } catch {}
+    void signalerDebut(jour.d, jour.f).catch(() => {});
+  }, [faites, jour.d, jour.f]);
 
   const enregistrer = () => {
     setErreur("");

@@ -4,6 +4,7 @@ import { Icon } from "@/components/Icon";
 import { ChoixLangue } from "@/components/Langue";
 import { ChoixTheme } from "@/components/ChoixTheme";
 import { PhotoProfil } from "@/components/PhotoProfil";
+import { Notifications } from "@/components/Notifications";
 import { getTheme } from "@/lib/theme/serveur";
 import { getBilan, getUtilisateur } from "@/lib/data";
 import { phaseFor } from "@/lib/coaching/programme";
@@ -68,6 +69,10 @@ export default async function Page() {
               <Icon nom="fleche" taille={18} className="muted" />
             </Link>
           )}
+          <section className="panel">
+            <div className="section-title">{T.notifs.titre}</div>
+            <Notifications coach={user.role === "coach"} />
+          </section>
           <section className="panel">
             <div className="section-title">{T.theme.titre}</div>
             <p className="meta" style={{ margin: "4px 0 14px" }}>{T.theme.aide}</p>

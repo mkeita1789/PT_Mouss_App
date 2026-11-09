@@ -286,3 +286,27 @@ export async function getPhotos(userId: string): Promise<PhotoProgression[]> {
   const liens = await signer("progression", (data ?? []).map((p) => p.chemin));
   return (data ?? []).map((p) => ({ ...p, vue: p.vue as Vue, url: liens[p.chemin] ?? null }));
 }
+
+/* ═══ Fil d'activité (coach) ═══ */
+
+export type Activite = { id: string; type: "debut" | "fin" | "libre"; jour_code: string | null; detail: string | null; cree_le: string; client: { id: string; prenom: string; avatar: string | null } };
+
+export async function getActivites(limite = 12): Promise<Activite[]> {
+  if (DEMO) return demo.activites();
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("activites")
+    .select("id, type, jour_code, detail, cree_le, client_id, client:profiles!activites_client_id_fkey(prenom, avatar_path)")
+    .order("cree_le", { ascending: false })
+    .limit(limite);
+  const lignes = (data ?? []).map((a) => ({ ...a, client: (Array.isArray(a.client) ? a.client[0] : a.client) as { prenom: string; avatar_path: string | null } | null }));
+  const liens = await signer("avatars", lignes.map((a) => a.client?.avatar_path));
+  return lignes.map((a) => ({
+    id: a.id,
+    type: a.type as Activite["type"],
+    jour_code: a.jour_code,
+    detail: a.detail,
+    cree_le: a.cree_le,
+    client: { id: a.client_id, prenom: a.client?.prenom ?? "", avatar: a.client?.avatar_path ? liens[a.client.avatar_path] ?? null : null },
+  }));
+}

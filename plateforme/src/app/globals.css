@@ -641,3 +641,9 @@ details.session[open] .chev { transform: rotate(90deg); }
 .libre-autre { display: flex; gap: 8px; }
 .libre-autre .input { flex: 1; min-width: 0; }
 .dot-prog { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--gold); margin-left: 8px; vertical-align: middle; }
+
+/* Fil d'activité du coach */
+.fil-badge { position: absolute; right: -3px; bottom: -3px; width: 17px; height: 17px; border-radius: 50%; display: grid; place-items: center; border: 2px solid var(--surface); }
+.fil-badge svg { stroke-width: 3; }
+.fil-debut { background: var(--gold); color: var(--gold-ink); }
+.fil-fin, .fil-libre { background: var(--ok); color: #06140d; }
