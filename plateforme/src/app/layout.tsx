@@ -5,6 +5,8 @@ import "@fontsource-variable/oswald";
 import "./globals.css";
 import { LangProvider } from "@/components/Langue";
 import { getLang } from "@/lib/i18n/serveur";
+import { APERCU } from "@/lib/theme";
+import { getTheme } from "@/lib/theme/serveur";
 
 export const metadata: Metadata = {
   title: "PT Mouss IA — JIGI Coaching",
@@ -13,17 +15,14 @@ export const metadata: Metadata = {
   icons: { icon: "/icon-192.png", apple: "/icon-192.png" },
 };
 
-export const viewport: Viewport = {
-  themeColor: "#060607",
-  width: "device-width",
-  initialScale: 1,
-  viewportFit: "cover",
-};
+export async function generateViewport(): Promise<Viewport> {
+  return { themeColor: APERCU[await getTheme()].barre, width: "device-width", initialScale: 1, viewportFit: "cover" };
+}
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
-  const lang = await getLang();
+  const [lang, theme] = await Promise.all([getLang(), getTheme()]);
   return (
-    <html lang={lang}>
+    <html lang={lang} data-theme={theme === "or" ? undefined : theme}>
       <body>
         <LangProvider lang={lang}>
           <div id="app">{children}</div>

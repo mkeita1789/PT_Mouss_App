@@ -2,6 +2,8 @@ import Link from "next/link";
 import { deconnexion } from "@/app/(auth)/actions";
 import { Icon } from "@/components/Icon";
 import { ChoixLangue } from "@/components/Langue";
+import { ChoixTheme } from "@/components/ChoixTheme";
+import { getTheme } from "@/lib/theme/serveur";
 import { getBilan, getUtilisateur } from "@/lib/data";
 import { phaseFor } from "@/lib/coaching/programme";
 import { locale, tc, ui } from "@/lib/i18n";
@@ -13,6 +15,7 @@ export default async function Page() {
   const user = await getUtilisateur();
   const bilan = await getBilan(user.id);
   const lang = await getLang();
+  const theme = await getTheme();
   const T = ui(lang);
   const phase = bilan ? phaseFor(bilan.reponses, bilan.debut) : null;
 
@@ -52,6 +55,11 @@ export default async function Page() {
         </section>
 
         <div className="stack">
+          <section className="panel">
+            <div className="section-title">{T.theme.titre}</div>
+            <p className="meta" style={{ margin: "4px 0 14px" }}>{T.theme.aide}</p>
+            <ChoixTheme actuel={theme} />
+          </section>
           <section className="panel">
             <div className="section-title">{T.langue}</div>
             <p className="meta" style={{ margin: "4px 0 14px" }}>{T.profil.langueAide}</p>

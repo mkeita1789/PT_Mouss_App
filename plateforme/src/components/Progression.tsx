@@ -31,8 +31,8 @@ function Courbe({ pts, lang }: { pts: { kg: number; date: string }[]; lang: Lang
             <stop offset="1" stopColor={col} stopOpacity="0" />
           </linearGradient>
         </defs>
-        <line x1="0" x2={W} y1={py} y2={py} stroke="rgba(255,255,255,.06)" vectorEffect="non-scaling-stroke" />
-        <line x1="0" x2={W} y1={H - py} y2={H - py} stroke="rgba(255,255,255,.06)" vectorEffect="non-scaling-stroke" />
+        <line x1="0" x2={W} y1={py} y2={py} style={{ stroke: "rgb(var(--fg-rgb) / .07)" }} vectorEffect="non-scaling-stroke" />
+        <line x1="0" x2={W} y1={H - py} y2={H - py} style={{ stroke: "rgb(var(--fg-rgb) / .07)" }} vectorEffect="non-scaling-stroke" />
         {pts.length > 1 && <path d={aire} fill={`url(#${id})`} />}
         {pts.length > 1 && <path d={ligne} fill="none" stroke={col} strokeWidth="2.25" vectorEffect="non-scaling-stroke" strokeLinejoin="round" strokeLinecap="round" />}
         {xy.map(([x, y], i) => (
