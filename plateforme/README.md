@@ -30,7 +30,7 @@ La PWA d'origine (dossier `public/` à la racine du dépôt) n'est pas touchée 
    |---|---|
    | `NEXT_PUBLIC_SUPABASE_URL` | l'URL du projet Supabase |
    | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | la clé `sb_publishable_…` |
-4. **Deploy**. Tu obtiens une adresse du type `https://ptmouss-plateforme.vercel.app`.
+4. **Deploy**. Tu obtiens une adresse du type `https://pt-mouss-app.vercel.app`.
 
 ### 3. Relier Supabase à cette adresse
 

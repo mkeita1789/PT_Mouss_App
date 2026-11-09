@@ -4,10 +4,20 @@ import { NextResponse, type NextRequest } from "next/server";
 /* Pages accessibles sans être connecté */
 const PUBLIC = ["/connexion", "/inscription", "/auth", "/importer"];
 
+/* Adresse unique de l'appli. L'ancienne adresse de la plateforme y renvoie. */
+const ADRESSE = "pt-mouss-app.vercel.app";
+const ANCIENNES = ["ptmouss-plateforme.vercel.app"];
+
 /* Rafraîchit la session Supabase à chaque requête et protège les pages privées. */
 export async function proxy(request: NextRequest) {
   /* Mode démo local (PTMOUSS_DEMO=1, jamais en production) : pas d'authentification */
   if (process.env.PTMOUSS_DEMO === "1") return NextResponse.next({ request });
+
+  const hote = (request.headers.get("x-forwarded-host") ?? request.headers.get("host") ?? "").split(":")[0];
+  if (ANCIENNES.includes(hote)) {
+    return NextResponse.redirect(`https://${ADRESSE}${request.nextUrl.pathname}${request.nextUrl.search}`, 308);
+  }
+
   let response = NextResponse.next({ request });
 
   const supabase = createServerClient(
@@ -48,5 +58,5 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|icon-.*\\.png|manifest.webmanifest).*)"],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|icon-.*\\.png|manifest.webmanifest|manifest\\.json|sw\\.js).*)"],
 };

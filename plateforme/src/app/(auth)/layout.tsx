@@ -1,4 +1,5 @@
 import { Icon } from "@/components/Icon";
+import { AncienHistoriqueNotice } from "@/components/Importeur";
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -29,6 +30,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
             <div className="wordmark-sub">JIGI Coaching</div>
           </span>
         </div>
+        <AncienHistoriqueNotice />
         {children}
       </div>
     </main>
