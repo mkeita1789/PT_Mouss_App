@@ -71,11 +71,23 @@ const PROFILS: Record<string, { prenom: string; created_at: string }> = {
   [NOUVELLE]: { prenom: "Léa", created_at: iso(2) },
 };
 
+/* Images de démonstration générées (aucune vraie photo dans le code) */
+const svg = (corps: string) => `data:image/svg+xml;utf8,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">${corps}</svg>`)}`;
+const avatarDemo = (a: string, b: string, l: string) =>
+  svg(`<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${a}"/><stop offset="1" stop-color="${b}"/></linearGradient></defs><rect width="120" height="120" fill="url(#g)"/><circle cx="60" cy="48" r="22" fill="#fff" fill-opacity=".85"/><ellipse cx="60" cy="112" rx="38" ry="32" fill="#fff" fill-opacity=".85"/><text x="60" y="56" font-family="Arial" font-size="20" text-anchor="middle" fill="${b}">${l}</text>`);
+const AVATARS: Record<string, string> = {
+  [CLIENTE]: avatarDemo("#f7a8c4", "#b8577f", "I"),
+  [JOUEUR]: avatarDemo("#8fb8ff", "#3e5f9e", "Y"),
+  [COACH]: avatarDemo("#f2c46a", "#a86c1c", "M"),
+};
+const photoDemo = (vue: string, apres: number) =>
+  `data:image/svg+xml;utf8,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 400"><rect width="300" height="400" fill="${apres ? "#3a2a33" : "#2d2a30"}"/><ellipse cx="150" cy="70" rx="30" ry="36" fill="#cfa99a"/><path d="M95 120 Q150 100 205 120 L215 250 Q${apres ? 232 : 222} 300 ${apres ? 205 : 200} 330 L180 395 H120 L100 330 Q${apres ? 68 : 78} 300 85 250 Z" fill="#cfa99a"/><text x="150" y="385" font-family="Arial" font-size="18" text-anchor="middle" fill="#fff" fill-opacity=".6">${vue}</text></svg>`)}`;
+
 export const demo = {
   utilisateur: () =>
     ROLE === "coach"
-      ? { id: COACH, email: "coach@demo.local", prenom: "Moustapha", role: "coach" as const }
-      : { id: CLIENTE, email: "ines@demo.local", prenom: "Inès", role: "client" as const },
+      ? { id: COACH, email: "coach@demo.local", prenom: "Moustapha", role: "coach" as const, avatar: AVATARS[COACH], avatarPath: null, photosAccord: null }
+      : { id: CLIENTE, email: "ines@demo.local", prenom: "Inès", role: "client" as const, avatar: AVATARS[CLIENTE], avatarPath: null, photosAccord: process.env.PTMOUSS_DEMO_ACCORD === "0" ? null : iso(20) },
   bilan: (id: string) => BILANS[id] ?? null,
   historique: (id: string) => HISTO[id] ?? [],
   checkinDuJour: (id: string): Checkin | null => {
@@ -85,10 +97,24 @@ export const demo = {
   },
   checkins: (userId?: string) => CHECKINS.filter((c) => !userId || c.user_id === userId),
   clients: () =>
-    Object.entries(PROFILS).map(([id, p]) => ({ id, prenom: p.prenom, inscrit_le: p.created_at, bilan: BILANS[id] ?? null })),
+    Object.entries(PROFILS).map(([id, p]) => ({ id, prenom: p.prenom, inscrit_le: p.created_at, avatar: AVATARS[id] ?? null, bilan: BILANS[id] ?? null })),
   client: (id: string) => {
     const p = PROFILS[id];
-    return p ? { id, prenom: p.prenom, inscrit_le: p.created_at, bilan: BILANS[id] ?? null } : null;
+    return p ? { id, prenom: p.prenom, inscrit_le: p.created_at, avatar: AVATARS[id] ?? null, bilan: BILANS[id] ?? null } : null;
   },
   seancesTous: () => HISTO,
+  mots: (id: string) =>
+    id === CLIENTE
+      ? [
+          { id: "m2", texte: "Bravo pour ton Hip Thrust Inès, +17,5 kg depuis le début ! Cette semaine on lève le pied (deload) : garde la technique propre, on repart fort lundi 💪", cree_le: iso(0.2), coach: { prenom: "Moustapha", avatar: AVATARS[COACH] } },
+          { id: "m1", texte: "Bienvenue dans le programme ! Pense à faire ton check-in avant chaque séance.", cree_le: iso(20), coach: { prenom: "Moustapha", avatar: AVATARS[COACH] } },
+        ]
+      : [],
+  photos: (id: string) =>
+    id === CLIENTE && process.env.PTMOUSS_DEMO_ACCORD !== "0"
+      ? (["face", "profil", "dos"] as const).flatMap((vue, i) => [
+          { id: `p${i}b`, chemin: "", vue, prise_le: iso(1).slice(0, 10), url: photoDemo(vue, 1) },
+          { id: `p${i}a`, chemin: "", vue, prise_le: iso(21).slice(0, 10), url: photoDemo(vue, 0) },
+        ])
+      : [],
 };

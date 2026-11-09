@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Avatar } from "@/components/Avatar";
 import { Icon } from "@/components/Icon";
 import { TransfertEnAttente } from "@/components/Importeur";
 import { SideNav, TabBar } from "@/components/TabBar";
@@ -6,8 +7,6 @@ import { deconnexion } from "@/app/(auth)/actions";
 import { getUtilisateur } from "@/lib/data";
 import { ui } from "@/lib/i18n";
 import { getLang } from "@/lib/i18n/serveur";
-
-const initiale = (s: string) => (s.trim()[0] ?? "?").toUpperCase();
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const user = await getUtilisateur();
@@ -26,7 +25,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         </Link>
         <SideNav coach={coach} />
         <div className="side-foot">
-          <span className="avatar">{initiale(user.prenom || user.email)}</span>
+          <Avatar url={user.avatar} nom={user.prenom || user.email} />
           <div className="who">
             <div>{user.prenom || user.email}</div>
             <span>{coach ? T.nav.coachRole : T.nav.clientRole}</span>
@@ -43,7 +42,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         <span className="monogram">JC</span>
         <div className="wordmark">PT MOUSS <b>IA</b></div>
         <Link href="/profil" className="topbar-user" aria-label={T.nav.monProfil}>
-          <span className="avatar">{initiale(user.prenom || user.email)}</span>
+          <Avatar url={user.avatar} nom={user.prenom || user.email} />
         </Link>
       </header>
 

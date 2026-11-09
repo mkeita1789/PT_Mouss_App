@@ -2,8 +2,9 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { CheckinCard } from "@/components/CheckinCard";
 import { Icon } from "@/components/Icon";
+import { CarteMot } from "@/components/MotCoach";
 import { refaireCheckin } from "./actions";
-import { getBilan, getCheckinDuJour, getHistorique, getUtilisateur, jourParis } from "@/lib/data";
+import { getBilan, getCheckinDuJour, getHistorique, getMots, getUtilisateur, jourParis, motRecent } from "@/lib/data";
 import { buildProgram, lundiCourant, scoreForme, SRA, verdictCheckin } from "@/lib/coaching/programme";
 import { indexJourSuivant } from "@/lib/coaching/seance";
 import { messagesClient } from "@/lib/coaching/alertes";
@@ -19,7 +20,8 @@ export default async function Accueil() {
 
   const lang = await getLang();
   const T = ui(lang);
-  const [historique, ci] = await Promise.all([getHistorique(user.id), getCheckinDuJour(user.id)]);
+  const [historique, ci, mots] = await Promise.all([getHistorique(user.id), getCheckinDuJour(user.id), getMots(user.id, 1)]);
+  const mot = motRecent(mots);
   const brut = buildProgram(bilan.reponses, bilan.debut);
   const P = traduireProgramme(brut, lang);
   const lundi = lundiCourant();
@@ -58,6 +60,8 @@ export default async function Accueil() {
           {P.deload && <span className="pill pill-ok">{T.accueil.semaineLegere}</span>}
         </div>
       </header>
+
+      {mot && <CarteMot mot={mot} titre={T.mot.titre} lang={lang} />}
 
       <div className="layout-home">
         <section className="panel panel-hero" aria-labelledby="today">

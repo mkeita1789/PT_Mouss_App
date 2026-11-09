@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { HistoriqueSeances, ProgressionCharges } from "@/components/Progression";
+import Link from "next/link";
 import { Icon } from "@/components/Icon";
 import { chargesParExercice, getBilan, getHistorique, getUtilisateur } from "@/lib/data";
 import { lundiCourant, weekNum } from "@/lib/coaching/programme";
@@ -27,6 +28,9 @@ export default async function Page() {
       <header className="page-head">
         <div className="meta">{T.suivi.semaineDepuis(weekNum(bilan.debut) + 1)}</div>
         <h1 className="page-title" style={{ marginTop: 6 }}>{T.suivi.titre}</h1>
+        <Link href="/photos" className="btn btn-ghost btn-sm" style={{ marginTop: 14, display: "inline-flex" }}>
+          <Icon nom="photo" taille={17} /> {T.photos.lien}
+        </Link>
       </header>
 
       <div className="grid-3">

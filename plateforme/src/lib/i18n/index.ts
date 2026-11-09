@@ -9,6 +9,7 @@ import type { Programme } from "@/lib/coaching/types";
 export type Lang = "fr" | "en";
 export const LANGS: Lang[] = ["fr", "en"];
 export const COOKIE_LANG = "ptmouss_lang";
+export type TextesUIPhotos = TextesUI["photos"];
 export const lireLang = (v: string | undefined | null): Lang => (v === "en" ? "en" : "fr");
 
 /** Textes d'interface dans la langue demandée */

@@ -1,8 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Avatar } from "@/components/Avatar";
+import { Comparaison, GrillePhotos } from "@/components/Comparaison";
+import { FormMot } from "@/components/FormMot";
 import { Icon } from "@/components/Icon";
+import { supprimerMot } from "../actions";
 import { HistoriqueSeances, ProgressionCharges } from "@/components/Progression";
-import { exigerCoach, getCheckinsRecents, getClient, getHistorique } from "@/lib/data";
+import { exigerCoach, getCheckinsRecents, getClient, getHistorique, getMots, getPhotos } from "@/lib/data";
 import { alertesCoach } from "@/lib/coaching/alertes";
 import { buildProgram, lundiCourant, phaseFor } from "@/lib/coaching/programme";
 import { locale, tc, traduireProgramme, ui } from "@/lib/i18n";
@@ -22,7 +26,7 @@ export default async function Page({ params }: PageProps<"/coach/[id]">) {
   if (!client) notFound();
   const lang = await getLang();
   const T = ui(lang);
-  const [historique, checkins] = await Promise.all([getHistorique(id), getCheckinsRecents(14, id)]);
+  const [historique, checkins, mots, photos] = await Promise.all([getHistorique(id), getCheckinsRecents(14, id), getMots(id, 5), getPhotos(id)]);
 
   const alertes = alertesCoach(historique, checkins.slice(0, 7), new Date(), lang, (n) => tc(lang, n));
   const b = client.bilan?.reponses;
@@ -36,7 +40,10 @@ export default async function Page({ params }: PageProps<"/coach/[id]">) {
         <Link href="/coach" className="meta" style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
           <Icon nom="retour" taille={16} /> {T.coach.retour}
         </Link>
-        <h1 className="page-title" style={{ marginTop: 8 }}>{client.prenom || T.coach.sansPrenom}</h1>
+        <div style={{ display: "flex", alignItems: "center", gap: 16, marginTop: 10 }}>
+          <Avatar url={client.avatar} nom={client.prenom || "?"} className="avatar-lg" />
+          <h1 className="page-title">{client.prenom || T.coach.sansPrenom}</h1>
+        </div>
         {b ? (
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 14 }}>
             <span className="pill pill-gold">{tc(lang, b.objectif)}</span>
@@ -86,6 +93,28 @@ export default async function Page({ params }: PageProps<"/coach/[id]">) {
         </section>
       </div>
 
+      <section className="section">
+        <div className="section-head"><h2 className="section-title">{T.mot.titre}</h2></div>
+        <div className="panel">
+          <FormMot clientId={id} prenom={client.prenom} />
+          {mots.length > 0 && (
+            <div className="rows" style={{ marginTop: 16 }}>
+              {mots.map((m) => (
+                <div key={m.id} className="row-item" style={{ alignItems: "flex-start" }}>
+                  <div className="row-main">
+                    <div style={{ fontSize: 14, whiteSpace: "pre-wrap" }}>{m.texte}</div>
+                    <div className="row-sub">{new Date(m.cree_le).toLocaleDateString(locale(lang), { day: "numeric", month: "long", hour: "2-digit", minute: "2-digit", timeZone: "Europe/Paris" })}</div>
+                  </div>
+                  <form action={supprimerMot.bind(null, m.id, id)}>
+                    <button type="submit" className="link" style={{ fontSize: 12.5, color: "var(--muted)" }}>{T.mot.supprimer}</button>
+                  </form>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+
       {checkins.length > 0 && (
         <section className="section">
           <div className="section-head"><h2 className="section-title">{T.coach.checkins}</h2><span className="section-note">{T.coach.quatorze}</span></div>
@@ -102,6 +131,17 @@ export default async function Page({ params }: PageProps<"/coach/[id]">) {
               </tbody>
             </table>
           </div>
+        </section>
+      )}
+
+      {photos.length > 0 && (
+        <section className="section">
+          <div className="section-head"><h2 className="section-title">{T.photos.coachTitre}</h2><span className="section-note">{T.photos.meta}</span></div>
+          <Comparaison photos={photos} lang={lang} P={T.photos} />
+          <details className="panel" style={{ marginTop: 12 }}>
+            <summary className="link" style={{ cursor: "pointer", fontSize: 14 }}>{T.photos.toutes} ({photos.length})</summary>
+            <div style={{ marginTop: 14 }}><GrillePhotos photos={photos} lang={lang} P={T.photos} /></div>
+          </details>
         </section>
       )}
 

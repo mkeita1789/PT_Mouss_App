@@ -3,6 +3,7 @@ import { deconnexion } from "@/app/(auth)/actions";
 import { Icon } from "@/components/Icon";
 import { ChoixLangue } from "@/components/Langue";
 import { ChoixTheme } from "@/components/ChoixTheme";
+import { PhotoProfil } from "@/components/PhotoProfil";
 import { getTheme } from "@/lib/theme/serveur";
 import { getBilan, getUtilisateur } from "@/lib/data";
 import { phaseFor } from "@/lib/coaching/programme";
@@ -55,6 +56,18 @@ export default async function Page() {
         </section>
 
         <div className="stack">
+          <section className="panel">
+            <div className="section-title">{T.avatar.titre}</div>
+            <p className="meta" style={{ margin: "4px 0 14px" }}>{T.avatar.aide}</p>
+            <PhotoProfil uid={user.id} nom={bilan?.reponses.prenom || user.prenom || user.email} url={user.avatar} />
+          </section>
+          {user.role === "client" && (
+            <Link href="/photos" className="panel row-link">
+              <span className="note-icon"><Icon nom="photo" taille={17} /></span>
+              <span style={{ flex: 1 }}><b style={{ fontWeight: 600 }}>{T.photos.lien}</b><br /><span className="meta" style={{ fontSize: 13 }}>{T.photos.meta}</span></span>
+              <Icon nom="fleche" taille={18} className="muted" />
+            </Link>
+          )}
           <section className="panel">
             <div className="section-title">{T.theme.titre}</div>
             <p className="meta" style={{ margin: "4px 0 14px" }}>{T.theme.aide}</p>

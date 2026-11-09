@@ -9,7 +9,26 @@ import { DEMO, demo } from "@/lib/demo";
    Toutes les lectures passent par ici. La sécurité réelle est assurée
    par les règles RLS de Supabase ; ces fonctions ne font que lire. */
 
-export type Utilisateur = { id: string; email: string; prenom: string; role: "client" | "coach" };
+export type Utilisateur = {
+  id: string; email: string; prenom: string; role: "client" | "coach";
+  avatar: string | null;          // lien signé (1 h) vers la photo de profil
+  avatarPath: string | null;
+  photosAccord: string | null;    // date de l'accord pour les photos de progression
+};
+
+export type Bucket = "avatars" | "progression";
+const DUREE_LIEN = 3600;
+
+/** Liens signés de courte durée pour des fichiers privés (RLS vérifiée par Supabase) */
+async function signer(bucket: Bucket, chemins: (string | null | undefined)[]): Promise<Record<string, string>> {
+  const liste = [...new Set(chemins.filter((c): c is string => !!c))];
+  if (!liste.length) return {};
+  const supabase = await createClient();
+  const { data } = await supabase.storage.from(bucket).createSignedUrls(liste, DUREE_LIEN);
+  const out: Record<string, string> = {};
+  (data ?? []).forEach((d) => { if (d.path && d.signedUrl) out[d.path] = d.signedUrl; });
+  return out;
+}
 
 export type ExerciceFait = {
   nom: string;
@@ -55,15 +74,19 @@ export const getUtilisateur = cache(async (): Promise<Utilisateur> => {
 
   const { data: profil } = await supabase
     .from("profiles")
-    .select("prenom, role")
+    .select("prenom, role, avatar_path, photos_accord")
     .eq("id", claims.sub)
     .single();
+  const liens = await signer("avatars", [profil?.avatar_path]);
 
   return {
     id: claims.sub,
     email: (claims.email as string) ?? "",
     prenom: profil?.prenom ?? "",
     role: profil?.role === "coach" ? "coach" : "client",
+    avatar: profil?.avatar_path ? liens[profil.avatar_path] ?? null : null,
+    avatarPath: profil?.avatar_path ?? null,
+    photosAccord: profil?.photos_accord ?? null,
   };
 });
 
@@ -121,6 +144,7 @@ export type ClientResume = {
   id: string;
   prenom: string;
   inscrit_le: string;
+  avatar: string | null;
   bilan: { reponses: Bilan; debut: string } | null;
 };
 
@@ -130,16 +154,18 @@ export async function getClients(coachId: string): Promise<ClientResume[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("profiles")
-    .select("id, prenom, created_at, bilans(reponses, debut)")
+    .select("id, prenom, created_at, avatar_path, bilans(reponses, debut)")
     .neq("id", coachId)
     .order("prenom");
   if (error) throw new Error(error.message);
+  const liens = await signer("avatars", (data ?? []).map((p) => p.avatar_path));
   return (data ?? []).map((p) => {
     const b = Array.isArray(p.bilans) ? p.bilans[0] : p.bilans;
     return {
       id: p.id,
       prenom: p.prenom,
       inscrit_le: p.created_at,
+      avatar: p.avatar_path ? liens[p.avatar_path] ?? null : null,
       bilan: b ? { reponses: b.reponses as Bilan, debut: b.debut as string } : null,
     };
   });
@@ -150,15 +176,17 @@ export async function getClient(id: string): Promise<ClientResume | null> {
   const supabase = await createClient();
   const { data } = await supabase
     .from("profiles")
-    .select("id, prenom, created_at, bilans(reponses, debut)")
+    .select("id, prenom, created_at, avatar_path, bilans(reponses, debut)")
     .eq("id", id)
     .maybeSingle();
   if (!data) return null;
+  const liens = await signer("avatars", [data.avatar_path]);
   const b = Array.isArray(data.bilans) ? data.bilans[0] : data.bilans;
   return {
     id: data.id,
     prenom: data.prenom,
     inscrit_le: data.created_at,
+    avatar: data.avatar_path ? liens[data.avatar_path] ?? null : null,
     bilan: b ? { reponses: b.reponses as Bilan, debut: b.debut as string } : null,
   };
 }
@@ -206,4 +234,55 @@ export function chargesParExercice(historique: SeanceFaite[]) {
     }),
   );
   return map;
+}
+
+
+/* ═══ Mot du coach ═══ */
+
+export type MotCoach = { id: string; texte: string; cree_le: string; coach: { prenom: string; avatar: string | null } };
+
+/** Mots du coach pour un client (le plus récent en premier) */
+export async function getMots(clientId: string, limite = 5): Promise<MotCoach[]> {
+  if (DEMO) return demo.mots(clientId).slice(0, limite);
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("mots_coach")
+    .select("id, texte, cree_le, coach:profiles!mots_coach_coach_id_fkey(prenom, avatar_path)")
+    .eq("client_id", clientId)
+    .order("cree_le", { ascending: false })
+    .limit(limite);
+  const lignes = (data ?? []).map((m) => ({ ...m, coach: (Array.isArray(m.coach) ? m.coach[0] : m.coach) as { prenom: string; avatar_path: string | null } | null }));
+  const liens = await signer("avatars", lignes.map((m) => m.coach?.avatar_path));
+  return lignes.map((m) => ({
+    id: m.id,
+    texte: m.texte,
+    cree_le: m.cree_le,
+    coach: { prenom: m.coach?.prenom ?? "", avatar: m.coach?.avatar_path ? liens[m.coach.avatar_path] ?? null : null },
+  }));
+}
+
+/** Le dernier mot du coach reste affiché 3 semaines sur l'accueil */
+export function motRecent(mots: MotCoach[], maintenant = Date.now()): MotCoach | null {
+  const m = mots[0];
+  return m && maintenant - Date.parse(m.cree_le) < 21 * 864e5 ? m : null;
+}
+
+/* ═══ Photos de progression ═══ */
+
+export type Vue = "face" | "profil" | "dos";
+export const VUES: Vue[] = ["face", "profil", "dos"];
+export type PhotoProgression = { id: string; chemin: string; vue: Vue; prise_le: string; url: string | null };
+
+export async function getPhotos(userId: string): Promise<PhotoProgression[]> {
+  if (DEMO) return demo.photos(userId);
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("photos_progression")
+    .select("id, chemin, vue, prise_le")
+    .eq("user_id", userId)
+    .order("prise_le", { ascending: false })
+    .order("created_at", { ascending: false })
+    .limit(120);
+  const liens = await signer("progression", (data ?? []).map((p) => p.chemin));
+  return (data ?? []).map((p) => ({ ...p, vue: p.vue as Vue, url: liens[p.chemin] ?? null }));
 }

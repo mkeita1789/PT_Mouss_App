@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Avatar } from "@/components/Avatar";
 import { Icon } from "@/components/Icon";
 import { exigerCoach, getCheckinsRecents, getClients, getSeancesTousClients } from "@/lib/data";
 import { alertesCoach, joursDepuis } from "@/lib/coaching/alertes";
@@ -60,7 +61,7 @@ export default async function Page() {
           <div className="stack">
             {lignes.map((l) => (
               <Link key={l.id} href={`/coach/${l.id}`} className="panel client-row" style={l.gravite === 2 ? { borderColor: "rgba(240,96,93,.4)" } : undefined}>
-                <span className="avatar" style={l.gravite === 2 ? { borderColor: "var(--ko)", color: "var(--ko)" } : undefined}>{(l.prenom[0] ?? "?").toUpperCase()}</span>
+                <Avatar url={l.avatar} nom={l.prenom} style={l.gravite === 2 ? { borderColor: "var(--ko)", color: "var(--ko)", boxShadow: "0 0 0 2px var(--ko)" } : undefined} />
                 <div style={{ minWidth: 0 }}>
                   <div className="row-title" style={{ fontSize: 16 }}>{l.prenom || T.coach.sansPrenom}</div>
                   <div className="row-sub">
