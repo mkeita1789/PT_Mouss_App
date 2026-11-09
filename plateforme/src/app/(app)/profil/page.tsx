@@ -1,63 +1,68 @@
 import Link from "next/link";
 import { deconnexion } from "@/app/(auth)/actions";
 import { Icon } from "@/components/Icon";
+import { ChoixLangue } from "@/components/Langue";
 import { getBilan, getUtilisateur } from "@/lib/data";
 import { phaseFor } from "@/lib/coaching/programme";
+import { locale, tc, ui } from "@/lib/i18n";
+import { getLang } from "@/lib/i18n/serveur";
 
 export const metadata = { title: "Profil — PT Mouss IA" };
-
-const LIBELLES: Record<string, string> = {
-  objectif: "Objectif", niveau: "Niveau", freq: "Séances par semaine", materiel: "Lieu d'entraînement",
-  sante: "Vigilance santé", sommeil: "Sommeil", periode: "Période", allure: "Allure de footing",
-};
 
 export default async function Page() {
   const user = await getUtilisateur();
   const bilan = await getBilan(user.id);
+  const lang = await getLang();
+  const T = ui(lang);
   const phase = bilan ? phaseFor(bilan.reponses, bilan.debut) : null;
 
   return (
     <div className="reveal">
       <header className="page-head">
-        <div className="meta">{user.email}{user.role === "coach" ? " · Coach" : ""}</div>
-        <h1 className="page-title" style={{ marginTop: 6 }}>{bilan?.reponses.prenom || user.prenom || "Mon profil"}</h1>
+        <div className="meta">{user.email}{user.role === "coach" ? ` · ${T.nav.coachRole}` : ""}</div>
+        <h1 className="page-title" style={{ marginTop: 6 }}>{bilan?.reponses.prenom || user.prenom || T.profil.titre}</h1>
       </header>
 
       <div className="grid-2" style={{ alignItems: "start" }}>
         <section className="panel">
           <div className="section-head">
-            <h2 className="section-title">Ton bilan</h2>
-            <Link href="/bilan" className="link" style={{ fontSize: 13.5 }}>{bilan ? "Refaire" : "Commencer"}</Link>
+            <h2 className="section-title">{T.profil.tonBilan}</h2>
+            <Link href="/bilan" className="link" style={{ fontSize: 13.5 }}>{bilan ? T.profil.refaire : T.profil.commencer}</Link>
           </div>
           {bilan ? (
             <div className="rows">
-              {Object.entries(LIBELLES).map(([k, lb]) => {
+              {Object.entries(T.profil.libelles).map(([k, lb]) => {
                 const v = (bilan.reponses as Record<string, string | undefined>)[k];
                 return v ? (
                   <div key={k} className="row-item">
                     <div className="row-main meta">{lb}</div>
-                    <div style={{ fontSize: 14, textAlign: "right" }}>{v}</div>
+                    <div style={{ fontSize: 14, textAlign: "right" }}>{tc(lang, v)}</div>
                   </div>
                 ) : null;
               })}
             </div>
           ) : (
-            <p className="meta">Fais ton bilan pour générer ton programme.</p>
+            <p className="meta">{T.profil.sansBilan}</p>
           )}
           {phase && (
             <p className="meta" style={{ marginTop: 12 }}>
-              Cycle démarré le {new Date(bilan!.debut).toLocaleDateString("fr-FR", { day: "numeric", month: "long", timeZone: "Europe/Paris" })} · semaine {phase.week} sur {phase.len}, {phase.n}
+              {T.profil.cycleDemarre(new Date(bilan!.debut).toLocaleDateString(locale(lang), { day: "numeric", month: "long", timeZone: "Europe/Paris" }), phase.week, phase.len, tc(lang, phase.n))}
             </p>
           )}
         </section>
 
         <div className="stack">
+          <section className="panel">
+            <div className="section-title">{T.langue}</div>
+            <p className="meta" style={{ margin: "4px 0 14px" }}>{T.profil.langueAide}</p>
+            <ChoixLangue />
+          </section>
           <div className="note note-ko">
             <span className="note-icon"><Icon nom="alerte" taille={17} /></span>
-            <div><b>Douleur, pas courbature ?</b> Tu arrêtes et tu préviens Moustapha. Pour la nutrition et le moral, tu passes par lui aussi.</div>
+            <div><b>{T.profil.douleur[0]}</b>{T.profil.douleur[1]}</div>
           </div>
           <form action={deconnexion}>
-            <button type="submit" className="btn btn-ghost btn-block"><Icon nom="sortie" taille={18} /> Se déconnecter</button>
+            <button type="submit" className="btn btn-ghost btn-block"><Icon nom="sortie" taille={18} /> {T.nav.deconnexion}</button>
           </form>
         </div>
       </div>

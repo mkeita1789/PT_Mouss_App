@@ -6,12 +6,15 @@ import { getBilan, getUtilisateur, jourParis } from "@/lib/data";
 import { CHECKIN_Q, OBJECTIFS, phaseFor, questionsBilan } from "@/lib/coaching/programme";
 import { parseKg } from "@/lib/coaching/amrap";
 import type { Bilan, Categorie, Checkin } from "@/lib/coaching/types";
+import { ui } from "@/lib/i18n";
+import { getLang } from "@/lib/i18n/serveur";
 
 /* Toutes les écritures passent par ces actions serveur. Les entrées sont
    revalidées ici ; les règles RLS de Supabase restent la barrière finale. */
 
 export async function enregistrerBilan(reponses: Partial<Bilan>, recommencer: boolean): Promise<{ erreur?: string }> {
   const user = await getUtilisateur();
+  const T = ui(await getLang());
 
   /* Chaque réponse doit appartenir aux choix proposés */
   const propre: Partial<Bilan> = {};
@@ -19,14 +22,14 @@ export async function enregistrerBilan(reponses: Partial<Bilan>, recommencer: bo
     const v = reponses[q.k];
     if (q.type === "text") {
       const txt = String(v ?? "").trim().slice(0, 40);
-      if (!txt) return { erreur: "Le prénom est obligatoire." };
+      if (!txt) return { erreur: T.bilan.prenomObligatoire };
       (propre as Record<string, string>)[q.k] = txt;
     } else {
-      if (!q.o?.includes(String(v))) return { erreur: `Réponse manquante : ${q.q}` };
+      if (!q.o?.includes(String(v))) return { erreur: T.bilan.reponseManquante(q.q) };
       (propre as Record<string, string>)[q.k] = String(v);
     }
   }
-  if (!OBJECTIFS.includes(propre.objectif!)) return { erreur: "Objectif inconnu." };
+  if (!OBJECTIFS.includes(propre.objectif!)) return { erreur: T.bilan.objectifInconnu };
 
   const supabase = await createClient();
   const existant = await getBilan(user.id);
@@ -35,7 +38,7 @@ export async function enregistrerBilan(reponses: Partial<Bilan>, recommencer: bo
   const { error } = await supabase
     .from("bilans")
     .upsert({ user_id: user.id, reponses: propre, debut, updated_at: new Date().toISOString() });
-  if (error) return { erreur: "Impossible d'enregistrer le bilan. Réessaie." };
+  if (error) return { erreur: T.bilan.erreur };
 
   await supabase.from("profiles").update({ prenom: propre.prenom }).eq("id", user.id);
   revalidatePath("/", "layout");
@@ -44,7 +47,8 @@ export async function enregistrerBilan(reponses: Partial<Bilan>, recommencer: bo
 
 export async function enregistrerCheckin(ci: Checkin): Promise<{ erreur?: string }> {
   const user = await getUtilisateur();
-  for (const q of CHECKIN_Q) if (!q.o.includes(ci[q.k])) return { erreur: "Réponse invalide." };
+  const T = ui(await getLang());
+  for (const q of CHECKIN_Q) if (!q.o.includes(ci[q.k])) return { erreur: T.checkin.invalide };
 
   const supabase = await createClient();
   const { error } = await supabase.from("checkins").upsert({
@@ -54,7 +58,7 @@ export async function enregistrerCheckin(ci: Checkin): Promise<{ erreur?: string
     energie: ci.energie,
     corps: ci.corps,
   });
-  if (error) return { erreur: "Impossible d'enregistrer le check-in." };
+  if (error) return { erreur: T.checkin.erreur };
   revalidatePath("/");
   return {};
 }
@@ -83,9 +87,10 @@ export async function enregistrerSeance(payload: {
   exercices: ExerciceSaisi[];
 }): Promise<{ erreur?: string }> {
   const user = await getUtilisateur();
+  const T = ui(await getLang());
   const bilan = await getBilan(user.id);
-  if (!bilan) return { erreur: "Fais d'abord ton bilan." };
-  if (!payload.exercices?.length || payload.exercices.length > 20) return { erreur: "Séance vide." };
+  if (!bilan) return { erreur: T.seance.erreurBilan };
+  if (!payload.exercices?.length || payload.exercices.length > 20) return { erreur: T.seance.erreurVide };
 
   const phase = phaseFor(bilan.reponses, bilan.debut);
   const supabase = await createClient();
@@ -101,7 +106,7 @@ export async function enregistrerSeance(payload: {
     })
     .select("id")
     .single();
-  if (error || !seance) return { erreur: "Impossible d'enregistrer la séance. Réessaie." };
+  if (error || !seance) return { erreur: T.seance.erreurEnregistrement };
 
   const lignes = payload.exercices.map((e, i) => {
     const kg = parseKg(e.charge);
@@ -123,7 +128,7 @@ export async function enregistrerSeance(payload: {
   const { error: errEx } = await supabase.from("seance_exercices").insert(lignes);
   if (errEx) {
     await supabase.from("seances").delete().eq("id", seance.id);
-    return { erreur: "Impossible d'enregistrer les exercices. Réessaie." };
+    return { erreur: T.seance.erreurExercices };
   }
   revalidatePath("/", "layout");
   return {};

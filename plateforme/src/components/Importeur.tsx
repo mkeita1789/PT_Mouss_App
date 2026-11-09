@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState, useTransition } from "react";
 import { importerDepuisPWA, type ResultatImport } from "@/app/importer/actions";
 import { Icon } from "./Icon";
+import { useLang } from "./Langue";
 
 export const CLE_IMPORT = "ptmouss.import";
 
@@ -47,6 +48,8 @@ export function Importeur({ connecte }: { connecte: boolean }) {
   const [etat, setEtat] = useState<"chargement" | "vide" | "invalide" | "pret">("chargement");
   const [resultat, setResultat] = useState<ResultatImport | null>(null);
   const [pending, start] = useTransition();
+  const { T } = useLang();
+  const I = T.importer;
 
   useEffect(() => {
     (async () => {
@@ -86,17 +89,17 @@ export function Importeur({ connecte }: { connecte: boolean }) {
   return (
     <div className="reveal" style={{ maxWidth: 560 }}>
       <header className="page-head">
-        <div className="meta">Ton historique sur ce téléphone</div>
-        <h1 className="page-title" style={{ marginTop: 6 }}>Reprendre ton historique</h1>
+        <div className="meta">{I.surCeTel}</div>
+        <h1 className="page-title" style={{ marginTop: 6 }}>{I.titre}</h1>
       </header>
 
-      {etat === "chargement" && <div className="panel meta">Lecture du transfert…</div>}
+      {etat === "chargement" && <div className="panel meta">{I.lecture}</div>}
 
       {etat === "vide" && (
         <div className="panel">
-          <div className="section-title">Rien à reprendre sur cet appareil</div>
+          <div className="section-title">{I.rien}</div>
           <p className="meta" style={{ marginTop: 6 }}>
-            Ton ancien historique est stocké sur le téléphone où tu utilisais l'appli. Ouvre PT Mouss sur ce téléphone-là : la reprise te sera proposée automatiquement.
+            {I.rienTexte}
           </p>
         </div>
       )}
@@ -104,38 +107,38 @@ export function Importeur({ connecte }: { connecte: boolean }) {
       {etat === "invalide" && (
         <div className="note note-ko">
           <span className="note-icon"><Icon nom="alerte" taille={17} /></span>
-          <div>Ce lien de transfert est incomplet. Relance le transfert depuis l'ancienne appli.</div>
+          <div>{I.incomplet}</div>
         </div>
       )}
 
       {etat === "pret" && paquet && !resultat?.seances && !resultat?.bilan && (
         <>
           <section className="panel panel-hero">
-            <div className="today-kicker">Retrouvé sur ce téléphone</div>
-            <div className="today-title" style={{ fontSize: 30 }}>{paquet.profile?.prenom || "Ton historique"}</div>
+            <div className="today-kicker">{I.retrouve}</div>
+            <div className="today-title" style={{ fontSize: 30 }}>{paquet.profile?.prenom || I.tonHistorique}</div>
             <div className="today-list" style={{ marginBottom: 6 }}>
-              <div className="today-ex" style={{ gridTemplateColumns: "22px 1fr auto" }}><Icon nom="profil" taille={18} className="gold" /><span>Bilan et programme</span><span className="presc">{paquet.profile ? "oui" : "—"}</span></div>
-              <div className="today-ex" style={{ gridTemplateColumns: "22px 1fr auto" }}><Icon nom="seance" taille={18} className="gold" /><span>Séances avec charges</span><span className="presc">{nbSeances}</span></div>
-              <div className="today-ex" style={{ gridTemplateColumns: "22px 1fr auto" }}><Icon nom="info" taille={18} className="gold" /><span>Check-ins</span><span className="presc">{nbCheckins}</span></div>
+              <div className="today-ex" style={{ gridTemplateColumns: "22px 1fr auto" }}><Icon nom="profil" taille={18} className="gold" /><span>{I.bilanProgramme}</span><span className="presc">{paquet.profile ? I.oui : "—"}</span></div>
+              <div className="today-ex" style={{ gridTemplateColumns: "22px 1fr auto" }}><Icon nom="seance" taille={18} className="gold" /><span>{I.seancesCharges}</span><span className="presc">{nbSeances}</span></div>
+              <div className="today-ex" style={{ gridTemplateColumns: "22px 1fr auto" }}><Icon nom="info" taille={18} className="gold" /><span>{I.checkins}</span><span className="presc">{nbCheckins}</span></div>
             </div>
           </section>
 
           {connecte ? (
             <>
               <button type="button" className="btn btn-primary btn-block" style={{ marginTop: 16 }} disabled={pending} onClick={importer}>
-                <Icon nom="transfert" taille={18} /> {pending ? "Import en cours…" : "Importer dans mon compte"}
+                <Icon nom="transfert" taille={18} /> {pending ? I.enCours : I.importer}
               </button>
-              <p className="meta" style={{ marginTop: 12 }}>Si ton compte a déjà un bilan, il est conservé. Tu peux relancer l'import sans créer de doublons.</p>
-              <button type="button" className="link" style={{ fontSize: 13, marginTop: 14 }} onClick={() => { effacer(); setEtat("vide"); }}>Ne pas reprendre cet historique</button>
+              <p className="meta" style={{ marginTop: 12 }}>{I.conserve}</p>
+              <button type="button" className="link" style={{ fontSize: 13, marginTop: 14 }} onClick={() => { effacer(); setEtat("vide"); }}>{I.nePas}</button>
             </>
           ) : (
             <>
               <p className="ink-2" style={{ marginTop: 18 }}>
-                Ton historique est bien sur ce téléphone. Crée ton compte (ou connecte-toi) : tu reviendras ici pour l'importer, et il ne pourra plus jamais se perdre.
+                {I.pasConnecte}
               </p>
               <div className="btn-row" style={{ marginTop: 16 }}>
-                <Link href="/inscription?suite=/importer" className="btn btn-primary">Créer mon compte</Link>
-                <Link href="/connexion?suite=/importer" className="btn btn-ghost">Se connecter</Link>
+                <Link href="/inscription?suite=/importer" className="btn btn-primary">{T.auth.creerCompte}</Link>
+                <Link href="/connexion?suite=/importer" className="btn btn-ghost">{T.auth.seConnecter}</Link>
               </div>
             </>
           )}
@@ -145,17 +148,14 @@ export function Importeur({ connecte }: { connecte: boolean }) {
 
       {resultat && !resultat.erreur && (
         <section className="panel panel-hero">
-          <div className="today-kicker">Import terminé</div>
-          <div className="today-title" style={{ fontSize: 30 }}>Tout est là</div>
+          <div className="today-kicker">{I.termine}</div>
+          <div className="today-title" style={{ fontSize: 30 }}>{I.toutEstLa}</div>
           <p className="today-sub" style={{ marginTop: 10 }}>
-            {resultat.seances} séance{(resultat.seances ?? 0) > 1 ? "s" : ""} importée{(resultat.seances ?? 0) > 1 ? "s" : ""}
-            {resultat.dejaLa ? `, ${resultat.dejaLa} déjà présente${resultat.dejaLa > 1 ? "s" : ""}` : ""}
-            {resultat.bilan ? ", bilan repris" : ""}
-            {resultat.checkins ? `, ${resultat.checkins} check-ins` : ""}.
+            {I.bilan(resultat.seances ?? 0, resultat.dejaLa ?? 0, !!resultat.bilan, resultat.checkins ?? 0)}
           </p>
           <div className="btn-row" style={{ marginTop: 18 }}>
-            <Link href="/suivi" className="btn btn-primary">Voir ma progression</Link>
-            <Link href="/" className="btn btn-ghost">Accueil</Link>
+            <Link href="/suivi" className="btn btn-primary">{I.voirProgression}</Link>
+            <Link href="/" className="btn btn-ghost">{T.nav.accueil}</Link>
           </div>
         </section>
       )}
@@ -166,6 +166,7 @@ export function Importeur({ connecte }: { connecte: boolean }) {
 /** Bandeau dans l'appli quand un transfert attend sur ce téléphone */
 export function TransfertEnAttente() {
   const [attente, setAttente] = useState(false);
+  const { T } = useLang();
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- stockage du navigateur, absent au rendu serveur
     setAttente((!!lire() || !!ancienHistoriqueLocal()) && window.location.pathname !== "/importer");
@@ -174,7 +175,7 @@ export function TransfertEnAttente() {
   return (
     <Link href="/importer" className="note note-gold" style={{ marginTop: 16 }}>
       <span className="note-icon"><Icon nom="transfert" taille={17} /></span>
-      <div><b>On a retrouvé ton historique sur ce téléphone.</b> Touche ici pour l'importer dans ton compte.</div>
+      <div><b>{T.importer.banniere[0]}</b>{T.importer.banniere[1]}</div>
     </Link>
   );
 }
@@ -182,6 +183,7 @@ export function TransfertEnAttente() {
 /** Message sur les pages de connexion quand un ancien historique est présent */
 export function AncienHistoriqueNotice() {
   const [present, setPresent] = useState(false);
+  const { T } = useLang();
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- stockage du navigateur, absent au rendu serveur
     setPresent(!!lire() || !!ancienHistoriqueLocal());
@@ -190,7 +192,7 @@ export function AncienHistoriqueNotice() {
   return (
     <div className="note note-gold" style={{ marginBottom: 24 }}>
       <span className="note-icon"><Icon nom="transfert" taille={17} /></span>
-      <div><b>L'appli PT Mouss évolue.</b> Ton historique est bien sur ce téléphone : crée ton compte (ou connecte-toi) pour le garder pour toujours.</div>
+      <div><b>{T.auth.ancienneAppli[0]}</b>{T.auth.ancienneAppli[1]}</div>
     </div>
   );
 }

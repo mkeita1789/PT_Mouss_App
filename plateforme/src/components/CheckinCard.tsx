@@ -5,8 +5,11 @@ import { enregistrerCheckin } from "@/app/(app)/actions";
 import { CHECKIN_Q } from "@/lib/coaching/programme";
 import type { Checkin } from "@/lib/coaching/types";
 import { Icon } from "./Icon";
+import { useLang } from "./Langue";
+import { tc } from "@/lib/i18n";
 
 export function CheckinCard() {
+  const { lang, T } = useLang();
   const [step, setStep] = useState(0);
   const [rep, setRep] = useState<Partial<Checkin>>({});
   const [erreur, setErreur] = useState("");
@@ -25,18 +28,18 @@ export function CheckinCard() {
   };
 
   return (
-    <section className="panel" aria-label="Check-in du jour">
+    <section className="panel" aria-label={T.checkin.titre}>
       <div className="section-head" style={{ marginBottom: 4 }}>
-        <span className="section-title">Check-in du jour</span>
+        <span className="section-title">{T.checkin.titre}</span>
         <span className="meta">{step + 1} / {CHECKIN_Q.length}</span>
       </div>
       <div className="steps" style={{ margin: "10px 0 16px" }}>
         {CHECKIN_Q.map((_, i) => <i key={i} className={i <= step ? "on" : ""} />)}
       </div>
-      <div style={{ fontSize: 17, fontWeight: 600 }}>{q.q}</div>
+      <div style={{ fontSize: 17, fontWeight: 600 }}>{tc(lang, q.q)}</div>
       {q.o.map((o) => (
         <button key={o} type="button" className={`choice ${rep[q.k] === o ? "sel" : ""}`} disabled={pending} onClick={() => choisir(o)}>
-          {o}
+          {tc(lang, o)}
           <span className="tick"><Icon nom="check" taille={14} /></span>
         </button>
       ))}

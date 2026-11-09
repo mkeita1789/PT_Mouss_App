@@ -1,12 +1,14 @@
 import { chargesParExercice, type SeanceFaite } from "@/lib/data";
 import { amrapNext } from "@/lib/coaching/amrap";
 import { Icon } from "./Icon";
+import { locale, nombre, tc, ui, type Lang } from "@/lib/i18n";
 
-const fmt = (n: number) => String(Math.round(n * 100) / 100).replace(".", ",");
-const dateCourte = (iso: string) => new Date(iso).toLocaleDateString("fr-FR", { day: "numeric", month: "short", timeZone: "Europe/Paris" });
+const dateCourte = (iso: string, lang: Lang) => new Date(iso).toLocaleDateString(locale(lang), { day: "numeric", month: "short", timeZone: "Europe/Paris" });
 
 /** Courbe des charges : aire dégradée, points, échelle min/max */
-function Courbe({ pts }: { pts: { kg: number; date: string }[] }) {
+function Courbe({ pts, lang }: { pts: { kg: number; date: string }[]; lang: Lang }) {
+  const T = ui(lang);
+  const fmt = (n: number) => nombre(lang, n);
   const W = 320, H = 96, px = 6, py = 10;
   const vals = pts.map((p) => p.kg);
   const min = Math.min(...vals), max = Math.max(...vals);
@@ -22,7 +24,7 @@ function Courbe({ pts }: { pts: { kg: number; date: string }[] }) {
   const id = `g${Math.round(min * 100)}${pts.length}${Math.round(max)}`;
   return (
     <>
-      <svg className="chart" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" role="img" aria-label={`Charges successives : ${vals.map(fmt).join(", ")} kg`}>
+      <svg className="chart" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" role="img" aria-label={`${T.suivi.chargesSucc} : ${vals.map(fmt).join(", ")} kg`}>
         <defs>
           <linearGradient id={id} x1="0" y1="0" x2="0" y2="1">
             <stop offset="0" stopColor={col} stopOpacity="0.28" />
@@ -38,19 +40,21 @@ function Courbe({ pts }: { pts: { kg: number; date: string }[] }) {
         ))}
       </svg>
       <div className="chart-axis">
-        <span>{dateCourte(pts[0].date)}</span>
-        <span>{fmt(min)} à {fmt(max)} kg</span>
-        <span>{dateCourte(pts[pts.length - 1].date)}</span>
+        <span>{dateCourte(pts[0].date, lang)}</span>
+        <span>{T.suivi.de(fmt(min), fmt(max))}</span>
+        <span>{dateCourte(pts[pts.length - 1].date, lang)}</span>
       </div>
     </>
   );
 }
 
 /** Progression des charges par exercice — partagée entre le client et le coach */
-export function ProgressionCharges({ historique }: { historique: SeanceFaite[] }) {
+export function ProgressionCharges({ historique, lang }: { historique: SeanceFaite[]; lang: Lang }) {
+  const T = ui(lang);
+  const fmt = (n: number) => nombre(lang, n);
   const parEx = Object.entries(chargesParExercice(historique)).sort((a, b) => b[1].length - a[1].length);
   if (!parEx.length)
-    return <div className="panel meta">Aucune charge enregistrée pour l'instant. Elles apparaîtront ici après la première séance.</div>;
+    return <div className="panel meta">{T.suivi.aucuneCharge}</div>;
 
   return (
     <div className="grid-2">
@@ -62,10 +66,10 @@ export function ProgressionCharges({ historique }: { historique: SeanceFaite[] }
           <article key={nom} className="panel chart-card">
             <div className="section-head" style={{ marginBottom: 0, alignItems: "flex-start" }}>
               <div>
-                <div className="row-title">{nom}</div>
+                <div className="row-title">{tc(lang, nom)}</div>
                 <div className="row-sub">
-                  {pts.length} séance{pts.length > 1 ? "s" : ""}
-                  {last.amrap && last.cible ? ` · dernière série ${last.amrap}/${last.cible}${rpe ? `, RPE ~${fmt(rpe)}` : ""}` : ""}
+                  {T.suivi.nSeances(pts.length)}
+                  {last.amrap && last.cible ? ` · ${T.suivi.derniereSerie(last.amrap, last.cible)}${rpe ? `, RPE ~${fmt(rpe)}` : ""}` : ""}
                 </div>
               </div>
               <div style={{ textAlign: "right" }}>
@@ -75,7 +79,7 @@ export function ProgressionCharges({ historique }: { historique: SeanceFaite[] }
                 )}
               </div>
             </div>
-            <Courbe pts={pts} />
+            <Courbe pts={pts} lang={lang} />
           </article>
         );
       })}
@@ -84,8 +88,10 @@ export function ProgressionCharges({ historique }: { historique: SeanceFaite[] }
 }
 
 /** Historique détaillé des séances */
-export function HistoriqueSeances({ historique, limite = 20 }: { historique: SeanceFaite[]; limite?: number }) {
-  if (!historique.length) return <div className="panel meta">Aucune séance enregistrée pour l'instant.</div>;
+export function HistoriqueSeances({ historique, limite = 20, lang }: { historique: SeanceFaite[]; limite?: number; lang: Lang }) {
+  const T = ui(lang);
+  const fmt = (n: number) => nombre(lang, n);
+  if (!historique.length) return <div className="panel meta">{T.suivi.aucuneSeance}</div>;
   return (
     <div className="panel" style={{ padding: "6px 18px" }}>
       <div className="rows">
@@ -96,30 +102,30 @@ export function HistoriqueSeances({ historique, limite = 20 }: { historique: Sea
             <details key={s.id} className="session row-item" style={{ display: "block" }}>
               <summary>
                 <span className="date-tile">
-                  <span className="num">{d.toLocaleDateString("fr-FR", { day: "numeric", timeZone: "Europe/Paris" })}</span>
-                  <span>{d.toLocaleDateString("fr-FR", { month: "short", timeZone: "Europe/Paris" }).replace(".", "")}</span>
+                  <span className="num">{d.toLocaleDateString(locale(lang), { day: "numeric", timeZone: "Europe/Paris" })}</span>
+                  <span>{d.toLocaleDateString(locale(lang), { month: "short", timeZone: "Europe/Paris" }).replace(".", "")}</span>
                 </span>
                 <span className="row-main">
                   <span className="row-title" style={{ display: "block" }}>
-                    <span className="num" style={{ fontSize: 16, letterSpacing: ".02em" }}>{s.jour_code}</span>
-                    <span className="ink-2" style={{ fontWeight: 400 }}> · {s.focus}</span>
+                    <span className="num" style={{ fontSize: 16, letterSpacing: ".02em" }}>{tc(lang, s.jour_code)}</span>
+                    <span className="ink-2" style={{ fontWeight: 400 }}> · {tc(lang, s.focus)}</span>
                   </span>
                   <span className="row-sub" style={{ display: "block" }}>
-                    {s.phase ? `${s.phase} · ` : ""}{s.seance_exercices.length} exercices{charges ? `, ${charges} chargés` : ""}{s.allegee ? " · allégée" : ""}
+                    {s.phase ? `${tc(lang, s.phase)} · ` : ""}{T.suivi.nExos(s.seance_exercices.length)}{charges ? `, ${T.suivi.nCharges(charges)}` : ""}{s.allegee ? ` · ${T.suivi.allegee}` : ""}
                   </span>
                 </span>
                 <span className="chev"><Icon nom="fleche" taille={18} /></span>
               </summary>
               <table className="tbl" style={{ margin: "12px 0 6px" }}>
                 <thead>
-                  <tr><th>Exercice</th><th>Séries</th><th>Charge</th><th>Dern. série</th></tr>
+                  <tr>{T.suivi.colonnes.map((c) => <th key={c}>{c}</th>)}</tr>
                 </thead>
                 <tbody>
                   {s.seance_exercices.map((e) => {
                     const rate = e.amrap !== null && e.cible !== null && e.amrap < e.cible;
                     return (
                       <tr key={e.position}>
-                        <td>{e.nom}{e.note && <div className="row-sub">« {e.note} »</div>}</td>
+                        <td>{tc(lang, e.nom)}{e.note && <div className="row-sub">« {e.note} »</div>}</td>
                         <td>{e.series}</td>
                         <td className="num">{e.charge_kg !== null ? `${fmt(e.charge_kg)} kg` : "—"}</td>
                         <td className={rate ? "ko" : undefined}>{e.amrap !== null ? `${e.amrap}${e.cible ? `/${e.cible}` : ""}` : "—"}</td>

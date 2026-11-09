@@ -5,7 +5,9 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import { enregistrerSeance } from "@/app/(app)/actions";
 import { FicheExercice } from "./FicheExercice";
 import { Icon } from "./Icon";
-import { amrapNext, amrapTexte, parseKg, RAISON_TXT } from "@/lib/coaching/amrap";
+import { amrapNext, amrapTexte, parseKg, raisonTexte } from "@/lib/coaching/amrap";
+import { tc } from "@/lib/i18n";
+import { useLang } from "./Langue";
 import type { LigneSeance } from "@/lib/coaching/seance";
 
 export type JourPrepare = { d: string; f: string; crit: boolean; lignes: LigneSeance[] };
@@ -47,6 +49,8 @@ export function SeanceTracker(props: {
   deload: boolean;
 }) {
   const router = useRouter();
+  const { lang, T } = useLang();
+  const kg = (n: number | null) => String(n).replace(".", lang === "fr" ? "," : ".");
   const [jourIdx, setJourIdx] = useState(props.jourInitial);
   const jour = props.jours[jourIdx];
   const [etats, setEtats] = useState<Etat[]>(() => etatsInitiaux(jour));
@@ -138,16 +142,16 @@ export function SeanceTracker(props: {
   return (
     <div className="reveal">
       <header className="page-head" style={{ paddingBottom: 16 }}>
-        <div className="meta">Séance du jour</div>
-        <h1 className="page-title" style={{ marginTop: 6, color: jour.crit ? "var(--ko)" : undefined }}>{jour.d}</h1>
-        <p className="page-lede">{jour.f}</p>
+        <div className="meta">{T.seance.duJour}</div>
+        <h1 className="page-title" style={{ marginTop: 6, color: jour.crit ? "var(--ko)" : undefined }}>{tc(lang, jour.d)}</h1>
+        <p className="page-lede">{tc(lang, jour.f)}</p>
       </header>
 
       {props.jours.length > 1 && (
-        <div className="days-switch" role="tablist" aria-label="Choisir la séance">
+        <div className="days-switch" role="tablist" aria-label={T.seance.choisir}>
           {props.jours.map((d, i) => (
             <button key={d.d} type="button" role="tab" aria-selected={i === jourIdx} className={i === jourIdx ? "on" : ""} onClick={() => changerJour(i)}>
-              {d.d}
+              {tc(lang, d.d)}
             </button>
           ))}
         </div>
@@ -156,14 +160,14 @@ export function SeanceTracker(props: {
       {props.verdict && (
         <div className={`note ${props.verdict.v === "REPORTER" ? "note-ko" : "note-gold"}`} style={{ marginBottom: 12 }}>
           <span className="note-icon"><Icon nom="alerte" taille={17} /></span>
-          <div><b>{props.verdict.v === "REPORTER" ? "Séance à reporter." : "Séance allégée."}</b> {props.verdict.msg}</div>
+          <div><b>{props.verdict.v === "REPORTER" ? T.seance.reporter : T.seance.allegee}</b> {props.verdict.msg}</div>
         </div>
       )}
 
       <details className="panel panel-tight" style={{ marginBottom: 12 }} open={warmOpen} onToggle={(e) => setWarmOpen((e.target as HTMLDetailsElement).open)}>
         <summary style={{ cursor: "pointer", listStyle: "none", display: "flex", alignItems: "center", gap: 12 }}>
           <span className="note-icon" style={{ width: 30, height: 30, borderRadius: 9, display: "grid", placeItems: "center", background: "var(--gold-soft)", color: "var(--gold)" }}><Icon nom="chrono" taille={17} /></span>
-          <span className="row-main"><span className="row-title">Échauffement</span><span className="row-sub" style={{ display: "block" }}>{props.echauffement.t}</span></span>
+          <span className="row-main"><span className="row-title">{T.seance.echauffement}</span><span className="row-sub" style={{ display: "block" }}>{props.echauffement.t}</span></span>
           <span className="muted" style={{ transform: warmOpen ? "rotate(90deg)" : undefined, transition: "transform .2s" }}><Icon nom="fleche" taille={18} /></span>
         </summary>
         <div className="rows" style={{ marginTop: 8 }}>
@@ -172,8 +176,8 @@ export function SeanceTracker(props: {
       </details>
 
       <div className="progress-sticky">
-        <div className="progress-line" role="progressbar" aria-valuenow={faites} aria-valuemin={0} aria-valuemax={total} aria-label="Séries faites"><i style={{ width: `${(faites / total) * 100}%` }} /></div>
-        <div className="progress-meta"><span><b className="num" style={{ color: "var(--ink)", fontSize: 14 }}>{faites}</b> / {total} séries</span><span>{fini ? "Terminé" : `${total - faites} restantes`}</span></div>
+        <div className="progress-line" role="progressbar" aria-valuenow={faites} aria-valuemin={0} aria-valuemax={total} aria-label={T.seance.seriesFaites}><i style={{ width: `${(faites / total) * 100}%` }} /></div>
+        <div className="progress-meta"><span><b className="num" style={{ color: "var(--ink)", fontSize: 14 }}>{faites}</b> / {total} {T.seance.series}</span><span>{fini ? T.seance.termine : T.seance.restantes(total - faites)}</span></div>
       </div>
 
       <div className="stack">
@@ -190,15 +194,15 @@ export function SeanceTracker(props: {
                 <div className="row-main">
                   <FicheExercice nom={l.n} />
                   <div className="row-sub">
-                    <span className="num" style={{ color: "var(--ink-2)", fontSize: 14 }}>{l.sets} × {l.r}</span>
+                    <span className="num" style={{ color: "var(--ink-2)", fontSize: 14 }}>{l.sets} × {tc(lang, l.r)}</span>
                     {l.rir !== "-" && ` · RIR ${l.rir}`}
-                    {l.drop && <span className="gold"> · drop set</span>}
+                    {l.drop && <span className="gold"> · {T.programme.dropSet}</span>}
                   </div>
-                  <div className="row-sub" style={{ marginTop: 4 }}>{l.note}</div>
+                  <div className="row-sub" style={{ marginTop: 4 }}>{tc(lang, l.note)}</div>
                 </div>
                 {l.suivi && (
                   <label className="kg-wrap">
-                    <input className="kg" placeholder="—" inputMode="decimal" aria-label={`Charge ${l.n} en kg`} value={st.charge} onChange={(e) => maj(i, { charge: e.target.value })} />
+                    <input className="kg" placeholder="—" inputMode="decimal" aria-label={T.seance.charge(tc(lang, l.n))} value={st.charge} onChange={(e) => maj(i, { charge: e.target.value })} />
                   </label>
                 )}
               </div>
@@ -206,18 +210,18 @@ export function SeanceTracker(props: {
               {l.suggestion !== null ? (
                 <div className={`hint ${l.changementPhase ? "hint-gold" : "hint-ok"}`}>
                   {l.changementPhase ? (
-                    <>{l.suggestionTxt}. Charge recalculée depuis ta performance du cycle : vérifie-la à l'échauffement.</>
+                    <>{l.suggestionTxt}. {T.seance.phase}</>
                   ) : (
-                    <>La dernière fois {String(l.derniereCharge).replace(".", ",")} kg · {l.suggestionTxt}</>
+                    <>{T.seance.derniereFois} {kg(l.derniereCharge)} kg · {l.suggestionTxt}</>
                   )}
                 </div>
               ) : l.derniereCharge !== null ? (
-                <div className="hint hint-plain">La dernière fois : {String(l.derniereCharge).replace(".", ",")} kg</div>
+                <div className="hint hint-plain">{T.seance.derniereFois} : {kg(l.derniereCharge)} kg</div>
               ) : null}
 
-              <div className="sets" role="group" aria-label="Séries">
+              <div className="sets" role="group" aria-label={T.seance.series}>
                 {Array.from({ length: l.sets }, (_, k) => (
-                  <button key={k} type="button" className={`set ${k < st.done ? "done" : ""}`} aria-pressed={k < st.done} aria-label={`Série ${k + 1}`} onClick={() => cocher(i, k)}>
+                  <button key={k} type="button" className={`set ${k < st.done ? "done" : ""}`} aria-pressed={k < st.done} aria-label={T.seance.serie(k + 1)} onClick={() => cocher(i, k)}>
                     {k < st.done ? <Icon nom="check" taille={20} /> : k + 1}
                   </button>
                 ))}
@@ -225,21 +229,21 @@ export function SeanceTracker(props: {
 
               {exFini && l.rir !== "-" && l.cible && (
                 <div className="amrap">
-                  <div className="row-title">Dernière série : combien de reps propres ?</div>
-                  <div className="row-sub">Une rep moche ne compte pas.</div>
+                  <div className="row-title">{T.seance.combienReps}</div>
+                  <div className="row-sub">{T.seance.repMoche}</div>
                   <div className="stepper">
-                    <button type="button" aria-label="Une rep de moins" onClick={() => maj(i, { amrap: Math.max(0, (st.amrap ?? l.cible ?? 0) - 1) })}><Icon nom="moins" taille={18} /></button>
-                    <input className="kg" inputMode="numeric" placeholder={String(l.cible)} aria-label="Reps de la dernière série"
+                    <button type="button" aria-label={T.seance.moinsUne} onClick={() => maj(i, { amrap: Math.max(0, (st.amrap ?? l.cible ?? 0) - 1) })}><Icon nom="moins" taille={18} /></button>
+                    <input className="kg" inputMode="numeric" placeholder={String(l.cible)} aria-label={T.seance.repsDerniere}
                       value={st.amrap ?? ""} onChange={(e) => { const n = parseInt(e.target.value, 10); maj(i, { amrap: isNaN(n) ? null : Math.max(0, Math.min(100, n)) }); }} />
-                    <button type="button" aria-label="Une rep de plus" onClick={() => maj(i, { amrap: Math.min(100, (st.amrap ?? l.cible ?? 0) + 1) })}><Icon nom="plus" taille={18} /></button>
+                    <button type="button" aria-label={T.seance.plusUne} onClick={() => maj(i, { amrap: Math.min(100, (st.amrap ?? l.cible ?? 0) + 1) })}><Icon nom="plus" taille={18} /></button>
                   </div>
                   {r && lv !== null && (
                     <div className="verdict" style={{ borderColor: rCol }}>
-                      <div style={{ color: rCol, fontWeight: 600, fontSize: 14 }}>Prochaine séance : {amrapTexte(r, lv)}</div>
-                      <div className="row-sub">{RAISON_TXT[r.raison]}</div>
+                      <div style={{ color: rCol, fontWeight: 600, fontSize: 14 }}>{T.seance.prochaine} : {amrapTexte(r, lv, lang)}</div>
+                      <div className="row-sub">{raisonTexte(r.raison, lang)}</div>
                     </div>
                   )}
-                  <input className="input" placeholder="Une note ? Sensation, technique…" value={st.note} maxLength={500}
+                  <input className="input" placeholder={T.seance.note} value={st.note} maxLength={500}
                     style={{ height: 44, fontSize: 14, marginTop: 12 }} onChange={(e) => maj(i, { note: e.target.value })} />
                 </div>
               )}
@@ -250,24 +254,24 @@ export function SeanceTracker(props: {
 
       {fini && (
         <section className="panel panel-hero section" style={{ textAlign: "center" }}>
-          <h2 className="today-title" style={{ fontSize: 30 }}>Séance terminée</h2>
-          <p className="today-sub" style={{ margin: "8px auto 18px", maxWidth: "42ch" }}>Bien joué. Enregistre-la : tes charges et ta progression seront visibles par ton coach.</p>
+          <h2 className="today-title" style={{ fontSize: 30 }}>{T.seance.terminee}</h2>
+          <p className="today-sub" style={{ margin: "8px auto 18px", maxWidth: "42ch" }}>{T.seance.bienJoue}</p>
           {erreur && <p className="form-err" style={{ marginBottom: 12 }}>{erreur}</p>}
-          <button type="button" className="btn btn-primary btn-block" disabled={pending} onClick={enregistrer}>{pending ? "Enregistrement…" : "Enregistrer la séance"}</button>
+          <button type="button" className="btn btn-primary btn-block" disabled={pending} onClick={enregistrer}>{pending ? T.seance.enregistrement : T.seance.enregistrer}</button>
         </section>
       )}
 
       {repos !== null && (
-        <div className="timer" role="dialog" aria-label="Repos entre les séries">
-          <div className="meta">Repos</div>
+        <div className="timer" role="dialog" aria-label={T.seance.repos}>
+          <div className="meta">{T.seance.repos}</div>
           <div className="ring">
             <svg width="200" height="200" viewBox="0 0 200 200" aria-hidden>
               <circle className="ring-track" cx="100" cy="100" r="86" />
               <circle className="ring-fill" cx="100" cy="100" r="86" stroke="var(--gold)" strokeDasharray={540.4} strokeDashoffset={540.4 * (1 - repos / REPOS_S)} />
             </svg>
-            <div className="ring-center"><span className="num" aria-live="polite">{repos}</span><span>secondes</span></div>
+            <div className="ring-center"><span className="num" aria-live="polite">{repos}</span><span>{T.seance.secondes}</span></div>
           </div>
-          <button type="button" className="btn btn-ghost" onClick={stopRepos}>Passer le repos</button>
+          <button type="button" className="btn btn-ghost" onClick={stopRepos}>{T.seance.passerRepos}</button>
         </div>
       )}
     </div>

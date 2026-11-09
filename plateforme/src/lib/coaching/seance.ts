@@ -3,7 +3,7 @@
    - changement de phase → charge recalculée depuis le 1RM estimé ;
    - même phase → progression fine par l'AMRAP ;
    - check-in « alléger » → −1 série par exercice. */
-import { amrapNext, amrapTexte, chargePourPhase, fmtKg, targetReps } from "./amrap";
+import { amrapNext, amrapTexte, chargePourPhase, fmtKgL, targetReps } from "./amrap";
 import type { Categorie, Jour, PhaseCourante } from "./types";
 
 export type HistoEx = { nom: string; charge_kg: number | null; amrap: number | null };
@@ -42,7 +42,10 @@ export function prepareSeance(
   phase: PhaseCourante | null,
   deload: boolean,
   alleger: boolean,
+  lang: "fr" | "en" = "fr",
+  nomPhase: (n: string) => string = (n) => n,
 ): LigneSeance[] {
+  const fmtKg = (n: number) => fmtKgL(n, lang);
   const derniere = historique.find((h) => h.jour_code === day.d);
 
   return day.ex.map((e) => {
@@ -60,14 +63,16 @@ export function prepareSeance(
       if (c) {
         suggestion = c.next;
         changementPhase = true;
-        suggestionTxt = `Nouvelle phase ${phase.n} (${c.pct} % de ton max) → ${fmtKg(c.next)} kg`;
+        suggestionTxt = lang === "en"
+          ? `New ${nomPhase(phase.n)} phase (${c.pct}% of your max) → ${fmtKg(c.next)} kg`
+          : `Nouvelle phase ${phase.n} (${c.pct} % de ton max) → ${fmtKg(c.next)} kg`;
       }
     }
     if (suggestion === null && prev?.amrap && cible && lv !== null) {
       const r = amrapNext(prev.amrap, cible, lv, e.c, deload);
       if (r) {
         suggestion = r.next;
-        suggestionTxt = amrapTexte(r, lv);
+        suggestionTxt = amrapTexte(r, lv, lang);
       }
     }
 

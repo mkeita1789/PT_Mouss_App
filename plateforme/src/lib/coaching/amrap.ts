@@ -134,21 +134,47 @@ export function chargePourPhase(dernPoids: number, dernReps: number, pctStr: str
 
 export const fmtKg = (n: number) => String(n).replace(".", ",");
 
-export const RAISON_TXT: Record<Raison, string> = {
-  cibleRatee: "Cible non atteinte : la charge est trop lourde pour l'instant. On recule pour mieux repartir.",
-  prochePlafond: "Tu es dans la bonne zone. On consolide avant de monter.",
-  legerementSous: "Un peu sous la zone optimale. Petite progression.",
-  sousZone: "Sous la zone d'hypertrophie optimale. On charge.",
-  tropLeger: "Charge nettement trop légère pour l'objectif.",
-  deload: "Semaine de récupération : on ne monte pas, même si c'était facile. C'est le programme.",
+type Lang = "fr" | "en";
+
+const RAISONS: Record<Lang, Record<Raison, string>> = {
+  fr: {
+    cibleRatee: "Cible non atteinte : la charge est trop lourde pour l'instant. On recule pour mieux repartir.",
+    prochePlafond: "Tu es dans la bonne zone. On consolide avant de monter.",
+    legerementSous: "Un peu sous la zone optimale. Petite progression.",
+    sousZone: "Sous la zone d'hypertrophie optimale. On charge.",
+    tropLeger: "Charge nettement trop légère pour l'objectif.",
+    deload: "Semaine de récupération : on ne monte pas, même si c'était facile. C'est le programme.",
+  },
+  en: {
+    cibleRatee: "Target missed: the load is too heavy for now. We step back to move forward.",
+    prochePlafond: "You're in the right zone. Consolidate before adding load.",
+    legerementSous: "Slightly below the optimal zone. Small increase.",
+    sousZone: "Below the optimal hypertrophy zone. Add load.",
+    tropLeger: "Load clearly too light for the goal.",
+    deload: "Recovery week: no increase, even if it felt easy. That's the plan.",
+  },
 };
 
-export function amrapTexte(r: ResultatAmrap, poids: number): string {
-  const rpe = `RPE ~${fmtKg(r.rpe)}`;
+/** Explication du verdict AMRAP */
+export const raisonTexte = (raison: Raison, lang: Lang = "fr") => RAISONS[lang][raison];
+/** Compatibilité : explications en français */
+export const RAISON_TXT = RAISONS.fr;
+
+export const fmtKgL = (n: number, lang: Lang) => String(n).replace(".", lang === "fr" ? "," : ".");
+
+export function amrapTexte(r: ResultatAmrap, poids: number, lang: Lang = "fr"): string {
+  const f = (n: number) => fmtKgL(n, lang);
+  const rpe = `RPE ~${f(r.rpe)}`;
+  if (lang === "en") {
+    if (r.raison === "deload") return `${rpe} · light week — no increase`;
+    if (r.verdict === "MAINTENIR") return `${rpe} · stay at ${f(poids)} kg`;
+    if (r.verdict === "BAISSER") return `${rpe} · drop to ${f(r.next)} kg`;
+    return `${rpe} · go up to ${f(r.next)} kg`;
+  }
   if (r.raison === "deload") return `${rpe} · semaine légère — on ne monte pas`;
-  if (r.verdict === "MAINTENIR") return `${rpe} · garde ${fmtKg(poids)} kg`;
-  if (r.verdict === "BAISSER") return `${rpe} · redescends à ${fmtKg(r.next)} kg`;
-  return `${rpe} · monte à ${fmtKg(r.next)} kg`;
+  if (r.verdict === "MAINTENIR") return `${rpe} · garde ${f(poids)} kg`;
+  if (r.verdict === "BAISSER") return `${rpe} · redescends à ${f(r.next)} kg`;
+  return `${rpe} · monte à ${f(r.next)} kg`;
 }
 
 /** Lecture d'une saisie de charge ("62,5", "62.5 kg") */

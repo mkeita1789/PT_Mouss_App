@@ -491,3 +491,10 @@ details.session[open] .chev { transform: rotate(90deg); }
 .reveal > *:nth-child(4) { animation-delay: 0.15s; }
 @keyframes rise { from { opacity: 0; transform: translateY(10px); } }
 .sheet-close svg { transform: rotate(45deg); }
+
+/* Sélecteur de langue */
+.lang-switch { display: inline-flex; padding: 3px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--line-strong); }
+.lang-switch button { padding: 6px 14px; border-radius: 999px; font-size: 13px; font-weight: 500; color: var(--muted); transition: background 0.2s, color 0.2s; }
+.lang-switch button.on { background: var(--ink); color: var(--bg); }
+.auth-lang-desktop { display: none; }
+@media (min-width: 1000px) { .auth-lang-desktop { display: flex; justify-content: flex-end; margin-bottom: 28px; } }

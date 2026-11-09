@@ -3,19 +3,23 @@ import { Icon } from "@/components/Icon";
 import { exigerCoach, getCheckinsRecents, getClients, getSeancesTousClients } from "@/lib/data";
 import { alertesCoach, joursDepuis } from "@/lib/coaching/alertes";
 import { lundiCourant, phaseFor } from "@/lib/coaching/programme";
+import { tc, ui } from "@/lib/i18n";
+import { getLang } from "@/lib/i18n/serveur";
 
-export const metadata = { title: "Mes clients — PT Mouss IA" };
+export const metadata = { title: "Coach — PT Mouss IA" };
 
 const PILL = { ko: "pill-ko", gold: "pill-gold", ok: "pill-ok" } as const;
 
 export default async function Page() {
   const coach = await exigerCoach();
+  const lang = await getLang();
+  const T = ui(lang);
   const [clients, seances, checkins] = await Promise.all([getClients(coach.id), getSeancesTousClients(), getCheckinsRecents(7)]);
   const lundi = lundiCourant();
 
   const lignes = clients.map((c) => {
     const hist = seances[c.id] ?? [];
-    const alertes = alertesCoach(hist, checkins.filter((x) => x.user_id === c.id));
+    const alertes = alertesCoach(hist, checkins.filter((x) => x.user_id === c.id), new Date(), lang, (n) => tc(lang, n));
     return {
       ...c,
       hist,
@@ -35,24 +39,22 @@ export default async function Page() {
   return (
     <div className="reveal">
       <header className="page-head">
-        <div className="meta">Espace coach</div>
-        <h1 className="page-title" style={{ marginTop: 6 }}>Mes clients</h1>
-        <p className="page-lede">Les clients qui ont besoin de toi apparaissent en premier.</p>
+        <div className="meta">{T.coach.espace}</div>
+        <h1 className="page-title" style={{ marginTop: 6 }}>{T.coach.titre}</h1>
+        <p className="page-lede">{T.coach.lede}</p>
       </header>
 
       <div className="grid-3">
-        <div className="stat"><div className="stat-value">{clients.length}</div><div className="stat-label">Clients</div></div>
-        <div className="stat"><div className="stat-value">{seancesSemaine}</div><div className="stat-label">Séances cette semaine</div></div>
-        <div className="stat"><div className={`stat-value ${urgents ? "ko" : aSuivre ? "gold" : "ok"}`}>{aSuivre}</div><div className="stat-label">{urgents ? `À suivre, dont ${urgents} urgent${urgents > 1 ? "s" : ""}` : "À suivre"}</div></div>
+        <div className="stat"><div className="stat-value">{clients.length}</div><div className="stat-label">{T.coach.clients}</div></div>
+        <div className="stat"><div className="stat-value">{seancesSemaine}</div><div className="stat-label">{T.coach.seancesSemaine}</div></div>
+        <div className="stat"><div className={`stat-value ${urgents ? "ko" : aSuivre ? "gold" : "ok"}`}>{aSuivre}</div><div className="stat-label">{urgents ? T.coach.dontUrgents(urgents) : T.coach.aSuivre}</div></div>
       </div>
 
       <section className="section">
         {!clients.length ? (
           <div className="panel">
-            <div className="section-title">Aucun client pour l'instant</div>
-            <p className="meta" style={{ marginTop: 6 }}>
-              Envoie le lien d'inscription à tes clients. Après leur bilan, ils apparaissent ici automatiquement.
-            </p>
+            <div className="section-title">{T.coach.aucun}</div>
+            <p className="meta" style={{ marginTop: 6 }}>{T.coach.aucunTexte}</p>
           </div>
         ) : (
           <div className="stack">
@@ -60,14 +62,14 @@ export default async function Page() {
               <Link key={l.id} href={`/coach/${l.id}`} className="panel client-row" style={l.gravite === 2 ? { borderColor: "rgba(240,96,93,.4)" } : undefined}>
                 <span className="avatar" style={l.gravite === 2 ? { borderColor: "var(--ko)", color: "var(--ko)" } : undefined}>{(l.prenom[0] ?? "?").toUpperCase()}</span>
                 <div style={{ minWidth: 0 }}>
-                  <div className="row-title" style={{ fontSize: 16 }}>{l.prenom || "Sans prénom"}</div>
+                  <div className="row-title" style={{ fontSize: 16 }}>{l.prenom || T.coach.sansPrenom}</div>
                   <div className="row-sub">
-                    {l.bilan ? l.bilan.reponses.objectif.replace(/ [🍑⚽]/u, "") : "Bilan non fait"}
-                    {l.phase && ` · S${l.phase.week} ${l.phase.n}`}
+                    {l.bilan ? tc(lang, l.bilan.reponses.objectif).replace(/ [🍑⚽]/u, "") : T.coach.bilanNonFait}
+                    {l.phase && ` · ${lang === "en" ? "W" : "S"}${l.phase.week} ${tc(lang, l.phase.n)}`}
                   </div>
                   <div className="row-sub">
-                    <span className="num" style={{ color: "var(--ink-2)" }}>{l.semaine}/{parseInt(l.bilan?.reponses.freq ?? "") || "–"}</span> cette semaine
-                    {l.jours !== null ? ` · dernière séance ${l.jours === 0 ? "aujourd'hui" : l.jours === 1 ? "hier" : `il y a ${l.jours} j`}` : ""}
+                    <span className="num" style={{ color: "var(--ink-2)" }}>{l.semaine}/{parseInt(l.bilan?.reponses.freq ?? "") || "–"}</span> {T.coach.cetteSemaine}
+                    {l.jours !== null ? T.coach.derniere(l.jours) : ""}
                   </div>
                 </div>
                 <div className="client-alerts">
@@ -79,7 +81,7 @@ export default async function Page() {
                       {l.alertes.length > 3 && <span className="pill" style={{ fontSize: 12, padding: "3px 9px" }}>+{l.alertes.length - 3}</span>}
                     </>
                   ) : (
-                    <span className="pill pill-ok" style={{ fontSize: 12, padding: "3px 9px" }}><span className="dot" />Tout va bien</span>
+                    <span className="pill pill-ok" style={{ fontSize: 12, padding: "3px 9px" }}><span className="dot" />{T.coach.toutVaBien}</span>
                   )}
                 </div>
                 <span className="muted" style={{ gridRow: 1, gridColumn: -1 }}><Icon nom="fleche" taille={18} /></span>

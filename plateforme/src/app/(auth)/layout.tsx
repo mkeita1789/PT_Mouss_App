@@ -1,7 +1,12 @@
 import { Icon } from "@/components/Icon";
 import { AncienHistoriqueNotice } from "@/components/Importeur";
+import { ChoixLangue } from "@/components/Langue";
+import { ui } from "@/lib/i18n";
+import { getLang } from "@/lib/i18n/serveur";
 
-export default function AuthLayout({ children }: { children: React.ReactNode }) {
+export default async function AuthLayout({ children }: { children: React.ReactNode }) {
+  const T = ui(await getLang());
+  const icones = ["programme", "suivi", "coach"] as const;
   return (
     <main className="auth">
       <aside className="auth-brand">
@@ -13,23 +18,25 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
           </span>
         </div>
         <div style={{ position: "relative", zIndex: 1 }}>
-          <p className="auth-quote">Discipline today, <em>results tomorrow.</em></p>
+          <p className="auth-quote">{T.auth.citation[0]}<em>{T.auth.citation[1]}</em></p>
           <div className="auth-points" style={{ marginTop: 34 }}>
-            <div><Icon nom="programme" /> Un programme construit à partir de ton bilan, qui évolue chaque semaine.</div>
-            <div><Icon nom="suivi" /> Tes charges ajustées après chaque séance, selon tes reps réelles.</div>
-            <div><Icon nom="coach" /> Ton coach suit tes séances et intervient quand il le faut.</div>
+            {T.auth.points.map((p, i) => <div key={p}><Icon nom={icones[i]} /> {p}</div>)}
           </div>
         </div>
-        <div className="meta" style={{ position: "relative", zIndex: 1 }}>Fessiers · préparation physique football · bien-être</div>
+        <div className="meta" style={{ position: "relative", zIndex: 1 }}>{T.auth.specialites}</div>
       </aside>
       <div className="auth-form-wrap">
-        <div className="auth-mobile-brand">
-          <span className="monogram">JC</span>
-          <span>
-            <div className="wordmark">PT MOUSS <b>IA</b></div>
-            <div className="wordmark-sub">JIGI Coaching</div>
+        <div className="auth-mobile-brand" style={{ justifyContent: "space-between" }}>
+          <span style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <span className="monogram">JC</span>
+            <span>
+              <div className="wordmark">PT MOUSS <b>IA</b></div>
+              <div className="wordmark-sub">JIGI Coaching</div>
+            </span>
           </span>
+          <ChoixLangue compact />
         </div>
+        <div className="auth-lang-desktop"><ChoixLangue compact /></div>
         <AncienHistoriqueNotice />
         {children}
       </div>

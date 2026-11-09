@@ -3,10 +3,12 @@ import type { Metadata, Viewport } from "next";
 import "@fontsource-variable/inter";
 import "@fontsource-variable/oswald";
 import "./globals.css";
+import { LangProvider } from "@/components/Langue";
+import { getLang } from "@/lib/i18n/serveur";
 
 export const metadata: Metadata = {
   title: "PT Mouss IA — JIGI Coaching",
-  description: "Ton coaching JIGI : programme, séances, progression.",
+  description: "JIGI Coaching : programme, séances, progression.",
   appleWebApp: { capable: true, title: "PT Mouss", statusBarStyle: "black-translucent" },
   icons: { icon: "/icon-192.png", apple: "/icon-192.png" },
 };
@@ -18,11 +20,14 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  const lang = await getLang();
   return (
-    <html lang="fr">
+    <html lang={lang}>
       <body>
-        <div id="app">{children}</div>
+        <LangProvider lang={lang}>
+          <div id="app">{children}</div>
+        </LangProvider>
       </body>
     </html>
   );

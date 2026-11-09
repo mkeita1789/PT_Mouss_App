@@ -4,14 +4,17 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getBilan, getUtilisateur } from "@/lib/data";
 import { normaliserImport } from "@/lib/coaching/import";
+import { ui } from "@/lib/i18n";
+import { getLang } from "@/lib/i18n/serveur";
 
 export type ResultatImport = { erreur?: string; bilan?: boolean; seances?: number; dejaLa?: number; checkins?: number };
 
 /** Importe le paquet de la PWA dans le compte connecté. Rejouable sans créer de doublons. */
 export async function importerDepuisPWA(paquet: unknown): Promise<ResultatImport> {
   const user = await getUtilisateur();
+  const T = ui(await getLang());
   const data = normaliserImport(paquet);
-  if (!data.bilan && !data.seances.length) return { erreur: "Aucune donnée exploitable dans ce transfert." };
+  if (!data.bilan && !data.seances.length) return { erreur: T.importer.aucuneDonnee };
 
   const supabase = await createClient();
   const res: ResultatImport = { bilan: false, seances: 0, dejaLa: 0, checkins: 0 };
@@ -37,7 +40,7 @@ export async function importerDepuisPWA(paquet: unknown): Promise<ResultatImport
       .from("seances")
       .insert(lot.map((s) => ({ user_id: user.id, realisee_le: s.realisee_le, jour_code: s.jour_code, focus: s.focus, phase: s.phase })))
       .select("id, realisee_le");
-    if (error || !crees) return { ...res, erreur: "Le transfert s'est arrêté en cours de route. Relance-le : rien ne sera dupliqué." };
+    if (error || !crees) return { ...res, erreur: T.importer.arrete };
 
     const parDate = new Map(crees.map((c) => [new Date(c.realisee_le).getTime(), c.id as string]));
     const lignes = lot.flatMap((s) => {
@@ -48,7 +51,7 @@ export async function importerDepuisPWA(paquet: unknown): Promise<ResultatImport
       const { error: errEx } = await supabase.from("seance_exercices").insert(lignes);
       if (errEx) {
         await supabase.from("seances").delete().in("id", crees.map((c) => c.id));
-        return { ...res, erreur: "Le transfert s'est arrêté en cours de route. Relance-le : rien ne sera dupliqué." };
+        return { ...res, erreur: T.importer.arrete };
       }
     }
     res.seances = (res.seances ?? 0) + crees.length;

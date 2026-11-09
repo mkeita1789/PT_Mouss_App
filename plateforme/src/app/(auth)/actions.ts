@@ -3,29 +3,33 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { ui } from "@/lib/i18n";
+import { getLang } from "@/lib/i18n/serveur";
+import type { TextesUI } from "@/lib/i18n/ui";
 
 export type EtatForm = { erreur?: string; ok?: string } | undefined;
 
 /* Seule destination de retour autorisée après connexion (évite les redirections ouvertes) */
 const suiteSure = (v: FormDataEntryValue | null) => (v === "/importer" ? "/importer" : null);
 
-const traduire = (msg: string) => {
-  if (/invalid login credentials/i.test(msg)) return "Email ou mot de passe incorrect.";
-  if (/email not confirmed/i.test(msg)) return "Confirme d'abord ton email : clique sur le lien reçu.";
-  if (/already registered|already exists/i.test(msg)) return "Un compte existe déjà avec cet email. Connecte-toi.";
-  if (/password/i.test(msg) && /characters|short|weak/i.test(msg)) return "Mot de passe trop faible : 8 caractères minimum.";
-  if (/rate limit/i.test(msg)) return "Trop de tentatives. Réessaie dans quelques minutes.";
-  return "Une erreur est survenue. Réessaie.";
+const traduire = (msg: string, T: TextesUI) => {
+  if (/invalid login credentials/i.test(msg)) return T.erreurs.identifiants;
+  if (/email not confirmed/i.test(msg)) return T.erreurs.nonConfirme;
+  if (/already registered|already exists/i.test(msg)) return T.erreurs.existe;
+  if (/password/i.test(msg) && /characters|short|weak/i.test(msg)) return T.erreurs.motDePasseFaible;
+  if (/rate limit/i.test(msg)) return T.erreurs.tropDeTentatives;
+  return T.erreurs.generique;
 };
 
 export async function connexion(_: EtatForm, formData: FormData): Promise<EtatForm> {
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
-  if (!email || !password) return { erreur: "Renseigne ton email et ton mot de passe." };
+  const T = ui(await getLang());
+  if (!email || !password) return { erreur: T.erreurs.champsConnexion };
 
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword({ email, password });
-  if (error) return { erreur: traduire(error.message) };
+  if (error) return { erreur: traduire(error.message, T) };
   redirect(suiteSure(formData.get("suite")) ?? "/");
 }
 
@@ -33,8 +37,9 @@ export async function inscription(_: EtatForm, formData: FormData): Promise<Etat
   const prenom = String(formData.get("prenom") ?? "").trim().slice(0, 40);
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
-  if (!prenom || !email) return { erreur: "Prénom et email sont obligatoires." };
-  if (password.length < 8) return { erreur: "Mot de passe trop court : 8 caractères minimum." };
+  const T = ui(await getLang());
+  if (!prenom || !email) return { erreur: T.erreurs.champsInscription };
+  if (password.length < 8) return { erreur: T.erreurs.motDePasseCourt };
 
   const origin = (await headers()).get("origin") ?? "";
   const supabase = await createClient();
@@ -43,11 +48,11 @@ export async function inscription(_: EtatForm, formData: FormData): Promise<Etat
     password,
     options: { data: { prenom }, emailRedirectTo: `${origin}/auth/confirm` },
   });
-  if (error) return { erreur: traduire(error.message) };
+  if (error) return { erreur: traduire(error.message, T) };
 
   /* Confirmation d'email désactivée dans Supabase → session immédiate */
   if (data.session) redirect(suiteSure(formData.get("suite")) ?? "/bilan");
-  return { ok: "Compte créé ! Ouvre l'email de confirmation que tu viens de recevoir, puis connecte-toi." };
+  return { ok: T.erreurs.compteCree };
 }
 
 export async function deconnexion() {

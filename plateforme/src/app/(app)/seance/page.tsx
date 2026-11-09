@@ -3,6 +3,8 @@ import { SeanceTracker, type JourPrepare } from "@/components/SeanceTracker";
 import { getBilan, getCheckinDuJour, getHistorique, getUtilisateur } from "@/lib/data";
 import { buildProgram, phaseFor, verdictCheckin, warmup } from "@/lib/coaching/programme";
 import { indexJourSuivant, prepareSeance } from "@/lib/coaching/seance";
+import { tc, ui } from "@/lib/i18n";
+import { getLang } from "@/lib/i18n/serveur";
 
 export const metadata = { title: "Séance — PT Mouss IA" };
 
@@ -11,6 +13,8 @@ export default async function Page() {
   const bilan = await getBilan(user.id);
   if (!bilan) redirect("/bilan");
 
+  const lang = await getLang();
+  const T = ui(lang);
   const [historique, ci] = await Promise.all([getHistorique(user.id, 60), getCheckinDuJour(user.id)]);
   const P = buildProgram(bilan.reponses, bilan.debut);
 
@@ -18,9 +22,9 @@ export default async function Page() {
     return (
       <div className="reveal">
         <header className="page-head">
-          <div className="meta">Séance du jour</div>
-          <h1 className="page-title" style={{ marginTop: 6 }}>Repos imposé</h1>
-          <p className="page-lede">Le repos fait partie du programme. Tu reviendras plus frais, et c'est comme ça qu'on évite les blessures.</p>
+          <div className="meta">{T.seance.duJour}</div>
+          <h1 className="page-title" style={{ marginTop: 6 }}>{T.accueil.reposImpose}</h1>
+          <p className="page-lede">{T.seance.reposTexte}</p>
         </header>
       </div>
     );
@@ -36,15 +40,15 @@ export default async function Page() {
     d: d.d,
     f: d.f,
     crit: !!d.crit,
-    lignes: prepareSeance(d, historique, phase, !!P.deload, alleger),
+    lignes: prepareSeance(d, historique, phase, !!P.deload, alleger, lang, (n) => tc(lang, n)),
   }));
 
   return (
     <SeanceTracker
       jours={jours}
       jourInitial={jourSuggere}
-      echauffement={warmup(bilan.reponses)}
-      verdict={v && v.v !== "MAINTENIR" ? { v: v.v, col: v.col, msg: v.msg } : null}
+      echauffement={(() => { const w = warmup(bilan.reponses); return { t: tc(lang, w.t), ex: w.ex.map((x) => tc(lang, x)) }; })()}
+      verdict={v && v.v !== "MAINTENIR" ? { v: v.v, col: v.col, msg: tc(lang, v.msg) } : null}
       allegee={alleger}
       deload={!!P.deload}
     />
