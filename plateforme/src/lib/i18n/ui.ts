@@ -34,7 +34,7 @@ export const UI_FR = {
     ancienneAppli: ["L'appli PT Mouss évolue.", " Ton historique est bien sur ce téléphone : crée ton compte (ou connecte-toi) pour le garder pour toujours."],
   },
   erreurs: {
-    identifiants: "Email ou mot de passe incorrect.",
+    identifiants: "Email ou mot de passe incorrect. Première fois sur la nouvelle appli ? Touche « Créer un compte » en bas : l'ancienne appli n'avait pas de compte.",
     nonConfirme: "Confirme d'abord ton email : clique sur le lien reçu.",
     existe: "Un compte existe déjà avec cet email. Connecte-toi.",
     motDePasseFaible: "Mot de passe trop faible : 8 caractères minimum.",
@@ -253,7 +253,7 @@ export const UI_EN: TextesUI = {
     ancienneAppli: ["The PT Mouss app is evolving.", " Your history is safe on this phone: create your account (or log in) to keep it forever."],
   },
   erreurs: {
-    identifiants: "Wrong email or password.",
+    identifiants: "Wrong email or password. First time on the new app? Tap « Create an account » below: the old app had no account.",
     nonConfirme: "Confirm your email first: click the link you received.",
     existe: "An account already exists with this email. Log in instead.",
     motDePasseFaible: "Password too weak: at least 8 characters.",
