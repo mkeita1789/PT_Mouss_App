@@ -313,14 +313,14 @@ export async function getActivites(limite = 12): Promise<Activite[]> {
 
 /* ═══ Réathlétisation ═══ */
 
-export type Reath = { semaine: number; debut: string };
+export type Reath = { semaine: number; debut: string; vma: number | null };
 export type ReathSeance = { semaine: number; jour: number; douleur: number | null; gonflement: boolean; note: string | null; fait_le: string };
 
 export async function getReath(clientId: string): Promise<Reath | null> {
   if (DEMO) return demo.reath(clientId);
   const supabase = await createClient();
-  const { data } = await supabase.from("reath").select("semaine, debut").eq("client_id", clientId).maybeSingle();
-  return data ?? null;
+  const { data } = await supabase.from("reath").select("semaine, debut, vma").eq("client_id", clientId).maybeSingle();
+  return data ? { ...data, vma: data.vma === null ? null : Number(data.vma) } : null;
 }
 
 export async function getReathSeances(clientId: string): Promise<ReathSeance[]> {

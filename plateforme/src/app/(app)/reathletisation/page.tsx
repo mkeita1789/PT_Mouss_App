@@ -23,7 +23,7 @@ export default async function Page() {
         <h1 className="page-title" style={{ marginTop: 8 }}>{R.titre}</h1>
         <p className="page-lede">{reath ? R.lede : R.nonInscrite}</p>
       </header>
-      {reath && <ReathParcours semaineOuverte={Math.min(reath.semaine, NB_SEMAINES)} termine={reath.semaine > NB_SEMAINES} seances={seances} />}
+      {reath && <ReathParcours semaineOuverte={Math.min(reath.semaine, NB_SEMAINES)} termine={reath.semaine > NB_SEMAINES} seances={seances} vma={reath.vma} />}
     </div>
   );
 }

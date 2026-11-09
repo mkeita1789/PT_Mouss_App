@@ -3,14 +3,14 @@
 import { useState, useTransition } from "react";
 import { noterSeanceReath, retirerSeanceReath } from "@/app/(app)/reathletisation/actions";
 import type { ReathSeance } from "@/lib/data";
-import { alerteGenou, JOURS_EN, JOURS_FR, joursActifs, LEXIQUE, NB_SEMAINES, REATH_LCA, tr, type SeanceReath } from "@/lib/coaching/reath-lca";
+import { alerteGenou, avecVma, JOURS_EN, JOURS_FR, joursActifs, LEXIQUE, NB_SEMAINES, REATH_LCA, tr, type SeanceReath } from "@/lib/coaching/reath-lca";
 import { Icon, type NomIcone } from "./Icon";
 import { useLang } from "./Langue";
 
 const ICONE: Record<SeanceReath["type"], NomIcone> = { course: "suivi", renfo: "seance", terrain: "drapeau", repos: "feuille" };
 
 /** Parcours de réathlétisation : semaines, séances, contrôle du genou */
-export function ReathParcours({ semaineOuverte, termine, seances }: { semaineOuverte: number; termine: boolean; seances: ReathSeance[] }) {
+export function ReathParcours({ semaineOuverte, termine, seances, vma }: { semaineOuverte: number; termine: boolean; seances: ReathSeance[]; vma: number | null }) {
   const { lang, T } = useLang();
   const R = T.reath;
   const [vue, setVue] = useState(semaineOuverte);
@@ -28,6 +28,8 @@ export function ReathParcours({ semaineOuverte, termine, seances }: { semaineOuv
         <span className="note-icon"><Icon nom="info" taille={17} /></span>
         <div><b>{R.regleTitre}.</b> {R.regle}</div>
       </div>
+
+      <p className="meta" style={{ marginTop: 12, fontSize: 13 }}>{vma ? R.vmaConnue(String(vma).replace(".", lang === "en" ? "." : ",")) : R.vmaInconnue}</p>
 
       <div className="reath-semaines" role="tablist" aria-label={R.titre}>
         {REATH_LCA.map((s) => {
@@ -88,7 +90,7 @@ export function ReathParcours({ semaineOuverte, termine, seances }: { semaineOuv
                   <span className="pill" style={{ fontSize: 12 }}>{R.aFaire}</span>
                 )}
               </div>
-              {sc.lignes.length > 0 && <ul className="reath-lignes">{sc.lignes.map((l) => <li key={l}>{tr(lang, l)}</li>)}</ul>}
+              {sc.lignes.length > 0 && <ul className="reath-lignes">{sc.lignes.map((l) => <li key={l}>{avecVma(lang, tr(lang, l), vma)}</li>)}</ul>}
               {sc.circuit && (
                 <div className="reath-circuit">
                   {sc.circuit.format && <div className="meta">{R.circuit} · {tr(lang, sc.circuit.format)}</div>}

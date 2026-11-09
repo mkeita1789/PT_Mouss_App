@@ -110,7 +110,7 @@ export const demo = {
           { id: "m1", texte: "Bienvenue dans le programme ! Pense à faire ton check-in avant chaque séance.", cree_le: iso(20), coach: { prenom: "Moustapha", avatar: AVATARS[COACH] } },
         ]
       : [],
-  reath: (id: string) => (id === CLIENTE || id === JOUEUR ? { semaine: id === CLIENTE ? 2 : 4, debut: iso(10).slice(0, 10) } : null),
+  reath: (id: string) => (id === CLIENTE || id === JOUEUR ? { semaine: id === CLIENTE ? 2 : 4, debut: iso(10).slice(0, 10), vma: id === CLIENTE ? 13.5 : null } : null),
   reathSeances: (id: string) =>
     id === CLIENTE
       ? [

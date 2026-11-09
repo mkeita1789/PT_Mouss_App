@@ -1,4 +1,4 @@
-import { arreterReath, changerSemaineReath, inscrireReath } from "@/app/(app)/reathletisation/actions";
+import { arreterReath, changerSemaineReath, enregistrerVma, inscrireReath } from "@/app/(app)/reathletisation/actions";
 import type { Reath, ReathSeance } from "@/lib/data";
 import { alerteGenou, CRITERES_ENTREE, CRITERES_SORTIE, JOURS_EN, JOURS_FR, joursActifs, NB_SEMAINES, REATH_LCA } from "@/lib/coaching/reath-lca";
 import { locale, ui, type Lang } from "@/lib/i18n";
@@ -57,6 +57,15 @@ export function ReathCoach({ clientId, reath, seances, lang }: { clientId: strin
           </div>
         ))}
       </div>
+
+      <form action={enregistrerVma.bind(null, clientId)} className="vma-form">
+        <label className="field" style={{ margin: 0 }}>
+          <span>{R.vma}</span>
+          <input name="vma" className="input num" inputMode="decimal" placeholder="ex. 14" defaultValue={reath.vma ?? ""} style={{ width: 110 }} />
+        </label>
+        <button type="submit" className="btn btn-ghost btn-sm">{R.vmaEnregistrer}</button>
+        <span className="meta" style={{ fontSize: 12.5 }}>{R.vmaAide}</span>
+      </form>
 
       {prete && <p className="ok" style={{ fontSize: 13.5, marginTop: 12 }}><Icon nom="check" taille={15} /> {R.pret}</p>}
 

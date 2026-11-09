@@ -337,6 +337,10 @@ export const UI_FR = {
     alertesGenou: "Alertes genou", aucuneAlerte: "Aucune douleur ni gonflement signalé.",
     criteresSortie: "Avant le retour à l'entraînement collectif :",
     detail: (s: number, j: string) => `Réath LCA · semaine ${s} · ${j}`,
+    vma: "VMA (km/h)", vmaEnregistrer: "Enregistrer la VMA",
+    vmaAide: "Les allures du plan sont en % de VMA : avec la VMA, la cliente voit son allure en min/km.",
+    vmaConnue: (v: string) => `Allures calculées pour ta VMA de ${v} km/h.`,
+    vmaInconnue: "Allures en % de VMA. Ton coach peut renseigner ta VMA pour les afficher en min/km ; sinon, cours au ressenti : 80 % = tu peux encore parler, 87 % = phrases courtes.",
   },
   /* Import de l'ancienne appli */
   importer: {
@@ -680,6 +684,10 @@ export const UI_EN: TextesUI = {
     alertesGenou: "Knee alerts", aucuneAlerte: "No pain or swelling reported.",
     criteresSortie: "Before returning to team training:",
     detail: (s: number, j: string) => `ACL rehab · week ${s} · ${j}`,
+    vma: "MAS (km/h)", vmaEnregistrer: "Save MAS",
+    vmaAide: "Plan paces are in % of maximal aerobic speed (MAS): with it, the client sees her pace in min/km.",
+    vmaConnue: (v: string) => `Paces calculated for your MAS of ${v} km/h.`,
+    vmaInconnue: "Paces in % of MAS. Your coach can enter your MAS to show them in min/km; otherwise run by feel: 80% = you can still talk, 87% = short sentences.",
   },
   importer: {
     surCeTel: "Your history on this phone",

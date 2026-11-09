@@ -674,3 +674,4 @@ details.session[open] .chev { transform: rotate(90deg); }
 .reath-lexique dd { color: var(--ink-2); }
 .criteres { display: grid; gap: 8px; margin: 12px 0 14px; }
 @media (max-width: 420px) { .reath-circuit .reath-lignes { grid-template-columns: 1fr; } .reath-lignes, .reath-circuit { padding-left: 0; } }
+.vma-form { display: flex; align-items: flex-end; gap: 10px; flex-wrap: wrap; margin-top: 16px; }

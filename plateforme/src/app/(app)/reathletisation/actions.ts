@@ -72,3 +72,14 @@ export async function arreterReath(clientId: string): Promise<void> {
   await supabase.from("reath").delete().eq("client_id", clientId);
   revalidatePath(`/coach/${clientId}`);
 }
+
+export async function enregistrerVma(clientId: string, formData: FormData): Promise<void> {
+  await exigerCoach();
+  if (!UUID.test(clientId)) return;
+  const brut = String(formData.get("vma") ?? "").replace(",", ".").trim();
+  const v = brut ? Math.round(Number(brut) * 10) / 10 : null;
+  if (v !== null && !(v >= 8 && v <= 25)) return;
+  const supabase = await createClient();
+  await supabase.from("reath").update({ vma: v, maj_le: new Date().toISOString() }).eq("client_id", clientId);
+  revalidatePath(`/coach/${clientId}`);
+}
