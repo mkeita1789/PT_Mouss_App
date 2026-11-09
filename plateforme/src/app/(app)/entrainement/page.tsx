@@ -4,6 +4,7 @@ import { getBilan, getHistorique, getReath, getUtilisateur } from "@/lib/data";
 import { EXDB } from "@/lib/coaching/exdb";
 import { buildProgram, phaseFor } from "@/lib/coaching/programme";
 import { indexJourSuivant } from "@/lib/coaching/seance";
+import { lireProgramme } from "@/lib/coaching/programmes-speciaux";
 import { tc, ui } from "@/lib/i18n";
 import { getLang } from "@/lib/i18n/serveur";
 
@@ -58,7 +59,13 @@ export default async function Page() {
       <Liste
         titre={E.monEntrainement}
         entrees={[
-          ...(reath || user.role === "coach" ? [{ href: "/reathletisation", ico: "drapeau" as const, titre: T.reath.titre, sous: !reath ? T.reath.inscrire : reath.semaine > 6 ? T.reath.fini : T.reath.semaineSur(reath.semaine, 6) }] : []),
+          ...(reath || user.role === "coach"
+            ? [(() => {
+                const p = reath ? lireProgramme(reath.programme) : null;
+                const n = p?.semaines.length ?? 0;
+                return { href: "/reathletisation", ico: "drapeau" as const, titre: p ? p.titre[lang] : T.reath.programmes, sous: !reath ? T.reath.inscrireGen : reath.semaine > n ? T.reath.fini : T.reath.semaineSur(reath.semaine, n) };
+              })()]
+            : []),
           { href: bilan ? "/programme" : "/bilan", ico: "programme", titre: E.programme, sous: sousProgramme },
           ...(bilan ? [{ href: "/seance", ico: "seance" as const, titre: E.seanceJour, sous: sousSeance }] : []),
           { href: "/seance/libre", ico: "crayon", titre: E.libre, sous: E.libreSous },

@@ -95,7 +95,7 @@ export default async function Page({ params }: PageProps<"/coach/[id]">) {
       </div>
 
       <section className="section">
-        <div className="section-head"><h2 className="section-title">{T.reath.coachTitre}</h2></div>
+        <div className="section-head"><h2 className="section-title">{T.reath.programmes}</h2></div>
         <ReathCoach clientId={id} reath={reath} seances={reathSeances} lang={lang} />
       </section>
 

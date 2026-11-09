@@ -682,3 +682,9 @@ details.session[open] .chev { transform: rotate(90deg); }
 .inviter-lien { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: var(--r-md); background: var(--surface-2); border: 1px solid var(--line-strong); }
 .inviter-lien code { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; font-size: 13.5px; color: var(--ink); }
 .inviter-qr { display: block; width: min(240px, 70%); margin: 12px auto 4px; border-radius: 16px; background: #fff; padding: 8px; }
+.reath-jour.info { border-style: solid; border-color: var(--gold-line); }
+.prog-choix { display: grid; gap: 8px; margin: 8px 0 10px; }
+.prog-opt { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-radius: var(--r-md); background: var(--surface-2); border: 1px solid var(--line-strong); cursor: pointer; font-size: 14.5px; }
+.prog-opt input { accent-color: var(--gold); }
+.prog-opt span { margin-left: auto; font-size: 12.5px; color: var(--muted); }
+.prog-opt.on { border-color: var(--gold); background: var(--gold-soft); }

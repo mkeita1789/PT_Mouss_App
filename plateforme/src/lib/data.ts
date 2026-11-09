@@ -313,13 +313,13 @@ export async function getActivites(limite = 12): Promise<Activite[]> {
 
 /* ═══ Réathlétisation ═══ */
 
-export type Reath = { semaine: number; debut: string; vma: number | null };
-export type ReathSeance = { semaine: number; jour: number; douleur: number | null; gonflement: boolean; note: string | null; fait_le: string };
+export type Reath = { programme: string; semaine: number; debut: string; vma: number | null };
+export type ReathSeance = { semaine: number; jour: number; douleur: number | null; gonflement: boolean; rpe: number | null; note: string | null; fait_le: string };
 
 export async function getReath(clientId: string): Promise<Reath | null> {
   if (DEMO) return demo.reath(clientId);
   const supabase = await createClient();
-  const { data } = await supabase.from("reath").select("semaine, debut, vma").eq("client_id", clientId).maybeSingle();
+  const { data } = await supabase.from("reath").select("programme, semaine, debut, vma").eq("client_id", clientId).maybeSingle();
   return data ? { ...data, vma: data.vma === null ? null : Number(data.vma) } : null;
 }
 
@@ -328,7 +328,7 @@ export async function getReathSeances(clientId: string): Promise<ReathSeance[]> 
   const supabase = await createClient();
   const { data } = await supabase
     .from("reath_seances")
-    .select("semaine, jour, douleur, gonflement, note, fait_le")
+    .select("semaine, jour, douleur, gonflement, rpe, note, fait_le")
     .eq("client_id", clientId)
     .order("fait_le", { ascending: false });
   return data ?? [];

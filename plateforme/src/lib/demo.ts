@@ -110,16 +110,16 @@ export const demo = {
           { id: "m1", texte: "Bienvenue dans le programme ! Pense à faire ton check-in avant chaque séance.", cree_le: iso(20), coach: { prenom: "Moustapha", avatar: AVATARS[COACH] } },
         ]
       : [],
-  reath: (id: string) => (id === CLIENTE || id === JOUEUR ? { semaine: id === CLIENTE ? 2 : 4, debut: iso(10).slice(0, 10), vma: id === CLIENTE ? 13.5 : null } : null),
+  reath: (id: string) => (id === CLIENTE || id === JOUEUR ? { programme: id === CLIENTE ? (process.env.PTMOUSS_DEMO_PROG ?? "lca") : "presaison", semaine: id === CLIENTE ? 2 : 3, debut: iso(10).slice(0, 10), vma: id === CLIENTE ? 13.5 : null } : null),
   reathSeances: (id: string) =>
     id === CLIENTE
       ? [
-          { semaine: 2, jour: 1, douleur: 4, gonflement: true, note: "Genou un peu gonflé ce matin", fait_le: iso(1) },
-          { semaine: 2, jour: 0, douleur: 1, gonflement: false, note: null, fait_le: iso(2) },
-          ...[0, 1, 2, 3, 4].map((j) => ({ semaine: 1, jour: j, douleur: j === 3 ? 2 : 1, gonflement: false, note: null, fait_le: iso(9 - j) })),
+          { semaine: 2, jour: 1, douleur: 4, gonflement: true, rpe: null, note: "Genou un peu gonflé ce matin", fait_le: iso(1) },
+          { semaine: 2, jour: 0, douleur: 1, gonflement: false, rpe: null, note: null, fait_le: iso(2) },
+          ...[0, 1, 2, 3, 4].map((j) => ({ semaine: 1, jour: j, douleur: j === 3 ? 2 : 1, gonflement: false, rpe: null, note: null, fait_le: iso(9 - j) })),
         ]
       : id === JOUEUR
-        ? [1, 2, 3].flatMap((s) => [0, 2, 4].map((j) => ({ semaine: s, jour: j, douleur: 1, gonflement: false, note: null, fait_le: iso(20 - s * 5 - j) })))
+        ? [1, 2, 3].flatMap((s) => [0, 1, 2, 4].map((j) => ({ semaine: s, jour: j, douleur: null, gonflement: false, rpe: 4 + s, note: null, fait_le: iso(20 - s * 5 - j) })))
         : [],
   activites: () => {
     const il = (min: number) => new Date(Date.now() - min * 60000).toISOString();

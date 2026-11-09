@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { CheckinCard } from "@/components/CheckinCard";
 import { Icon } from "@/components/Icon";
 import { CarteMot } from "@/components/MotCoach";
+import { lireProgramme } from "@/lib/coaching/programmes-speciaux";
 import { refaireCheckin } from "./actions";
 import { getBilan, getCheckinDuJour, getHistorique, getMots, getReath, getUtilisateur, jourParis, motRecent } from "@/lib/data";
 import { buildProgram, lundiCourant, scoreForme, SRA, verdictCheckin } from "@/lib/coaching/programme";
@@ -62,10 +63,10 @@ export default async function Accueil() {
       </header>
 
       {mot && <CarteMot mot={mot} titre={T.mot.titre} lang={lang} />}
-      {reath && reath.semaine <= 6 && (
+      {reath && reath.semaine <= lireProgramme(reath.programme).semaines.length && (
         <Link href="/reathletisation" className="panel row-link" style={{ marginBottom: 14, borderColor: "var(--gold-line)" }}>
           <span className="note-icon"><Icon nom="drapeau" taille={17} /></span>
-          <span style={{ flex: 1 }}><b style={{ fontWeight: 600 }}>{T.reath.titre}</b><br /><span className="meta" style={{ fontSize: 13 }}>{T.reath.semaineSur(reath.semaine, 6)}</span></span>
+          <span style={{ flex: 1 }}><b style={{ fontWeight: 600 }}>{lireProgramme(reath.programme).titre[lang]}</b><br /><span className="meta" style={{ fontSize: 13 }}>{T.reath.semaineSur(reath.semaine, lireProgramme(reath.programme).semaines.length)}</span></span>
           <Icon nom="fleche" taille={18} className="muted" />
         </Link>
       )}

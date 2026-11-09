@@ -5,13 +5,17 @@
 import type { Lang } from "@/lib/i18n";
 
 export type TypeSeanceReath = "course" | "renfo" | "terrain" | "repos";
+/* Texte simple (traduit par tr) ou déjà écrit dans les deux langues */
+export type Txt = string | { fr: string; en: string };
 export type SeanceReath = {
   type: TypeSeanceReath;
-  titre: string;
-  lignes: string[];
-  circuit?: { format?: string; exos: string[] };
+  titre: Txt;
+  lignes: Txt[];
+  circuit?: { format?: Txt; exos: Txt[] };
+  /* Jour hors appli (ex. reprise collective) : rien à noter */
+  info?: boolean;
 };
-export type SemaineReath = { n: number; theme: string; jours: SeanceReath[] };
+export type SemaineReath = { n: number; theme: Txt; jours: SeanceReath[] };
 
 export const JOURS_FR = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"];
 export const JOURS_EN = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
@@ -121,7 +125,7 @@ export const ORIGINE = "PDF « Reprise LCA » — 6 semaines";
 export const NB_SEMAINES = REATH_LCA.length;
 
 /** Jours à faire dans une semaine (hors repos) */
-export const joursActifs = (s: SemaineReath) => s.jours.map((j, i) => ({ j, i })).filter(({ j }) => j.type !== "repos");
+export const joursActifs = (s: SemaineReath) => s.jours.map((j, i) => ({ j, i })).filter(({ j }) => j.type !== "repos" && !j.info);
 
 /* Règle de la douleur : au-delà, on lève le pied et on prévient le coach */
 export const DOULEUR_MAX = 3;
@@ -262,6 +266,13 @@ export function avecVma(lang: Lang, s: string, vma: number | null): string {
     return `${p} % ${lang === "en" ? "MAS" : "VMA"}${a ? ` (≈ ${a})` : ""}`;
   });
 }
+
+/** Texte à afficher dans la langue de l'utilisateur */
+export function txt(lang: Lang, t: Txt): string {
+  return typeof t === "string" ? tr(lang, t) : t[lang];
+}
+/** Clé stable d'un texte (identifiant d'exercice) */
+export const cle = (t: Txt) => (typeof t === "string" ? t : t.fr);
 
 export function tr(lang: Lang, s: string): string {
   if (lang === "fr") return s;
