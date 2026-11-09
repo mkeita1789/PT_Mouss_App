@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { enregistrerSeance } from "@/app/(app)/actions";
 import { FicheExercice } from "./FicheExercice";
+import { Icon } from "./Icon";
 import { amrapNext, amrapTexte, parseKg, RAISON_TXT } from "@/lib/coaching/amrap";
 import type { LigneSeance } from "@/lib/coaching/seance";
 
@@ -135,148 +136,141 @@ export function SeanceTracker(props: {
   };
 
   return (
-    <>
-      <div style={{ display: "flex", gap: 6, marginTop: 16, overflowX: "auto", paddingBottom: 2 }}>
-        {props.jours.map((d, i) => (
-          <button key={d.d} type="button" className={`btn ${i === jourIdx ? "p" : "s"}`} style={{ padding: "10px 6px", fontSize: 10.5, minWidth: 78, flex: 1 }} onClick={() => changerJour(i)}>
-            {d.d}
-          </button>
-        ))}
-      </div>
+    <div className="reveal">
+      <header className="page-head" style={{ paddingBottom: 16 }}>
+        <div className="meta">Séance du jour</div>
+        <h1 className="page-title" style={{ marginTop: 6, color: jour.crit ? "var(--ko)" : undefined }}>{jour.d}</h1>
+        <p className="page-lede">{jour.f}</p>
+      </header>
 
-      {props.verdict && (
-        <div className="card anim-item" style={{ marginTop: 12, border: `1.5px solid ${props.verdict.col}` }}>
-          <div style={{ fontFamily: "var(--font-oswald)", fontWeight: 700, color: props.verdict.col, textTransform: "uppercase", fontSize: 14 }}>
-            {props.verdict.v === "REPORTER" ? "Séance à reporter" : "Séance allégée"}
-          </div>
-          <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 5, lineHeight: 1.55 }}>{props.verdict.msg}</div>
+      {props.jours.length > 1 && (
+        <div className="days-switch" role="tablist" aria-label="Choisir la séance">
+          {props.jours.map((d, i) => (
+            <button key={d.d} type="button" role="tab" aria-selected={i === jourIdx} className={i === jourIdx ? "on" : ""} onClick={() => changerJour(i)}>
+              {d.d}
+            </button>
+          ))}
         </div>
       )}
 
-      <div style={{ fontFamily: "var(--font-oswald)", fontWeight: 700, fontSize: 19, textTransform: "uppercase", marginTop: 14, color: jour.crit ? "var(--ko)" : undefined }}>
-        {jour.d} — {jour.f}
-      </div>
-
-      <button type="button" className="card anim-item" style={{ marginTop: 11, width: "100%", textAlign: "left", color: "inherit", font: "inherit", cursor: "pointer" }} onClick={() => setWarmOpen(!warmOpen)}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div style={{ fontWeight: 600, fontSize: 13.5 }}>🔶 {props.echauffement.t}</div>
-          <div style={{ color: "var(--gold)", fontFamily: "var(--font-oswald)" }}>{warmOpen ? "−" : "+"}</div>
+      {props.verdict && (
+        <div className={`note ${props.verdict.v === "REPORTER" ? "note-ko" : "note-gold"}`} style={{ marginBottom: 12 }}>
+          <span className="note-icon"><Icon nom="alerte" taille={17} /></span>
+          <div><b>{props.verdict.v === "REPORTER" ? "Séance à reporter." : "Séance allégée."}</b> {props.verdict.msg}</div>
         </div>
-        {warmOpen && (
-          <div style={{ marginTop: 9 }}>
-            {props.echauffement.ex.map((x) => (
-              <div key={x} style={{ fontSize: 12.5, color: "var(--muted)", padding: "4px 0", borderBottom: "1px solid var(--line)" }}>› {x}</div>
-            ))}
-          </div>
-        )}
-      </button>
+      )}
 
-      <div style={{ height: 6, background: "var(--panel2)", borderRadius: 4, marginTop: 6, overflow: "hidden" }}>
-        <div style={{ height: "100%", width: `${(faites / total) * 100}%`, background: "var(--gold)", borderRadius: 4, transition: "width .4s" }} />
+      <details className="panel panel-tight" style={{ marginBottom: 12 }} open={warmOpen} onToggle={(e) => setWarmOpen((e.target as HTMLDetailsElement).open)}>
+        <summary style={{ cursor: "pointer", listStyle: "none", display: "flex", alignItems: "center", gap: 12 }}>
+          <span className="note-icon" style={{ width: 30, height: 30, borderRadius: 9, display: "grid", placeItems: "center", background: "var(--gold-soft)", color: "var(--gold)" }}><Icon nom="chrono" taille={17} /></span>
+          <span className="row-main"><span className="row-title">Échauffement</span><span className="row-sub" style={{ display: "block" }}>{props.echauffement.t}</span></span>
+          <span className="muted" style={{ transform: warmOpen ? "rotate(90deg)" : undefined, transition: "transform .2s" }}><Icon nom="fleche" taille={18} /></span>
+        </summary>
+        <div className="rows" style={{ marginTop: 8 }}>
+          {props.echauffement.ex.map((x) => <div key={x} className="row-item" style={{ fontSize: 14, color: "var(--ink-2)", padding: "9px 0" }}>{x}</div>)}
+        </div>
+      </details>
+
+      <div className="progress-sticky">
+        <div className="progress-line" role="progressbar" aria-valuenow={faites} aria-valuemin={0} aria-valuemax={total} aria-label="Séries faites"><i style={{ width: `${(faites / total) * 100}%` }} /></div>
+        <div className="progress-meta"><span><b className="num" style={{ color: "var(--ink)", fontSize: 14 }}>{faites}</b> / {total} séries</span><span>{fini ? "Terminé" : `${total - faites} restantes`}</span></div>
       </div>
-      <div style={{ fontSize: 10.5, color: "var(--muted)", marginTop: 6 }}>{faites}/{total} séries</div>
 
-      {jour.lignes.map((l, i) => {
-        const st = etats[i] ?? { done: 0, charge: "", amrap: null, note: "" };
-        const exFini = st.done >= l.sets;
-        const lv = parseKg(st.charge);
-        const r = st.amrap && l.cible && lv !== null ? amrapNext(st.amrap, l.cible, lv, l.c, props.deload) : null;
-        const rCol = r ? (r.verdict === "MONTER" ? "var(--ok)" : r.verdict === "BAISSER" ? "var(--ko)" : "var(--gold)") : "";
+      <div className="stack">
+        {jour.lignes.map((l, i) => {
+          const st = etats[i] ?? { done: 0, charge: "", amrap: null, note: "" };
+          const exFini = st.done >= l.sets;
+          const lv = parseKg(st.charge);
+          const r = st.amrap && l.cible && lv !== null ? amrapNext(st.amrap, l.cible, lv, l.c, props.deload) : null;
+          const rCol = r ? (r.verdict === "MONTER" ? "var(--ok)" : r.verdict === "BAISSER" ? "var(--ko)" : "var(--gold)") : "";
 
-        return (
-          <div key={`${jour.d}-${i}`} className="card anim-item" style={exFini ? { borderColor: "rgba(78,208,122,.4)" } : undefined}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontWeight: 600, fontSize: 14.5 }}>
-                  {exFini ? "✅ " : ""}
+          return (
+            <article key={`${jour.d}-${i}`} className={`panel ex-card ${exFini ? "done" : ""}`}>
+              <div className="ex-top">
+                <div className="row-main">
                   <FicheExercice nom={l.n} />
-                </div>
-                <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 2 }}>
-                  {l.sets} × {l.r}
-                  {l.rir !== "-" && ` · RIR ${l.rir}`}
-                  {l.drop && <> · <span style={{ color: "var(--gold)" }}>DROP SET</span></>}
-                </div>
-              </div>
-              {l.suivi && (
-                <input className="kg-input" placeholder="kg" inputMode="decimal" aria-label={`Charge ${l.n} (kg)`} value={st.charge} onChange={(e) => maj(i, { charge: e.target.value })} />
-              )}
-            </div>
-
-            {l.suggestion !== null ? (
-              l.changementPhase ? (
-                <div style={{ fontSize: 11.5, color: "var(--gold)", background: "rgba(245,184,65,.08)", borderLeft: "3px solid var(--gold)", borderRadius: 8, padding: "9px 11px", marginBottom: 8 }}>
-                  <div>🔄 {l.suggestionTxt}</div>
-                  <div style={{ color: "var(--muted)", fontSize: 10.5, marginTop: 4, lineHeight: 1.5 }}>Charge recalculée depuis ta performance du cycle. Vérifie à l'échauffement et ajuste si besoin.</div>
-                </div>
-              ) : (
-                <div style={{ fontSize: 11.5, color: "var(--ok)", background: "rgba(70,213,131,.07)", borderRadius: 8, padding: "7px 10px", marginBottom: 8 }}>
-                  💡 La dernière fois : {String(l.derniereCharge).replace(".", ",")} kg, {l.suggestionTxt}
-                </div>
-              )
-            ) : l.derniereCharge !== null ? (
-              <div style={{ fontSize: 11, color: "var(--muted)", marginBottom: 8 }}>La dernière fois : {String(l.derniereCharge).replace(".", ",")} kg</div>
-            ) : null}
-
-            <div style={{ fontSize: 11.5, color: "var(--muted)", marginBottom: 10 }}>💡 {l.note}</div>
-            <div style={{ display: "flex", gap: 7, flexWrap: "wrap" }}>
-              {Array.from({ length: l.sets }, (_, k) => (
-                <button key={k} type="button" className={`setbtn ${k < st.done ? "done" : ""}`} aria-label={`Série ${k + 1}`} onClick={() => cocher(i, k)}>
-                  {k + 1}
-                </button>
-              ))}
-            </div>
-
-            {exFini && l.rir !== "-" && l.cible && (
-              <div style={{ marginTop: 11, paddingTop: 11, borderTop: "1px solid var(--line)" }}>
-                <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 3 }}>Dernière série : combien de reps ?</div>
-                <div style={{ fontSize: 10.5, color: "var(--muted)", marginBottom: 8 }}>Uniquement les reps propres. Une rep moche ne compte pas.</div>
-                <div style={{ display: "flex", gap: 7, alignItems: "center" }}>
-                  <button type="button" className="rpechip" style={{ flex: "none", width: 44 }} onClick={() => maj(i, { amrap: Math.max(0, (st.amrap ?? l.cible ?? 0) - 1) })}>−</button>
-                  <input className="kg-input" style={{ flex: 1, width: "auto" }} inputMode="numeric" placeholder={String(l.cible)} aria-label="Reps de la dernière série"
-                    value={st.amrap ?? ""} onChange={(e) => { const n = parseInt(e.target.value, 10); maj(i, { amrap: isNaN(n) ? null : Math.max(0, Math.min(100, n)) }); }} />
-                  <button type="button" className="rpechip" style={{ flex: "none", width: 44 }} onClick={() => maj(i, { amrap: Math.min(100, (st.amrap ?? l.cible ?? 0) + 1) })}>+</button>
-                </div>
-                {r && lv !== null && (
-                  <div style={{ marginTop: 9, background: "var(--panel2)", borderLeft: `3px solid ${rCol}`, borderRadius: 10, padding: "10px 12px" }}>
-                    <div style={{ fontSize: 12.5, color: rCol, fontWeight: 600 }}>Prochaine séance : {amrapTexte(r, lv)}</div>
-                    <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 4, lineHeight: 1.5 }}>{RAISON_TXT[r.raison]}</div>
+                  <div className="row-sub">
+                    <span className="num" style={{ color: "var(--ink-2)", fontSize: 14 }}>{l.sets} × {l.r}</span>
+                    {l.rir !== "-" && ` · RIR ${l.rir}`}
+                    {l.drop && <span className="gold"> · drop set</span>}
                   </div>
+                  <div className="row-sub" style={{ marginTop: 4 }}>{l.note}</div>
+                </div>
+                {l.suivi && (
+                  <label className="kg-wrap">
+                    <input className="kg" placeholder="—" inputMode="decimal" aria-label={`Charge ${l.n} en kg`} value={st.charge} onChange={(e) => maj(i, { charge: e.target.value })} />
+                  </label>
                 )}
-                <input className="input" placeholder="Une note ? (sensation, technique…)" value={st.note} maxLength={500}
-                  style={{ padding: 10, fontSize: 12.5, marginTop: 9 }} onChange={(e) => maj(i, { note: e.target.value })} />
               </div>
-            )}
-          </div>
-        );
-      })}
+
+              {l.suggestion !== null ? (
+                <div className={`hint ${l.changementPhase ? "hint-gold" : "hint-ok"}`}>
+                  {l.changementPhase ? (
+                    <>{l.suggestionTxt}. Charge recalculée depuis ta performance du cycle : vérifie-la à l'échauffement.</>
+                  ) : (
+                    <>La dernière fois {String(l.derniereCharge).replace(".", ",")} kg · {l.suggestionTxt}</>
+                  )}
+                </div>
+              ) : l.derniereCharge !== null ? (
+                <div className="hint hint-plain">La dernière fois : {String(l.derniereCharge).replace(".", ",")} kg</div>
+              ) : null}
+
+              <div className="sets" role="group" aria-label="Séries">
+                {Array.from({ length: l.sets }, (_, k) => (
+                  <button key={k} type="button" className={`set ${k < st.done ? "done" : ""}`} aria-pressed={k < st.done} aria-label={`Série ${k + 1}`} onClick={() => cocher(i, k)}>
+                    {k < st.done ? <Icon nom="check" taille={20} /> : k + 1}
+                  </button>
+                ))}
+              </div>
+
+              {exFini && l.rir !== "-" && l.cible && (
+                <div className="amrap">
+                  <div className="row-title">Dernière série : combien de reps propres ?</div>
+                  <div className="row-sub">Une rep moche ne compte pas.</div>
+                  <div className="stepper">
+                    <button type="button" aria-label="Une rep de moins" onClick={() => maj(i, { amrap: Math.max(0, (st.amrap ?? l.cible ?? 0) - 1) })}><Icon nom="moins" taille={18} /></button>
+                    <input className="kg" inputMode="numeric" placeholder={String(l.cible)} aria-label="Reps de la dernière série"
+                      value={st.amrap ?? ""} onChange={(e) => { const n = parseInt(e.target.value, 10); maj(i, { amrap: isNaN(n) ? null : Math.max(0, Math.min(100, n)) }); }} />
+                    <button type="button" aria-label="Une rep de plus" onClick={() => maj(i, { amrap: Math.min(100, (st.amrap ?? l.cible ?? 0) + 1) })}><Icon nom="plus" taille={18} /></button>
+                  </div>
+                  {r && lv !== null && (
+                    <div className="verdict" style={{ borderColor: rCol }}>
+                      <div style={{ color: rCol, fontWeight: 600, fontSize: 14 }}>Prochaine séance : {amrapTexte(r, lv)}</div>
+                      <div className="row-sub">{RAISON_TXT[r.raison]}</div>
+                    </div>
+                  )}
+                  <input className="input" placeholder="Une note ? Sensation, technique…" value={st.note} maxLength={500}
+                    style={{ height: 44, fontSize: 14, marginTop: 12 }} onChange={(e) => maj(i, { note: e.target.value })} />
+                </div>
+              )}
+            </article>
+          );
+        })}
+      </div>
 
       {fini && (
-        <div className="card gold anim-item" style={{ textAlign: "center" }}>
-          <div style={{ fontFamily: "var(--font-oswald)", fontWeight: 700, fontSize: 20, textTransform: "uppercase" }}>Séance terminée 🔥</div>
-          <div style={{ fontSize: 12.5, color: "var(--muted)", margin: "9px 0 14px", lineHeight: 1.55 }}>
-            Bien joué. Enregistre-la : tes charges et ta progression seront visibles par ton coach.
-          </div>
-          {erreur && <p className="form-err">{erreur}</p>}
-          <button type="button" className="btn p" disabled={pending} onClick={enregistrer}>{pending ? "Enregistrement…" : "Enregistrer la séance"}</button>
-        </div>
+        <section className="panel panel-hero section" style={{ textAlign: "center" }}>
+          <h2 className="today-title" style={{ fontSize: 30 }}>Séance terminée</h2>
+          <p className="today-sub" style={{ margin: "8px auto 18px", maxWidth: "42ch" }}>Bien joué. Enregistre-la : tes charges et ta progression seront visibles par ton coach.</p>
+          {erreur && <p className="form-err" style={{ marginBottom: 12 }}>{erreur}</p>}
+          <button type="button" className="btn btn-primary btn-block" disabled={pending} onClick={enregistrer}>{pending ? "Enregistrement…" : "Enregistrer la séance"}</button>
+        </section>
       )}
 
       {repos !== null && (
-        <div className="timer-wrap">
-          <div className="timer-ring">
-            <svg width="190" height="190" aria-hidden>
-              <circle className="track" cx="95" cy="95" r="54" />
-              <circle className="fill" cx="95" cy="95" r="54" style={{ strokeDashoffset: 339 * (1 - repos / REPOS_S) }} />
+        <div className="timer" role="dialog" aria-label="Repos entre les séries">
+          <div className="meta">Repos</div>
+          <div className="ring">
+            <svg width="200" height="200" viewBox="0 0 200 200" aria-hidden>
+              <circle className="ring-track" cx="100" cy="100" r="86" />
+              <circle className="ring-fill" cx="100" cy="100" r="86" stroke="var(--gold)" strokeDasharray={540.4} strokeDashoffset={540.4 * (1 - repos / REPOS_S)} />
             </svg>
-            <div className="timer-num">
-              <div className="t">{repos}s</div>
-              <div className="l">Repos</div>
-            </div>
+            <div className="ring-center"><span className="num" aria-live="polite">{repos}</span><span>secondes</span></div>
           </div>
-          <button type="button" className="btn p" style={{ maxWidth: 200, marginTop: 26 }} onClick={stopRepos}>Passer</button>
+          <button type="button" className="btn btn-ghost" onClick={stopRepos}>Passer le repos</button>
         </div>
       )}
-    </>
+    </div>
   );
 }
 

@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { SeanceTracker, type JourPrepare } from "@/components/SeanceTracker";
 import { getBilan, getCheckinDuJour, getHistorique, getUtilisateur } from "@/lib/data";
 import { buildProgram, phaseFor, verdictCheckin, warmup } from "@/lib/coaching/programme";
-import { prepareSeance } from "@/lib/coaching/seance";
+import { indexJourSuivant, prepareSeance } from "@/lib/coaching/seance";
 
 export const metadata = { title: "Séance — PT Mouss IA" };
 
@@ -16,10 +16,12 @@ export default async function Page() {
 
   if (P.repos)
     return (
-      <div className="card" style={{ textAlign: "center", padding: "28px 16px", marginTop: 18 }}>
-        <div style={{ fontSize: 40 }}>🛑</div>
-        <div style={{ fontFamily: "var(--font-oswald)", fontWeight: 700, fontSize: 20, textTransform: "uppercase", marginTop: 8 }}>Repos imposé</div>
-        <div className="sub">Le repos fait partie du programme. Reviens frais.</div>
+      <div className="reveal">
+        <header className="page-head">
+          <div className="meta">Séance du jour</div>
+          <h1 className="page-title" style={{ marginTop: 6 }}>Repos imposé</h1>
+          <p className="page-lede">Le repos fait partie du programme. Tu reviendras plus frais, et c'est comme ça qu'on évite les blessures.</p>
+        </header>
       </div>
     );
 
@@ -28,9 +30,7 @@ export default async function Page() {
   const alleger = v?.v === "ALLÉGER";
 
   /* Jour suggéré : celui qui suit la dernière séance faite */
-  const derniere = historique[0]?.jour_code;
-  const iDerniere = P.days.findIndex((d) => d.d === derniere);
-  const jourSuggere = iDerniere >= 0 ? (iDerniere + 1) % P.days.length : 0;
+  const jourSuggere = indexJourSuivant(P.days, historique);
 
   const jours: JourPrepare[] = P.days.map((d) => ({
     d: d.d,

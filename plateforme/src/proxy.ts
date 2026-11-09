@@ -2,10 +2,12 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 /* Pages accessibles sans être connecté */
-const PUBLIC = ["/connexion", "/inscription", "/auth"];
+const PUBLIC = ["/connexion", "/inscription", "/auth", "/importer"];
 
 /* Rafraîchit la session Supabase à chaque requête et protège les pages privées. */
 export async function proxy(request: NextRequest) {
+  /* Mode démo local (PTMOUSS_DEMO=1, jamais en production) : pas d'authentification */
+  if (process.env.PTMOUSS_DEMO === "1") return NextResponse.next({ request });
   let response = NextResponse.next({ request });
 
   const supabase = createServerClient(

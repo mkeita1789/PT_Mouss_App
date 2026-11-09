@@ -3,6 +3,7 @@ import { cache } from "react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import type { Bilan, Categorie, Checkin } from "@/lib/coaching/types";
+import { DEMO, demo } from "@/lib/demo";
 
 /* ═══ Couche d'accès aux données ═══
    Toutes les lectures passent par ici. La sécurité réelle est assurée
@@ -36,8 +37,17 @@ export function jourParis(d: Date = new Date()): string {
   return new Intl.DateTimeFormat("fr-CA", { timeZone: "Europe/Paris" }).format(d);
 }
 
+/** Utilisateur connecté ou null, sans redirection (pages publiques) */
+export async function getUtilisateurOuNull(): Promise<{ id: string; prenom: string } | null> {
+  if (DEMO) return demo.utilisateur();
+  const supabase = await createClient();
+  const { data } = await supabase.auth.getClaims();
+  return data?.claims?.sub ? { id: data.claims.sub, prenom: "" } : null;
+}
+
 /** Utilisateur connecté, ou redirection vers la connexion */
 export const getUtilisateur = cache(async (): Promise<Utilisateur> => {
+  if (DEMO) return demo.utilisateur();
   const supabase = await createClient();
   const { data } = await supabase.auth.getClaims();
   const claims = data?.claims;
@@ -58,6 +68,7 @@ export const getUtilisateur = cache(async (): Promise<Utilisateur> => {
 });
 
 export const getBilan = cache(async (userId: string) => {
+  if (DEMO) return demo.bilan(userId);
   const supabase = await createClient();
   const { data } = await supabase
     .from("bilans")
@@ -68,6 +79,7 @@ export const getBilan = cache(async (userId: string) => {
 });
 
 export const getHistorique = cache(async (userId: string, limite = 200): Promise<SeanceFaite[]> => {
+  if (DEMO) return demo.historique(userId).slice(0, limite);
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("seances")
@@ -85,6 +97,7 @@ export const getHistorique = cache(async (userId: string, limite = 200): Promise
 });
 
 export const getCheckinDuJour = cache(async (userId: string): Promise<Checkin | null> => {
+  if (DEMO) return demo.checkinDuJour(userId);
   const supabase = await createClient();
   const { data } = await supabase
     .from("checkins")
@@ -113,6 +126,7 @@ export type ClientResume = {
 
 /** Tous les clients (RLS : seul le coach voit les autres profils) */
 export async function getClients(coachId: string): Promise<ClientResume[]> {
+  if (DEMO) return demo.clients();
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("profiles")
@@ -132,6 +146,7 @@ export async function getClients(coachId: string): Promise<ClientResume[]> {
 }
 
 export async function getClient(id: string): Promise<ClientResume | null> {
+  if (DEMO) return demo.client(id);
   const supabase = await createClient();
   const { data } = await supabase
     .from("profiles")
@@ -150,6 +165,7 @@ export async function getClient(id: string): Promise<ClientResume | null> {
 
 /** Check-ins des N derniers jours, pour un ou tous les clients */
 export async function getCheckinsRecents(jours = 7, userId?: string) {
+  if (DEMO) return demo.checkins(userId);
   const supabase = await createClient();
   const depuis = jourParis(new Date(Date.now() - jours * 864e5));
   let q = supabase.from("checkins").select("user_id, jour, sommeil, energie, corps").gte("jour", depuis).order("jour", { ascending: false });
@@ -160,6 +176,7 @@ export async function getCheckinsRecents(jours = 7, userId?: string) {
 
 /** Séances récentes de tous les clients, groupées par client (plus récente en premier) */
 export async function getSeancesTousClients(limite = 1000) {
+  if (DEMO) return demo.seancesTous() as Record<string, SeanceFaite[]>;
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("seances")

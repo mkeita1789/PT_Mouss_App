@@ -554,6 +554,7 @@ function viewHome(P) {
     <div class="h1">${salut}, <em>${S.profile.prenom || ""}</em></div>
     <div class="sub">${P?.phase || P?.proto || ""}</div>
     ${ring}
+    ${window.transfertCard ? window.transfertCard() : ""}
     ${window.rituelCard ? window.rituelCard() : ""}
     ${window.bilanCard ? window.bilanCard() : ""}
     ${msgs.map((m, i) => `<div class="card anim-item" style="animation-delay:${.06 + i * .06}s;border-left:3px solid ${m.col}">
@@ -659,6 +660,7 @@ function viewProfile(P) {
     ${window.smsButton ? `<div style="margin-top:9px">${window.smsButton(false)}</div>` : ""}
     <div class="eyebrow">${t("lang.label")}</div>
     ${langToggle()}
+    ${window.transfertCard ? window.transfertCard() : ""}
     <button class="btn s anim-item" style="margin-top:12px" onclick="redoBilan()">${t("pf.redo")}</button>
     <div style="text-align:center;font-size:10px;color:#4c4c52;margin-top:16px;line-height:1.6">
       ${t("pf.footer")}</div>`;

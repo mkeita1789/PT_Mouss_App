@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { enregistrerCheckin } from "@/app/(app)/actions";
 import { CHECKIN_Q } from "@/lib/coaching/programme";
 import type { Checkin } from "@/lib/coaching/types";
+import { Icon } from "./Icon";
 
 export function CheckinCard() {
   const [step, setStep] = useState(0);
@@ -24,25 +25,22 @@ export function CheckinCard() {
   };
 
   return (
-    <div className="card gold glow anim-item">
-      <div className="eyebrow" style={{ marginTop: 0 }}>
-        Check-in du jour ({step + 1}/3) — 20 secondes
+    <section className="panel" aria-label="Check-in du jour">
+      <div className="section-head" style={{ marginBottom: 4 }}>
+        <span className="section-title">Check-in du jour</span>
+        <span className="meta">{step + 1} / {CHECKIN_Q.length}</span>
       </div>
-      <div style={{ fontFamily: "var(--font-oswald)", fontWeight: 600, fontSize: 17, textTransform: "uppercase", marginBottom: 11 }}>{q.q}</div>
+      <div className="steps" style={{ margin: "10px 0 16px" }}>
+        {CHECKIN_Q.map((_, i) => <i key={i} className={i <= step ? "on" : ""} />)}
+      </div>
+      <div style={{ fontSize: 17, fontWeight: 600 }}>{q.q}</div>
       {q.o.map((o) => (
-        <button
-          key={o}
-          type="button"
-          className={`choice ${rep[q.k] === o ? "sel" : ""}`}
-          style={{ padding: "12px 14px", fontSize: 14, width: "100%", textAlign: "left", color: "inherit", font: "inherit" }}
-          disabled={pending}
-          onClick={() => choisir(o)}
-        >
+        <button key={o} type="button" className={`choice ${rep[q.k] === o ? "sel" : ""}`} disabled={pending} onClick={() => choisir(o)}>
           {o}
-          <span className="chk">✓</span>
+          <span className="tick"><Icon nom="check" taille={14} /></span>
         </button>
       ))}
       {erreur && <p className="form-err">{erreur}</p>}
-    </div>
+    </section>
   );
 }

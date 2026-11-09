@@ -26,6 +26,13 @@ export type LigneSeance = {
   suivi: boolean; // exercice chargé (S/A/P) → saisie de charge + AMRAP
 };
 
+/** Jour du programme suggéré : celui qui suit la dernière séance faite */
+export function indexJourSuivant(days: Jour[], historique: { jour_code: string }[]): number {
+  if (!days.length) return 0;
+  const i = days.findIndex((d) => d.d === historique[0]?.jour_code);
+  return i >= 0 ? (i + 1) % days.length : 0;
+}
+
 /**
  * @param historique séances du client, la plus récente en premier
  */

@@ -6,6 +6,9 @@ import { createClient } from "@/lib/supabase/server";
 
 export type EtatForm = { erreur?: string; ok?: string } | undefined;
 
+/* Seule destination de retour autorisée après connexion (évite les redirections ouvertes) */
+const suiteSure = (v: FormDataEntryValue | null) => (v === "/importer" ? "/importer" : null);
+
 const traduire = (msg: string) => {
   if (/invalid login credentials/i.test(msg)) return "Email ou mot de passe incorrect.";
   if (/email not confirmed/i.test(msg)) return "Confirme d'abord ton email : clique sur le lien reçu.";
@@ -23,7 +26,7 @@ export async function connexion(_: EtatForm, formData: FormData): Promise<EtatFo
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) return { erreur: traduire(error.message) };
-  redirect("/");
+  redirect(suiteSure(formData.get("suite")) ?? "/");
 }
 
 export async function inscription(_: EtatForm, formData: FormData): Promise<EtatForm> {
@@ -43,7 +46,7 @@ export async function inscription(_: EtatForm, formData: FormData): Promise<Etat
   if (error) return { erreur: traduire(error.message) };
 
   /* Confirmation d'email désactivée dans Supabase → session immédiate */
-  if (data.session) redirect("/bilan");
+  if (data.session) redirect(suiteSure(formData.get("suite")) ?? "/bilan");
   return { ok: "Compte créé ! Ouvre l'email de confirmation que tu viens de recevoir, puis connecte-toi." };
 }
 

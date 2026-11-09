@@ -1,11 +1,12 @@
 import Link from "next/link";
+import { Icon } from "@/components/Icon";
 import { exigerCoach, getCheckinsRecents, getClients, getSeancesTousClients } from "@/lib/data";
 import { alertesCoach, joursDepuis } from "@/lib/coaching/alertes";
 import { lundiCourant, phaseFor } from "@/lib/coaching/programme";
 
-export const metadata = { title: "Espace coach — PT Mouss IA" };
+export const metadata = { title: "Mes clients — PT Mouss IA" };
 
-const COULEUR = { ko: "var(--ko)", gold: "var(--gold)", ok: "var(--ok)" } as const;
+const PILL = { ko: "pill-ko", gold: "pill-gold", ok: "pill-ok" } as const;
 
 export default async function Page() {
   const coach = await exigerCoach();
@@ -14,8 +15,7 @@ export default async function Page() {
 
   const lignes = clients.map((c) => {
     const hist = seances[c.id] ?? [];
-    const ci = checkins.filter((x) => x.user_id === c.id);
-    const alertes = alertesCoach(hist, ci);
+    const alertes = alertesCoach(hist, checkins.filter((x) => x.user_id === c.id));
     return {
       ...c,
       hist,
@@ -30,47 +30,64 @@ export default async function Page() {
 
   const seancesSemaine = lignes.reduce((a, l) => a + l.semaine, 0);
   const aSuivre = lignes.filter((l) => l.gravite > 0).length;
+  const urgents = lignes.filter((l) => l.gravite === 2).length;
 
   return (
-    <>
-      <div className="h1">Espace <em>coach</em></div>
-      <div className="sub">Séances et charges de tes clients, avec les points à surveiller en premier.</div>
+    <div className="reveal">
+      <header className="page-head">
+        <div className="meta">Espace coach</div>
+        <h1 className="page-title" style={{ marginTop: 6 }}>Mes clients</h1>
+        <p className="page-lede">Les clients qui ont besoin de toi apparaissent en premier.</p>
+      </header>
 
-      <div className="statgrid anim-item" style={{ gridTemplateColumns: "repeat(3,1fr)" }}>
-        <div className="stat"><div className="v" style={{ color: "var(--gold)" }}>{clients.length}</div><div className="l">Clients</div></div>
-        <div className="stat"><div className="v" style={{ color: "var(--ok)" }}>{seancesSemaine}</div><div className="l">Séances / sem.</div></div>
-        <div className="stat"><div className="v" style={{ color: aSuivre ? "var(--ko)" : "var(--ok)" }}>{aSuivre}</div><div className="l">À suivre</div></div>
+      <div className="grid-3">
+        <div className="stat"><div className="stat-value">{clients.length}</div><div className="stat-label">Clients</div></div>
+        <div className="stat"><div className="stat-value">{seancesSemaine}</div><div className="stat-label">Séances cette semaine</div></div>
+        <div className="stat"><div className={`stat-value ${urgents ? "ko" : aSuivre ? "gold" : "ok"}`}>{aSuivre}</div><div className="stat-label">{urgents ? `À suivre, dont ${urgents} urgent${urgents > 1 ? "s" : ""}` : "À suivre"}</div></div>
       </div>
 
-      {!clients.length && (
-        <div className="card muted" style={{ fontSize: 13, lineHeight: 1.6 }}>
-          Aucun client pour l'instant. Envoie le lien de l'appli à tes clients : ils créent leur compte, font leur bilan, et apparaissent ici.
-        </div>
-      )}
-
-      {lignes.map((l) => (
-        <Link key={l.id} href={`/coach/${l.id}`} className="card anim-item" style={{ display: "block", borderLeft: `3px solid ${l.gravite === 2 ? "var(--ko)" : l.gravite ? "var(--gold)" : "var(--ok)"}` }}>
-          <div style={{ display: "flex", justifyContent: "space-between", gap: 8, alignItems: "baseline" }}>
-            <div style={{ fontFamily: "var(--font-oswald)", fontWeight: 700, fontSize: 18, textTransform: "uppercase" }}>{l.prenom || "Sans prénom"}</div>
-            <div style={{ fontFamily: "var(--font-oswald)", color: "var(--gold)", fontSize: 13, whiteSpace: "nowrap" }}>
-              {l.semaine}/{parseInt(l.bilan?.reponses.freq ?? "") || "–"} cette sem.
-            </div>
+      <section className="section">
+        {!clients.length ? (
+          <div className="panel">
+            <div className="section-title">Aucun client pour l'instant</div>
+            <p className="meta" style={{ marginTop: 6 }}>
+              Envoie le lien d'inscription à tes clients. Après leur bilan, ils apparaissent ici automatiquement.
+            </p>
           </div>
-          <div className="muted" style={{ fontSize: 11.5, marginTop: 3 }}>
-            {l.bilan ? l.bilan.reponses.objectif : "Bilan non fait"}
-            {l.phase && ` · ${l.phase.n} (S${l.phase.week})`}
-            {` · ${l.hist.length} séance${l.hist.length > 1 ? "s" : ""}`}
-            {l.jours !== null && ` · dernière il y a ${l.jours === 0 ? "moins d'1 j" : `${l.jours} j`}`}
+        ) : (
+          <div className="stack">
+            {lignes.map((l) => (
+              <Link key={l.id} href={`/coach/${l.id}`} className="panel client-row" style={l.gravite === 2 ? { borderColor: "rgba(240,96,93,.4)" } : undefined}>
+                <span className="avatar" style={l.gravite === 2 ? { borderColor: "var(--ko)", color: "var(--ko)" } : undefined}>{(l.prenom[0] ?? "?").toUpperCase()}</span>
+                <div style={{ minWidth: 0 }}>
+                  <div className="row-title" style={{ fontSize: 16 }}>{l.prenom || "Sans prénom"}</div>
+                  <div className="row-sub">
+                    {l.bilan ? l.bilan.reponses.objectif.replace(/ [🍑⚽]/u, "") : "Bilan non fait"}
+                    {l.phase && ` · S${l.phase.week} ${l.phase.n}`}
+                  </div>
+                  <div className="row-sub">
+                    <span className="num" style={{ color: "var(--ink-2)" }}>{l.semaine}/{parseInt(l.bilan?.reponses.freq ?? "") || "–"}</span> cette semaine
+                    {l.jours !== null ? ` · dernière séance ${l.jours === 0 ? "aujourd'hui" : l.jours === 1 ? "hier" : `il y a ${l.jours} j`}` : ""}
+                  </div>
+                </div>
+                <div className="client-alerts">
+                  {l.alertes.length ? (
+                    <>
+                      {l.alertes.slice(0, 3).map((a, i) => (
+                        <span key={i} className={`pill ${PILL[a.niveau]}`} style={{ fontSize: 12, padding: "3px 9px" }}><span className="dot" />{a.titre}</span>
+                      ))}
+                      {l.alertes.length > 3 && <span className="pill" style={{ fontSize: 12, padding: "3px 9px" }}>+{l.alertes.length - 3}</span>}
+                    </>
+                  ) : (
+                    <span className="pill pill-ok" style={{ fontSize: 12, padding: "3px 9px" }}><span className="dot" />Tout va bien</span>
+                  )}
+                </div>
+                <span className="muted" style={{ gridRow: 1, gridColumn: -1 }}><Icon nom="fleche" taille={18} /></span>
+              </Link>
+            ))}
           </div>
-          {l.alertes.slice(0, 3).map((a, i) => (
-            <div key={i} style={{ fontSize: 12, marginTop: 7, lineHeight: 1.45 }}>
-              <span style={{ color: COULEUR[a.niveau], fontWeight: 600 }}>● {a.titre}</span>
-              <span className="muted"> — {a.detail}</span>
-            </div>
-          ))}
-          {l.alertes.length > 3 && <div className="muted" style={{ fontSize: 11, marginTop: 6 }}>+ {l.alertes.length - 3} autre(s)</div>}
-        </Link>
-      ))}
-    </>
+        )}
+      </section>
+    </div>
   );
 }

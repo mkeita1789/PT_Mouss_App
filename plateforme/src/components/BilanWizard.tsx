@@ -5,6 +5,7 @@ import { useState, useTransition } from "react";
 import { enregistrerBilan } from "@/app/(app)/actions";
 import { questionsBilan } from "@/lib/coaching/programme";
 import type { Bilan } from "@/lib/coaching/types";
+import { Icon } from "./Icon";
 
 export function BilanWizard({ initial, existe }: { initial: Partial<Bilan>; existe: boolean }) {
   const router = useRouter();
@@ -30,58 +31,49 @@ export function BilanWizard({ initial, existe }: { initial: Partial<Bilan>; exis
   };
 
   return (
-    <>
-      <div className="h1">Ton bilan</div>
-      <div className="sub">Question {idx + 1} / {QS.length}</div>
-      <div className="progress-dots">
-        {QS.map((_, i) => (
-          <div key={i} className={`pdot ${i <= idx ? "on" : ""}`} />
-        ))}
+    <div className="reveal" style={{ maxWidth: 620 }}>
+      <header className="page-head" style={{ paddingBottom: 0 }}>
+        <div className="meta">Bilan · question {idx + 1} sur {QS.length}</div>
+        <h1 className="page-title" style={{ marginTop: 6 }}>{q.q}</h1>
+      </header>
+      <div className="steps" aria-hidden>
+        {QS.map((_, i) => <i key={i} className={i <= idx ? "on" : ""} />)}
       </div>
 
-      <div style={{ fontFamily: "var(--font-oswald)", fontWeight: 600, fontSize: 19, textTransform: "uppercase", margin: "6px 0 14px" }}>{q.q}</div>
-
       {q.type === "text" ? (
-        <input
-          className="input"
-          placeholder={q.ph}
-          value={String(val ?? "")}
-          maxLength={40}
-          autoFocus
+        <input className="input" placeholder={q.ph} value={String(val ?? "")} maxLength={40} autoFocus aria-label={q.q}
           onChange={(e) => setRep({ ...rep, [q.k]: e.target.value })}
-        />
+          onKeyDown={(e) => e.key === "Enter" && ok && suivant()} />
       ) : (
-        q.o!.map((o) => (
-          <button
-            key={o}
-            type="button"
-            className={`choice ${val === o ? "sel" : ""}`}
-            style={{ width: "100%", textAlign: "left", color: "inherit", font: "inherit" }}
-            onClick={() => setRep({ ...rep, [q.k]: o })}
-          >
-            {o}
-            <span className="chk">✓</span>
-          </button>
-        ))
+        <div role="radiogroup" aria-label={q.q}>
+          {q.o!.map((o) => (
+            <button key={o} type="button" role="radio" aria-checked={val === o} className={`choice ${val === o ? "sel" : ""}`} onClick={() => setRep({ ...rep, [q.k]: o })}>
+              {o}
+              <span className="tick"><Icon nom="check" taille={14} /></span>
+            </button>
+          ))}
+        </div>
       )}
 
       {dernier && existe && (
-        <label style={{ display: "flex", gap: 10, alignItems: "center", fontSize: 13, marginTop: 16, color: "var(--muted)" }}>
-          <input type="checkbox" checked={recommencer} onChange={(e) => setRecommencer(e.target.checked)} />
+        <label style={{ display: "flex", gap: 10, alignItems: "center", fontSize: 14, marginTop: 18, color: "var(--ink-2)" }}>
+          <input type="checkbox" checked={recommencer} onChange={(e) => setRecommencer(e.target.checked)} style={{ width: 18, height: 18, accentColor: "var(--gold)" }} />
           Recommencer le cycle à la semaine 1
         </label>
       )}
 
-      {erreur && <p className="form-err" style={{ marginTop: 12 }}>{erreur}</p>}
+      {erreur && <p className="form-err">{erreur}</p>}
 
-      <div className="row" style={{ marginTop: 20 }}>
+      <div className="btn-row" style={{ marginTop: 26 }}>
         {idx > 0 && (
-          <button type="button" className="btn s" onClick={() => setIdx(idx - 1)}>Retour</button>
+          <button type="button" className="btn btn-ghost" style={{ flex: "0 0 auto" }} onClick={() => setIdx(idx - 1)} aria-label="Question précédente">
+            <Icon nom="retour" taille={18} />
+          </button>
         )}
-        <button type="button" className="btn p" disabled={!ok || pending} onClick={suivant}>
-          {pending ? "…" : dernier ? "Voir mon programme" : "Suivant"}
+        <button type="button" className="btn btn-primary" disabled={!ok || pending} onClick={suivant}>
+          {pending ? "Enregistrement…" : dernier ? "Voir mon programme" : "Continuer"}
         </button>
       </div>
-    </>
+    </div>
   );
 }

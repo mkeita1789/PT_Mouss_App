@@ -1,13 +1,14 @@
 import Link from "next/link";
 import { deconnexion } from "@/app/(auth)/actions";
+import { Icon } from "@/components/Icon";
 import { getBilan, getUtilisateur } from "@/lib/data";
 import { phaseFor } from "@/lib/coaching/programme";
 
 export const metadata = { title: "Profil — PT Mouss IA" };
 
 const LIBELLES: Record<string, string> = {
-  objectif: "Objectif", niveau: "Niveau", freq: "Séances / semaine", materiel: "Lieu",
-  sante: "Vigilance santé", sommeil: "Sommeil", periode: "Période", allure: "Allure footing",
+  objectif: "Objectif", niveau: "Niveau", freq: "Séances par semaine", materiel: "Lieu d'entraînement",
+  sante: "Vigilance santé", sommeil: "Sommeil", periode: "Période", allure: "Allure de footing",
 };
 
 export default async function Page() {
@@ -16,44 +17,50 @@ export default async function Page() {
   const phase = bilan ? phaseFor(bilan.reponses, bilan.debut) : null;
 
   return (
-    <>
-      <div className="h1">
-        <em>{bilan?.reponses.prenom || user.prenom || "Profil"}</em>
-      </div>
-      <div className="sub">{user.email}{user.role === "coach" ? " · Coach" : ""}</div>
+    <div className="reveal">
+      <header className="page-head">
+        <div className="meta">{user.email}{user.role === "coach" ? " · Coach" : ""}</div>
+        <h1 className="page-title" style={{ marginTop: 6 }}>{bilan?.reponses.prenom || user.prenom || "Mon profil"}</h1>
+      </header>
 
-      {bilan ? (
-        <div className="card gold anim-item">
-          <div className="eyebrow" style={{ marginTop: 0 }}>Ton bilan</div>
-          {Object.entries(LIBELLES).map(([k, lb]) => {
-            const v = (bilan.reponses as Record<string, string | undefined>)[k];
-            return v ? (
-              <div key={k} className="exline">
-                <div style={{ flex: 1, color: "var(--muted)", fontSize: 12.5 }}>{lb}</div>
-                <div style={{ fontSize: 13, textAlign: "right" }}>{v}</div>
-              </div>
-            ) : null;
-          })}
-          {phase && (
-            <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 10 }}>
-              Cycle démarré le {new Date(bilan.debut).toLocaleDateString("fr-FR", { timeZone: "Europe/Paris" })} · {phase.label} — {phase.n}
+      <div className="grid-2" style={{ alignItems: "start" }}>
+        <section className="panel">
+          <div className="section-head">
+            <h2 className="section-title">Ton bilan</h2>
+            <Link href="/bilan" className="link" style={{ fontSize: 13.5 }}>{bilan ? "Refaire" : "Commencer"}</Link>
+          </div>
+          {bilan ? (
+            <div className="rows">
+              {Object.entries(LIBELLES).map(([k, lb]) => {
+                const v = (bilan.reponses as Record<string, string | undefined>)[k];
+                return v ? (
+                  <div key={k} className="row-item">
+                    <div className="row-main meta">{lb}</div>
+                    <div style={{ fontSize: 14, textAlign: "right" }}>{v}</div>
+                  </div>
+                ) : null;
+              })}
             </div>
+          ) : (
+            <p className="meta">Fais ton bilan pour générer ton programme.</p>
           )}
+          {phase && (
+            <p className="meta" style={{ marginTop: 12 }}>
+              Cycle démarré le {new Date(bilan!.debut).toLocaleDateString("fr-FR", { day: "numeric", month: "long", timeZone: "Europe/Paris" })} · semaine {phase.week} sur {phase.len}, {phase.n}
+            </p>
+          )}
+        </section>
+
+        <div className="stack">
+          <div className="note note-ko">
+            <span className="note-icon"><Icon nom="alerte" taille={17} /></span>
+            <div><b>Douleur, pas courbature ?</b> Tu arrêtes et tu préviens Moustapha. Pour la nutrition et le moral, tu passes par lui aussi.</div>
+          </div>
+          <form action={deconnexion}>
+            <button type="submit" className="btn btn-ghost btn-block"><Icon nom="sortie" taille={18} /> Se déconnecter</button>
+          </form>
         </div>
-      ) : (
-        <div className="card">Pas encore de bilan.</div>
-      )}
-
-      <Link href="/bilan" className="btn s anim-item" style={{ textAlign: "center", marginBottom: 10 }}>
-        {bilan ? "Refaire mon bilan" : "Faire mon bilan"}
-      </Link>
-      <form action={deconnexion}>
-        <button type="submit" className="btn s">Se déconnecter</button>
-      </form>
-
-      <div className="card alert ko" style={{ marginTop: 18, fontSize: 12.5 }}>
-        <b>Douleur</b> (pas courbature) → tu arrêtes et tu préviens Moustapha. Pour la nutrition et le moral, tu passes par lui.
       </div>
-    </>
+    </div>
   );
 }
