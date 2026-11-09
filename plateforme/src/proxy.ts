@@ -2,7 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 /* Pages accessibles sans être connecté */
-const PUBLIC = ["/connexion", "/inscription", "/auth", "/importer"];
+const PUBLIC = ["/connexion", "/inscription", "/auth", "/importer", "/api/rappels"];
 
 /* Adresse unique de l'appli. L'ancienne adresse de la plateforme y renvoie. */
 const ADRESSE = "pt-mouss-app.vercel.app";

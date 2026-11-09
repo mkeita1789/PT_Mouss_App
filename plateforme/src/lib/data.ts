@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import type { Bilan, Categorie, Checkin } from "@/lib/coaching/types";
 import { DEMO, demo } from "@/lib/demo";
+import { avancementDefi, badges, records, serieSemaines, type AvancementDefi, type Badge, type Defi, type RecordExo, type Serie } from "@/lib/coaching/motivation";
 
 /* ═══ Couche d'accès aux données ═══
    Toutes les lectures passent par ici. La sécurité réelle est assurée
@@ -332,4 +333,59 @@ export async function getReathSeances(clientId: string): Promise<ReathSeance[]> 
     .eq("client_id", clientId)
     .order("fait_le", { ascending: false });
   return data ?? [];
+}
+
+/* ═══ Motivation ═══ */
+
+/** Défis visibles (coach : tous ; client : les siens et ceux pour toutes). Vide si la table n'existe pas encore. */
+export async function getDefis(): Promise<Defi[]> {
+  if (DEMO) return demo.defis();
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("defis")
+    .select("id, client_id, titre, type, exercice, cible, debut, fin")
+    .order("fin", { ascending: false })
+    .limit(50);
+  if (error) return [];
+  return (data ?? []).map((d) => ({ ...d, cible: Number(d.cible) })) as Defi[];
+}
+
+export type Motivation = {
+  serie: Serie;
+  records: RecordExo[];
+  badges: Badge[];
+  defis: { defi: Defi; av: AvancementDefi }[];
+};
+
+/** Tout ce qui motive une cliente : série, records, badges, défis en cours */
+export const getMotivation = cache(async (userId: string, objectif: number, cycles: number): Promise<Motivation> => {
+  const [historique, reathSeances, checkins, defis] = await Promise.all([getHistorique(userId, 500), getReathSeances(userId), getCheckinsRecents(120, userId), getDefis()]);
+  const autres = reathSeances.map((r) => r.fait_le);
+  const dates = [...historique.map((h) => h.realisee_le), ...autres];
+  const pauses = checkins.filter((c) => /douleur/i.test(c.corps)).map((c) => c.jour + "T12:00:00Z");
+  const serie = serieSemaines(dates, objectif, pauses);
+  const recs = records(historique);
+  const miens = defis.filter((d) => d.client_id === null || d.client_id === userId).map((defi) => ({ defi, av: avancementDefi(defi, historique, autres) }));
+  return {
+    serie,
+    records: recs,
+    badges: badges({
+      seances: dates.length,
+      records: recs.reduce((n, r) => n + r.nbRecords, 0),
+      meilleureSerie: serie.meilleure,
+      cycles,
+      defisReussis: miens.filter((x) => x.av.reussi).length,
+    }),
+    defis: miens,
+  };
+});
+
+/** Séances des programmes spéciaux de tous les clients (dates seulement), pour le coach */
+export async function getReathDatesTous(): Promise<Record<string, string[]>> {
+  if (DEMO) return {};
+  const supabase = await createClient();
+  const { data } = await supabase.from("reath_seances").select("client_id, fait_le").limit(5000);
+  const out: Record<string, string[]> = {};
+  (data ?? []).forEach((r) => (out[r.client_id] ||= []).push(r.fait_le));
+  return out;
 }

@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { Avatar } from "@/components/Avatar";
 import { Icon } from "@/components/Icon";
-import { exigerCoach, getActivites, getCheckinsRecents, getClients, getSeancesTousClients } from "@/lib/data";
+import { exigerCoach, getActivites, getCheckinsRecents, getClients, getDefis, getReathDatesTous, getSeancesTousClients } from "@/lib/data";
+import { DefisCoach } from "@/components/DefisCoach";
+import { serieSemaines } from "@/lib/coaching/motivation";
 import { FilActivite } from "@/components/FilActivite";
 import { Inviter } from "@/components/Inviter";
 import { alertesCoach, joursDepuis } from "@/lib/coaching/alertes";
@@ -17,7 +19,7 @@ export default async function Page() {
   const coach = await exigerCoach();
   const lang = await getLang();
   const T = ui(lang);
-  const [clients, seances, checkins, activites] = await Promise.all([getClients(coach.id), getSeancesTousClients(), getCheckinsRecents(7), getActivites(6)]);
+  const [clients, seances, checkins, activites, defis, reathDates, checkins120] = await Promise.all([getClients(coach.id), getSeancesTousClients(), getCheckinsRecents(7), getActivites(6), getDefis(), getReathDatesTous(), getCheckinsRecents(120)]);
   const lundi = lundiCourant();
 
   const lignes = clients.map((c) => {
@@ -31,6 +33,11 @@ export default async function Page() {
       jours: joursDepuis(hist[0]?.realisee_le),
       phase: c.bilan ? phaseFor(c.bilan.reponses, c.bilan.debut) : null,
       gravite: alertes.some((a) => a.niveau === "ko") ? 2 : alertes.length ? 1 : 0,
+      serie: serieSemaines(
+        [...hist.map((h) => h.realisee_le), ...(reathDates[c.id] ?? [])],
+        parseInt(c.bilan?.reponses.freq ?? "") || 3,
+        checkins120.filter((x) => x.user_id === c.id && /douleur/i.test(x.corps)).map((x) => x.jour + "T12:00:00Z"),
+      ).semaines,
     };
   });
   lignes.sort((a, b) => b.gravite - a.gravite || a.prenom.localeCompare(b.prenom));
@@ -56,6 +63,10 @@ export default async function Page() {
 
       {clients.length > 0 && <FilActivite activites={activites} lang={lang} />}
 
+      {clients.length > 0 && (
+        <DefisCoach defis={defis} clients={lignes.map((l) => ({ id: l.id, prenom: l.prenom, hist: l.hist, autres: reathDates[l.id] ?? [] }))} lang={lang} limite={new Date(lundi.getTime() - 14 * 864e5).toISOString().slice(0, 10)} />
+      )}
+
       <section className="section">
         {!clients.length ? (
           <div className="panel">
@@ -76,6 +87,7 @@ export default async function Page() {
                   <div className="row-sub">
                     <span className="num" style={{ color: "var(--ink-2)" }}>{l.semaine}/{parseInt(l.bilan?.reponses.freq ?? "") || "–"}</span> {T.coach.cetteSemaine}
                     {l.jours !== null ? T.coach.derniere(l.jours) : ""}
+                    {l.serie > 0 && <> · <span className="gold">🔥 {T.motiv.serieClient(l.serie)}</span></>}
                   </div>
                 </div>
                 <div className="client-alerts">

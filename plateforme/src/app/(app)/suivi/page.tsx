@@ -2,8 +2,9 @@ import { redirect } from "next/navigation";
 import { HistoriqueSeances, ProgressionCharges } from "@/components/Progression";
 import Link from "next/link";
 import { Icon } from "@/components/Icon";
-import { chargesParExercice, getBilan, getHistorique, getUtilisateur } from "@/lib/data";
-import { lundiCourant, weekNum } from "@/lib/coaching/programme";
+import { chargesParExercice, getBilan, getHistorique, getMotivation, getUtilisateur } from "@/lib/data";
+import { Badges } from "@/components/Badges";
+import { lundiCourant, phaseFor, weekNum } from "@/lib/coaching/programme";
 import { meilleureProgression } from "@/lib/coaching/alertes";
 import { nombre, tc, ui } from "@/lib/i18n";
 import { getLang } from "@/lib/i18n/serveur";
@@ -21,6 +22,8 @@ export default async function Page() {
   const semaine = historique.filter((h) => new Date(h.realisee_le) >= lundiCourant()).length;
   const bienEtre = bilan.reponses.objectif === "Me sentir mieux";
   const best = meilleureProgression(historique);
+  const motiv = await getMotivation(user.id, parseInt(bilan.reponses.freq) || 3, Math.max(0, (phaseFor(bilan.reponses, bilan.debut)?.cycle ?? 1) - 1));
+  const M = T.motiv;
   const enHausse = Object.values(chargesParExercice(historique)).filter((p) => p.length > 1 && p[p.length - 1].kg > p[0].kg).length;
 
   return (
@@ -28,10 +31,19 @@ export default async function Page() {
       <header className="page-head">
         <div className="meta">{T.suivi.semaineDepuis(weekNum(bilan.debut) + 1)}</div>
         <h1 className="page-title" style={{ marginTop: 6 }}>{T.suivi.titre}</h1>
-        <Link href="/photos" className="btn btn-ghost btn-sm" style={{ marginTop: 14, display: "inline-flex" }}>
-          <Icon nom="photo" taille={17} /> {T.photos.lien}
-        </Link>
+        <div className="btn-row" style={{ marginTop: 14, flexWrap: "wrap" }}>
+          <Link href="/records" className="btn btn-primary btn-sm"><span aria-hidden>🏆</span> {M.records}</Link>
+          <Link href="/photos" className="btn btn-ghost btn-sm"><Icon nom="photo" taille={17} /> {T.photos.lien}</Link>
+        </div>
       </header>
+
+      <div className="panel" style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 14 }}>
+        <span style={{ fontSize: 34 }} aria-hidden>🔥</span>
+        <div>
+          <div className="row-title" style={{ fontSize: 17 }}>{motiv.serie.semaines ? M.serie(motiv.serie.semaines).replace("🔥 ", "") : M.serieZero.replace("🔥 ", "")}</div>
+          <div className="meta" style={{ fontSize: 13 }}>{M.meilleureSerie(motiv.serie.meilleure)} · {motiv.serie.manque === 0 ? M.validee : M.encore(motiv.serie.manque)}</div>
+        </div>
+      </div>
 
       <div className="grid-3">
         <div className="stat"><div className="stat-value">{semaine}<small>/{parseInt(bilan.reponses.freq) || 3}</small></div><div className="stat-label">{T.suivi.cetteSemaine}</div></div>
@@ -62,6 +74,10 @@ export default async function Page() {
       <section className="section" id="historique" style={{ scrollMarginTop: 80 }}>
         <div className="section-head"><h2 className="section-title">{T.suivi.historique}</h2><span className="section-note">{T.suivi.toucheDetail}</span></div>
         <HistoriqueSeances historique={historique} lang={lang} />
+      </section>
+      <section className="section">
+        <div className="section-head"><h2 className="section-title">{M.badges}</h2><span className="section-note">{M.badgesObtenus(motiv.badges.filter((b) => b.obtenu).length, motiv.badges.length)}</span></div>
+        <Badges badges={motiv.badges} lang={lang} />
       </section>
     </div>
   );

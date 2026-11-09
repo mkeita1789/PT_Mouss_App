@@ -4,6 +4,8 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { enregistrerSeance, signalerDebut } from "@/app/(app)/actions";
 import { FicheExercice } from "./FicheExercice";
+import { CelebrationRecords } from "./Celebration";
+import type { NouveauRecord } from "@/lib/coaching/motivation";
 import { Icon } from "./Icon";
 import { amrapNext, amrapTexte, parseKg, raisonTexte } from "@/lib/coaching/amrap";
 import { tc } from "@/lib/i18n";
@@ -57,6 +59,7 @@ export function SeanceTracker(props: {
   const [warmOpen, setWarmOpen] = useState(false);
   const [repos, setRepos] = useState<number | null>(null);
   const [erreur, setErreur] = useState("");
+  const [recordsBattus, setRecordsBattus] = useState<NouveauRecord[] | null>(null);
   const [pending, start] = useTransition();
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
   const charge = useRef(false);
@@ -146,6 +149,8 @@ export function SeanceTracker(props: {
       });
       if (r.erreur) return setErreur(r.erreur);
       effacerBrouillon(jour.d);
+      /* Record battu : on prend le temps de le fêter */
+      if (r.records?.length) return setRecordsBattus(r.records);
       celebrer();
       setTimeout(() => router.push("/suivi"), 1200);
     });
@@ -272,6 +277,8 @@ export function SeanceTracker(props: {
           <button type="button" className="btn btn-primary btn-block" disabled={pending} onClick={enregistrer}>{pending ? T.seance.enregistrement : T.seance.enregistrer}</button>
         </section>
       )}
+
+      {recordsBattus && <CelebrationRecords records={recordsBattus} onFin={() => router.push("/suivi")} />}
 
       {repos !== null && (
         <div className="timer" role="dialog" aria-label={T.seance.repos}>

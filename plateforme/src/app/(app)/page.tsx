@@ -5,7 +5,9 @@ import { Icon } from "@/components/Icon";
 import { CarteMot } from "@/components/MotCoach";
 import { lireProgramme } from "@/lib/coaching/programmes-speciaux";
 import { refaireCheckin } from "./actions";
-import { getBilan, getCheckinDuJour, getHistorique, getMots, getReath, getUtilisateur, jourParis, motRecent } from "@/lib/data";
+import { getBilan, getCheckinDuJour, getHistorique, getMotivation, getMots, getReath, getUtilisateur, jourParis, motRecent } from "@/lib/data";
+import { CarteDefi } from "@/components/Defis";
+import { phaseFor } from "@/lib/coaching/programme";
 import { buildProgram, lundiCourant, scoreForme, SRA, verdictCheckin } from "@/lib/coaching/programme";
 import { indexJourSuivant } from "@/lib/coaching/seance";
 import { messagesClient } from "@/lib/coaching/alertes";
@@ -28,6 +30,10 @@ export default async function Accueil() {
   const lundi = lundiCourant();
   const semaine = historique.filter((h) => new Date(h.realisee_le) >= lundi);
   const target = parseInt(bilan.reponses.freq) || 3;
+  const cycles = Math.max(0, (phaseFor(bilan.reponses, bilan.debut)?.cycle ?? 1) - 1);
+  const motiv = await getMotivation(user.id, target, cycles);
+  const M = T.motiv;
+  const defisActifs = motiv.defis.filter((x) => !x.av.termine);
   const sf = ci ? scoreForme(ci, semaine.length, bilan.reponses.freq) : null;
   const v = ci ? verdictCheckin(ci) : null;
   const msgs = messagesClient({
@@ -56,6 +62,7 @@ export default async function Accueil() {
         <div className="meta" style={{ textTransform: "capitalize" }}>{date}</div>
         <h1 className="page-title" style={{ marginTop: 6 }}>{salut}, {bilan.reponses.prenom}</h1>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 14 }}>
+          <span className={`pill ${motiv.serie.semaines ? "pill-gold" : ""} serie`}>{motiv.serie.semaines ? M.serie(motiv.serie.semaines) : M.serieZero}</span>
           <span className="pill pill-gold">{P.icon} {P.proto.charAt(0) + P.proto.slice(1).toLowerCase()}</span>
           {P.phaseNom && <span className="pill">{P.phase?.split(" — ")[0].replace(/^(SEMAINE|WEEK)/, (m) => m.charAt(0) + m.slice(1).toLowerCase()).replace("CYCLE", "cycle")} · {P.phaseNom}</span>}
           {P.deload && <span className="pill pill-ok">{T.accueil.semaineLegere}</span>}
@@ -63,6 +70,7 @@ export default async function Accueil() {
       </header>
 
       {mot && <CarteMot mot={mot} titre={T.mot.titre} lang={lang} />}
+      {defisActifs.map(({ defi, av }) => <CarteDefi key={defi.id} defi={defi} av={av} lang={lang} />)}
       {reath && reath.semaine <= lireProgramme(reath.programme).semaines.length && (
         <Link href="/reathletisation" className="panel row-link" style={{ marginBottom: 14, borderColor: "var(--gold-line)" }}>
           <span className="note-icon"><Icon nom="drapeau" taille={17} /></span>
@@ -99,6 +107,7 @@ export default async function Accueil() {
                   </div>
                 ))}
               </div>
+              <p className={`serie-msg${motiv.serie.manque === 0 ? " ok" : ""}`}>{motiv.serie.manque === 0 ? M.validee : M.encore(motiv.serie.manque)}</p>
               <Link href="/seance" className="btn btn-primary btn-block" style={{ marginTop: 22 }}>
                 {T.accueil.commencer} <Icon nom="fleche" taille={18} />
               </Link>

@@ -6,6 +6,8 @@ import { enregistrerSeanceLibre, type ExerciceLibre } from "@/app/(app)/actions"
 import { EXDB } from "@/lib/coaching/exdb";
 import { tc } from "@/lib/i18n";
 import { FicheExercice } from "./FicheExercice";
+import { CelebrationRecords } from "./Celebration";
+import type { NouveauRecord } from "@/lib/coaching/motivation";
 import { Icon } from "./Icon";
 import { useLang } from "./Langue";
 
@@ -23,6 +25,7 @@ export function SeanceLibre() {
   const [choix, setChoix] = useState(false);
   const [q, setQ] = useState("");
   const [erreur, setErreur] = useState("");
+  const [recordsBattus, setRecordsBattus] = useState<NouveauRecord[] | null>(null);
   const [pending, start] = useTransition();
 
   /* Brouillon gardé sur le téléphone : rien n'est perdu en changeant de page */
@@ -61,12 +64,14 @@ export function SeanceLibre() {
       const r = await enregistrerSeanceLibre(b);
       if (r.erreur) return setErreur(r.erreur);
       try { localStorage.removeItem(CLE); } catch {}
+      if (r.records?.length) return setRecordsBattus(r.records);
       router.push("/suivi#historique");
     });
   };
 
   return (
     <>
+      {recordsBattus && <CelebrationRecords records={recordsBattus} onFin={() => router.push("/suivi#historique")} />}
       <label className="field">
         <span>{L.nom}</span>
         <input className="input" value={b.nom} maxLength={80} placeholder={L.nomPlaceholder} onChange={(e) => maj({ ...b, nom: e.target.value })} />

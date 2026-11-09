@@ -42,3 +42,49 @@ export async function supprimerMot(id: string, clientId: string) {
   await supabase.from("mots_coach").delete().eq("id", id);
   revalidatePath(`/coach/${clientId}`);
 }
+
+/* ─── Défis ─── */
+export type EtatDefi = { erreur?: string; ok?: string; n?: number } | undefined;
+const DATE = /^\d{4}-\d{2}-\d{2}$/;
+
+export async function creerDefi(prev: EtatDefi, formData: FormData): Promise<EtatDefi> {
+  const coach = await exigerCoach();
+  const lang = await getLang();
+  const T = ui(lang);
+  const titre = String(formData.get("titre") ?? "").trim().slice(0, 80);
+  const type = formData.get("type") === "charge" ? "charge" : "seances";
+  const exercice = type === "charge" ? String(formData.get("exercice") ?? "").trim().slice(0, 80) : null;
+  const cible = Number(String(formData.get("cible") ?? "").replace(",", "."));
+  const client = String(formData.get("client") ?? "");
+  const debut = String(formData.get("debut") ?? "");
+  const fin = String(formData.get("fin") ?? "");
+  if (!titre || !(cible > 0 && cible <= 1000) || !DATE.test(debut) || !DATE.test(fin) || fin < debut || (type === "charge" && !exercice) || (client && !UUID.test(client)))
+    return { erreur: T.mot.erreur };
+
+  const supabase = await createClient();
+  const { error } = await supabase.from("defis").insert({ titre, type, exercice, cible, debut, fin, client_id: client || null });
+  if (error) return { erreur: T.motiv.defisIndispo };
+
+  /* Les clientes concernées sont prévenues */
+  let q = supabase.from("push_abonnements").select("endpoint, p256dh, auth, lang, user_id").neq("user_id", coach.id);
+  if (client) q = q.eq("user_id", client);
+  const { data: abos } = await q;
+  envoyerApres((abos ?? []) as Abonnement[], (lg) => ({
+    titre: lg === "en" ? `New challenge: ${titre} 🎯` : `Nouveau défi : ${titre} 🎯`,
+    corps: lg === "en" ? `Your coach ${coach.prenom || ""} is counting on you. Ends ${fin.split("-").reverse().join("/")}.` : `${coach.prenom || "Ton coach"} compte sur toi. Fin le ${fin.split("-").reverse().join("/")}.`,
+    url: "/",
+    tag: "defi",
+  }));
+  revalidatePath("/coach");
+  revalidatePath("/", "layout");
+  return { ok: "✓", n: (prev?.n ?? 0) + 1 };
+}
+
+export async function supprimerDefi(id: string) {
+  await exigerCoach();
+  if (!UUID.test(id)) return;
+  const supabase = await createClient();
+  await supabase.from("defis").delete().eq("id", id);
+  revalidatePath("/coach");
+  revalidatePath("/", "layout");
+}

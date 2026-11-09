@@ -2,7 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { getBilan, getUtilisateur, jourParis } from "@/lib/data";
+import { getBilan, getHistorique, getUtilisateur, jourParis } from "@/lib/data";
+import { nouveauxRecords, type NouveauRecord } from "@/lib/coaching/motivation";
 import { CHECKIN_Q, OBJECTIFS, phaseFor, questionsBilan } from "@/lib/coaching/programme";
 import { parseKg } from "@/lib/coaching/amrap";
 import { JOUR_LIBRE } from "@/lib/coaching/seance";
@@ -88,8 +89,10 @@ export async function enregistrerSeance(payload: {
   focus: string;
   allegee: boolean;
   exercices: ExerciceSaisi[];
-}): Promise<{ erreur?: string }> {
+}): Promise<{ erreur?: string; records?: NouveauRecord[] }> {
   const user = await getUtilisateur();
+  /* Historique AVANT la séance, pour repérer les records battus */
+  const avant = await getHistorique(user.id, 500);
   const T = ui(await getLang());
   const bilan = await getBilan(user.id);
   if (!bilan) return { erreur: T.seance.erreurBilan };
@@ -134,17 +137,21 @@ export async function enregistrerSeance(payload: {
     return { erreur: T.seance.erreurExercices };
   }
 
-  /* Prévenir le coach : « Inès a terminé sa séance — DAY 1 · Glutes Heavy · 4 exercices · 52 min » */
+  /* Records battus pendant cette séance */
+  const recs = nouveauxRecords(avant, lignes.map((l) => ({ nom: l.nom, kg: l.charge_kg })));
+
+  /* Prévenir le coach : « Inès a terminé sa séance — DAY 1 · Glutes Heavy · 4 exercices · 52 min · 🏆 Hip Thrust 80 kg » */
   const jourCode = String(payload.jour_code).slice(0, 40);
   const duree = await minutesDepuisDebut(user.id, jourCode);
   const faits = lignes.filter((l) => l.series > 0).length;
   await notifierCoach(user, "fin", jourCode, (lang) => {
     const N = ui(lang).notifs;
-    return [jourCode, tc(lang, payload.focus), N.exos(faits), duree ? N.duree(duree) : ""].filter(Boolean).join(" · ");
+    const record = recs.length ? `🏆 ${recs.map((r) => `${tc(lang, r.nom)} ${String(r.kg).replace(".", lang === "fr" ? "," : ".")} kg`).join(", ")}` : "";
+    return [jourCode, tc(lang, payload.focus), N.exos(faits), duree ? N.duree(duree) : "", record].filter(Boolean).join(" · ");
   });
 
   revalidatePath("/", "layout");
-  return {};
+  return { records: recs };
 }
 
 /** Première série cochée : le coach est prévenu que la séance commence (une fois) */
@@ -169,8 +176,9 @@ export async function signalerDebut(jourCode: string, focus: string): Promise<vo
 export type SerieLibre = { kg: string; reps: string };
 export type ExerciceLibre = { nom: string; series: SerieLibre[] };
 
-export async function enregistrerSeanceLibre(payload: { nom: string; exercices: ExerciceLibre[] }): Promise<{ erreur?: string }> {
+export async function enregistrerSeanceLibre(payload: { nom: string; exercices: ExerciceLibre[] }): Promise<{ erreur?: string; records?: NouveauRecord[] }> {
   const user = await getUtilisateur();
+  const avant = await getHistorique(user.id, 500);
   const T = ui(await getLang());
 
   /* On ne garde que les séries renseignées (charge ou répétitions) */
@@ -220,7 +228,10 @@ export async function enregistrerSeanceLibre(payload: { nom: string; exercices: 
     return { erreur: T.libre.erreur };
   }
   const titre = String(payload.nom ?? "").trim().slice(0, 80);
-  await notifierCoach(user, "libre", JOUR_LIBRE, (lg) => [titre || ui(lg).libre.defaut, ui(lg).notifs.exos(lignes.length)].join(" · "));
+  const recs = nouveauxRecords(avant, lignes.map((l) => ({ nom: l.nom, kg: l.charge_kg })));
+  await notifierCoach(user, "libre", JOUR_LIBRE, (lg) =>
+    [titre || ui(lg).libre.defaut, ui(lg).notifs.exos(lignes.length), recs.length ? `🏆 ${recs.map((r) => `${tc(lg, r.nom)} ${r.kg} kg`).join(", ")}` : ""].filter(Boolean).join(" · "),
+  );
   revalidatePath("/", "layout");
-  return {};
+  return { records: recs };
 }

@@ -121,6 +121,13 @@ export const demo = {
       : id === JOUEUR
         ? [1, 2, 3].flatMap((s) => [0, 1, 2, 4].map((j) => ({ semaine: s, jour: j, douleur: null, gonflement: false, rpe: 4 + s, note: null, fait_le: iso(20 - s * 5 - j) })))
         : [],
+  defis: () => {
+    const j = (n: number) => new Date(Date.now() + n * 864e5).toISOString().slice(0, 10);
+    return [
+      { id: "d1", client_id: null, titre: "12 séances avant Noël", type: "seances" as const, exercice: null, cible: 12, debut: j(-20), fin: j(15) },
+      { id: "d2", client_id: CLIENTE, titre: "Hip Thrust à 80 kg", type: "charge" as const, exercice: "Hip Thrust", cible: 80, debut: j(-30), fin: j(30) },
+    ];
+  },
   activites: () => {
     const il = (min: number) => new Date(Date.now() - min * 60000).toISOString();
     const c = (id: string) => ({ id, prenom: PROFILS[id]?.prenom ?? "", avatar: AVATARS[id] ?? null });
