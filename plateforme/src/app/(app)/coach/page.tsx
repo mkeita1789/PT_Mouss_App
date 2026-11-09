@@ -3,6 +3,7 @@ import { Avatar } from "@/components/Avatar";
 import { Icon } from "@/components/Icon";
 import { exigerCoach, getActivites, getCheckinsRecents, getClients, getSeancesTousClients } from "@/lib/data";
 import { FilActivite } from "@/components/FilActivite";
+import { Inviter } from "@/components/Inviter";
 import { alertesCoach, joursDepuis } from "@/lib/coaching/alertes";
 import { lundiCourant, phaseFor } from "@/lib/coaching/programme";
 import { tc, ui } from "@/lib/i18n";
@@ -44,6 +45,7 @@ export default async function Page() {
         <div className="meta">{T.coach.espace}</div>
         <h1 className="page-title" style={{ marginTop: 6 }}>{T.coach.titre}</h1>
         <p className="page-lede">{T.coach.lede}</p>
+        <div style={{ marginTop: 14 }}><Inviter coach={coach.prenom} /></div>
       </header>
 
       <div className="grid-3">

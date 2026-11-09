@@ -675,3 +675,10 @@ details.session[open] .chev { transform: rotate(90deg); }
 .criteres { display: grid; gap: 8px; margin: 12px 0 14px; }
 @media (max-width: 420px) { .reath-circuit .reath-lignes { grid-template-columns: 1fr; } .reath-lignes, .reath-circuit { padding-left: 0; } }
 .vma-form { display: flex; align-items: flex-end; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
+
+/* Inviter une cliente */
+.inviter-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 16px; }
+.inviter-actions .btn:first-child:nth-last-child(odd) { grid-column: 1 / -1; }
+.inviter-lien { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: var(--r-md); background: var(--surface-2); border: 1px solid var(--line-strong); }
+.inviter-lien code { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; font-size: 13.5px; color: var(--ink); }
+.inviter-qr { display: block; width: min(240px, 70%); margin: 12px auto 4px; border-radius: 16px; background: #fff; padding: 8px; }

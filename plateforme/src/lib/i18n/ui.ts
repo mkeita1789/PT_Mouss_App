@@ -343,6 +343,14 @@ export const UI_FR = {
     vmaConnue: (v: string) => `Allures calculées pour ta VMA de ${v} km/h.`,
     vmaInconnue: "Allures en % de VMA. Ton coach peut renseigner ta VMA pour les afficher en min/km ; sinon, cours au ressenti : 80 % = tu peux encore parler, 87 % = phrases courtes.",
   },
+  /* Inviter une cliente */
+  inviter: {
+    bouton: "Inviter une cliente", titre: "Inviter une cliente",
+    aide: "Envoie le lien d'inscription en un geste. Elle apparaîtra dans Mes clients dès qu'elle aura créé son compte.",
+    langue: "Langue du message", partager: "Partager…", copierMessage: "Copier le message",
+    lien: "Le lien", copier: "Copier", copie: "Copié ✓",
+    qr: "QR code", qrAide: "À faire scanner sur place, en salle ou pendant un rendez-vous : il ouvre directement la création de compte.",
+  },
   /* Import de l'ancienne appli */
   importer: {
     surCeTel: "Ton historique sur ce téléphone",
@@ -690,6 +698,13 @@ export const UI_EN: TextesUI = {
     vmaAide: "Plan paces are in % of maximal aerobic speed (MAS): with it, the client sees her pace in min/km.",
     vmaConnue: (v: string) => `Paces calculated for your MAS of ${v} km/h.`,
     vmaInconnue: "Paces in % of MAS. Your coach can enter your MAS to show them in min/km; otherwise run by feel: 80% = you can still talk, 87% = short sentences.",
+  },
+  inviter: {
+    bouton: "Invite a client", titre: "Invite a client",
+    aide: "Send the sign-up link in one tap. She'll show up in My clients as soon as she creates her account.",
+    langue: "Message language", partager: "Share…", copierMessage: "Copy the message",
+    lien: "The link", copier: "Copy", copie: "Copied ✓",
+    qr: "QR code", qrAide: "Have it scanned in person, at the gym or during a session: it opens account creation directly.",
   },
   importer: {
     surCeTel: "Your history on this phone",
