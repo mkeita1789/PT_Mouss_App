@@ -5,13 +5,13 @@ import { locale, ui, type Lang } from "@/lib/i18n";
 import { Icon } from "./Icon";
 
 /** Fiche client, côté coach : inscription, avancement, alertes genou, passage des semaines */
-export function ReathCoach({ clientId, reath, seances, lang }: { clientId: string; reath: Reath | null; seances: ReathSeance[]; lang: Lang }) {
+export function ReathCoach({ clientId, reath, seances, lang, ouvert = false }: { clientId: string; reath: Reath | null; seances: ReathSeance[]; lang: Lang; ouvert?: boolean }) {
   const R = ui(lang).reath;
   const jours = lang === "en" ? JOURS_EN : JOURS_FR;
 
   if (!reath)
     return (
-      <details className="panel">
+      <details className="panel" open={ouvert}>
         <summary className="link" style={{ cursor: "pointer", fontSize: 14.5 }}><Icon nom="plus" taille={15} /> {R.inscrire}</summary>
         <form action={inscrireReath.bind(null, clientId)} style={{ marginTop: 12 }}>
           <div className="meta">{R.criteresEntree}</div>

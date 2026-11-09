@@ -54,6 +54,7 @@ export async function inscrireReath(clientId: string, formData: FormData): Promi
   const supabase = await createClient();
   await supabase.from("reath").upsert({ client_id: clientId, semaine: 1, debut: /^\d{4}-\d{2}-\d{2}$/.test(debut) ? debut : new Date().toISOString().slice(0, 10), maj_le: new Date().toISOString() });
   revalidatePath(`/coach/${clientId}`);
+  revalidatePath("/reathletisation");
 }
 
 export async function changerSemaineReath(clientId: string, semaine: number): Promise<void> {
@@ -63,6 +64,7 @@ export async function changerSemaineReath(clientId: string, semaine: number): Pr
   const supabase = await createClient();
   await supabase.from("reath").update({ semaine: s, maj_le: new Date().toISOString() }).eq("client_id", clientId);
   revalidatePath(`/coach/${clientId}`);
+  revalidatePath("/reathletisation");
 }
 
 export async function arreterReath(clientId: string): Promise<void> {
@@ -71,6 +73,7 @@ export async function arreterReath(clientId: string): Promise<void> {
   const supabase = await createClient();
   await supabase.from("reath").delete().eq("client_id", clientId);
   revalidatePath(`/coach/${clientId}`);
+  revalidatePath("/reathletisation");
 }
 
 export async function enregistrerVma(clientId: string, formData: FormData): Promise<void> {
@@ -82,4 +85,5 @@ export async function enregistrerVma(clientId: string, formData: FormData): Prom
   const supabase = await createClient();
   await supabase.from("reath").update({ vma: v, maj_le: new Date().toISOString() }).eq("client_id", clientId);
   revalidatePath(`/coach/${clientId}`);
+  revalidatePath("/reathletisation");
 }

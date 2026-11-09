@@ -58,7 +58,7 @@ export default async function Page() {
       <Liste
         titre={E.monEntrainement}
         entrees={[
-          ...(reath ? [{ href: "/reathletisation", ico: "drapeau" as const, titre: T.reath.titre, sous: reath.semaine > 6 ? T.reath.fini : T.reath.semaineSur(reath.semaine, 6) }] : []),
+          ...(reath || user.role === "coach" ? [{ href: "/reathletisation", ico: "drapeau" as const, titre: T.reath.titre, sous: !reath ? T.reath.inscrire : reath.semaine > 6 ? T.reath.fini : T.reath.semaineSur(reath.semaine, 6) }] : []),
           { href: bilan ? "/programme" : "/bilan", ico: "programme", titre: E.programme, sous: sousProgramme },
           ...(bilan ? [{ href: "/seance", ico: "seance" as const, titre: E.seanceJour, sous: sousSeance }] : []),
           { href: "/seance/libre", ico: "crayon", titre: E.libre, sous: E.libreSous },

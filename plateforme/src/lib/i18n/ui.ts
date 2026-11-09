@@ -329,6 +329,7 @@ export const UI_FR = {
     erreur: "Impossible d'enregistrer. Réessaie.",
     /* Coach */
     coachTitre: "Réathlétisation LCA",
+    coachSoi: "Tu peux suivre ce programme toi aussi : coche les critères ci-dessous pour t'inscrire. Tes clientes, tu les inscris depuis leur fiche.",
     inscrire: "Inscrire à la réathlétisation", criteresEntree: "Avant d'inscrire, vérifie :",
     debut: "Date de début", criteresAide: "Coche tous les critères pour pouvoir inscrire.",
     enCours: (n: number) => `En cours · semaine ${n} sur 6`, fini: "Programme terminé", terminer: "Valider la fin du programme",
@@ -676,6 +677,7 @@ export const UI_EN: TextesUI = {
     douleurCourt: (d: number) => `pain ${d}/10`, gonfle: "knee swollen",
     erreur: "Couldn't save. Please try again.",
     coachTitre: "ACL return to sport",
+    coachSoi: "You can follow this program yourself too: tick the criteria below to enrol. Enrol your clients from their profile.",
     inscrire: "Enrol in ACL return to sport", criteresEntree: "Before enrolling, check:",
     debut: "Start date", criteresAide: "Tick every criterion to enrol.",
     enCours: (n: number) => `In progress · week ${n} of 6`, fini: "Program complete", terminer: "Mark the program complete",
