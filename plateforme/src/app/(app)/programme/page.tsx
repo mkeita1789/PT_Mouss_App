@@ -95,7 +95,7 @@ export default async function Page() {
         </div>
         <div className="grid-2">
           {P.days.map((d, di) => (
-            <article key={d.d} className="panel day-card" style={d.crit ? { borderColor: "rgba(240,96,93,.35)" } : undefined}>
+            <article key={d.d} className="panel day-card" style={d.crit ? { borderColor: "color-mix(in srgb, var(--ko) 35%, transparent)" } : undefined}>
               <div className="day-head">
                 <span className="day-code" style={d.crit ? { color: "var(--ko)" } : undefined}>{d.d}</span>
                 <span className="day-focus">{d.f}</span>

@@ -5,7 +5,7 @@ const s = (n: number) => (n > 1 ? "s" : "");
 
 export const UI_FR = {
   langue: "Langue",
-  theme: { titre: "Couleurs", aide: "Choisis l'ambiance de ton appli. Elle change tout de suite, sur ce téléphone.", noms: { or: "Or", rose: "Rose", lilas: "Lilas", peche: "Pêche", blush: "Blush" } },
+  theme: { titre: "Couleurs", aide: "Choisis l'ambiance de ton appli. Elle change tout de suite, sur ce téléphone.", noms: { or: "Or", rouge: "Rouge", rose: "Rose", lilas: "Lilas", peche: "Pêche", blush: "Blush" } },
   /* Navigation */
   nav: { accueil: "Accueil", programme: "Programme", seance: "Séance", progression: "Progression", profil: "Profil", coach: "Coach", mesClients: "Mes clients", coaching: "Coaching", deconnexion: "Se déconnecter", coachRole: "Coach", clientRole: "Client", monProfil: "Mon profil", entrainement: "Entraînement", outils: "Outils", exercices: "Exercices", chrono: "Chrono" },
   /* Connexion */
@@ -390,7 +390,7 @@ export type TextesUI = typeof UI_FR;
 
 export const UI_EN: TextesUI = {
   langue: "Language",
-  theme: { titre: "Colours", aide: "Pick the look of your app. It changes right away, on this phone.", noms: { or: "Gold", rose: "Pink", lilas: "Lilac", peche: "Peach", blush: "Blush" } },
+  theme: { titre: "Colours", aide: "Pick the look of your app. It changes right away, on this phone.", noms: { or: "Gold", rouge: "Red", rose: "Pink", lilas: "Lilac", peche: "Peach", blush: "Blush" } },
   nav: { accueil: "Home", programme: "Program", seance: "Workout", progression: "Progress", profil: "Profile", coach: "Coach", mesClients: "My clients", coaching: "Coaching", deconnexion: "Log out", coachRole: "Coach", clientRole: "Client", monProfil: "My profile", entrainement: "Training", outils: "Tools", exercices: "Exercises", chrono: "Timer" },
   auth: {
     citation: ["Discipline today, ", "results tomorrow."],

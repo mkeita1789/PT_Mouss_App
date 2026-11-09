@@ -249,7 +249,7 @@ input, textarea, select { font: inherit; color: inherit; }
 }
 .pill-gold { background: var(--gold-soft); border-color: var(--gold-line); color: var(--gold); }
 .pill-ok { background: var(--ok-soft); border-color: rgba(76, 195, 138, 0.35); color: var(--ok); }
-.pill-ko { background: var(--ko-soft); border-color: rgba(240, 96, 93, 0.35); color: var(--ko); }
+.pill-ko { background: var(--ko-soft); border-color: color-mix(in srgb, var(--ko) 35%, transparent); color: var(--ko); }
 .dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; flex: none; }
 .cat { display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 6px; font-size: 10.5px; font-weight: 700; font-family: var(--font-oswald); }
 .cat-S { background: var(--ko-soft); color: var(--ko); }
@@ -263,7 +263,7 @@ input, textarea, select { font: inherit; color: inherit; }
 }
 .note-icon { flex: none; width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center; background: var(--surface-3); color: var(--gold); }
 .note-ok .note-icon { background: var(--ok-soft); color: var(--ok); }
-.note-ko { border-color: rgba(240, 96, 93, 0.35); background: linear-gradient(180deg, rgba(240, 96, 93, 0.07), var(--surface)); }
+.note-ko { border-color: color-mix(in srgb, var(--ko) 35%, transparent); background: linear-gradient(180deg, color-mix(in srgb, var(--ko) 7%, transparent), var(--surface)); }
 .note-ko .note-icon { background: var(--ko-soft); color: var(--ko); }
 .note-gold .note-icon { background: var(--gold-soft); color: var(--gold); }
 .note b { font-weight: 600; }
@@ -519,6 +519,16 @@ details.session[open] .chev { transform: rotate(90deg); }
 /* ═══ THÈMES DE COULEUR ═════════════════════════════════
    « Or » est le thème par défaut (:root). Chaque thème ne
    redéfinit que ses teintes ; la structure reste identique. */
+:root[data-theme="rouge"] {
+  --a: 229 56 59; --bg-rgb: 10 7 7; --sf-rgb: 21 15 15;
+  --bg: #0a0707; --surface: #150f0f; --surface-2: #1d1414; --surface-3: #281b1b;
+  --gold: #e5383b; --gold-deep: #a4161a; --gold-light: #ff6b6b; --gold-ink: #ffffff;
+  --gold-soft: rgba(229, 56, 59, 0.12); --gold-line: rgba(229, 56, 59, 0.38); --gold-text: #ff9c9c;
+  --hero-1: #210c0c; --hero-2: #120808; --auth-bg: #100707;
+  --ink: #f6eeee; --ink-2: #c7b7b7; --muted: #8d7c7c; --placeholder: #655454;
+  /* L'accent est déjà rouge : les alertes passent en orange pour rester distinctes */
+  --ko: #ff9f43; --ko-soft: rgba(255, 159, 67, 0.1);
+}
 :root[data-theme="rose"] {
   --a: 247 143 179; --bg-rgb: 12 7 10; --sf-rgb: 23 15 19;
   --bg: #0c070a; --surface: #170f13; --surface-2: #1f151a; --surface-3: #2a1c23;
@@ -559,7 +569,7 @@ details.session[open] .chev { transform: rotate(90deg); }
 }
 
 /* Sélecteur de couleurs (Profil) */
-.themes { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
+.themes { display: grid; grid-template-columns: repeat(auto-fill, minmax(62px, 1fr)); gap: 10px; }
 .theme-opt { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 12px 4px 10px; border-radius: var(--r-md); border: 1px solid var(--line); background: var(--surface-2); font-size: 12.5px; color: var(--ink-2); transition: border-color 0.2s, background 0.2s; }
 .theme-opt:hover { border-color: var(--line-strong); }
 .theme-opt.on { border-color: var(--gold); color: var(--ink); background: var(--gold-soft); }

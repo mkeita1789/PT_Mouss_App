@@ -65,7 +65,7 @@ export default async function Page() {
         ) : (
           <div className="stack">
             {lignes.map((l) => (
-              <Link key={l.id} href={`/coach/${l.id}`} className="panel client-row" style={l.gravite === 2 ? { borderColor: "rgba(240,96,93,.4)" } : undefined}>
+              <Link key={l.id} href={`/coach/${l.id}`} className="panel client-row" style={l.gravite === 2 ? { borderColor: "color-mix(in srgb, var(--ko) 40%, transparent)" } : undefined}>
                 <Avatar url={l.avatar} nom={l.prenom} style={l.gravite === 2 ? { borderColor: "var(--ko)", color: "var(--ko)", boxShadow: "0 0 0 2px var(--ko)" } : undefined} />
                 <div style={{ minWidth: 0 }}>
                   <div className="row-title" style={{ fontSize: 16 }}>{l.prenom || T.coach.sansPrenom}</div>
