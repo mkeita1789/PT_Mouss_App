@@ -1,0 +1,863 @@
+/* Fiches exercices — reprises telles quelles de la PWA (exdb.js). Clé = nom utilisé par buildProgram(). */
+import type { FicheExercice } from "./types";
+
+export const EXDB: Record<string, FicheExercice> = {
+  "Hip Thrust": {
+    "video": "https://vimeo.com/665086157",
+    "groupe": "Fessiers",
+    "primaires": "Grand fessier",
+    "secondaires": "Ischio-jambiers, quadriceps",
+    "diff": "Débutant à avancé",
+    "materiel": "Barre + banc (ou au sol)",
+    "tempo": "2-1-1 (montée contrôlée, pause 1 s en haut)",
+    "repos": "90 s",
+    "depart": "Dos calé sur le banc au niveau des omoplates, barre sur le pli de la hanche, pieds à plat largeur bassin, tibias verticaux en position haute.",
+    "arrivee": "Hanches en extension complète, corps aligné épaules-hanches-genoux, fessiers contractés à fond, menton légèrement rentré (côtes basses).",
+    "points": [
+      "Pousse dans les talons",
+      "Verrouille en serrant les fessiers, pas en cambrant le bas du dos",
+      "Regarde devant/vers le bas, pas au plafond",
+      "Amplitude complète : descends jusqu'à quasi toucher le sol"
+    ],
+    "erreurs": [
+      "Cambrer le bas du dos au lieu d'étendre la hanche",
+      "Monter sur la pointe des pieds",
+      "Amplitude partielle",
+      "Basculer le bassin en avant (hyperlordose)"
+    ],
+    "coach": "C'est LE roi des fessiers, et il ouvre chaque séance JIGI. La pause d'1 s en haut vaut de l'or : c'est là que le fessier travaille le plus.",
+    "variantes": {
+      "deb": "Glute Bridge au sol (sans banc, sans barre)",
+      "int": "Hip Thrust barre classique",
+      "av": "Hip Thrust unilatéral ou avec pause 3 s"
+    },
+    "alternatives": "Au sol pieds sur une chaise · Hip Thrust à l'élastique · Glute Bridge lesté"
+  },
+  "RDL": {
+    "video": "https://vimeo.com/665083928",
+    "groupe": "Chaîne postérieure",
+    "primaires": "Ischio-jambiers, grand fessier",
+    "secondaires": "Érecteurs du rachis, dorsaux",
+    "diff": "Intermédiaire",
+    "materiel": "Barre ou haltères",
+    "tempo": "3-0-1 (descente lente, remontée dynamique)",
+    "repos": "90 s",
+    "depart": "Debout, barre contre les cuisses, dos neutre, léger fléchissement des genoux, épaules en arrière.",
+    "arrivee": "Buste penché, barre le long des jambes jusqu'à mi-tibia, dos toujours plat, étirement senti dans les ischios.",
+    "points": [
+      "Le mouvement part des HANCHES qui reculent, pas du dos qui s'arrondit",
+      "Barre collée aux jambes tout du long",
+      "Descends tant que le dos reste plat, pas plus bas",
+      "Genoux quasi fixes"
+    ],
+    "erreurs": [
+      "Arrondir le dos",
+      "Transformer en squat (trop de flexion de genou)",
+      "Éloigner la barre du corps",
+      "Descendre au-delà de la mobilité"
+    ],
+    "coach": "L'exercice le plus mal fait en salle. Si tu sens le bas du dos plus que les ischios, tu arrondis. Filme-toi de profil.",
+    "variantes": {
+      "deb": "RDL haltères, amplitude réduite",
+      "int": "RDL barre",
+      "av": "RDL une jambe (unilatéral)"
+    },
+    "alternatives": "Cable Pull Through (si dos sensible) · Good Morning · Leg Curl"
+  },
+  "Cable Pull Through": {
+    "video": "https://vimeo.com/665089576",
+    "groupe": "Chaîne postérieure",
+    "primaires": "Grand fessier, ischio-jambiers",
+    "secondaires": "Érecteurs du rachis",
+    "diff": "Débutant",
+    "materiel": "Poulie basse + corde",
+    "tempo": "2-0-2",
+    "repos": "75 s",
+    "depart": "Dos à la poulie, corde passée entre les jambes, buste penché hanches en arrière, bras tendus.",
+    "arrivee": "Extension de hanche debout, fessiers serrés, bras restent tendus (ce n'est pas un tirage de bras).",
+    "points": [
+      "La charge est DEVANT, jamais sur la colonne — idéal dos sensible",
+      "Le mouvement vient de la hanche",
+      "Serre les fessiers en haut",
+      "Bras = simple crochet"
+    ],
+    "erreurs": [
+      "Tirer avec les bras",
+      "Arrondir le dos en position basse",
+      "Ne pas atteindre l'extension complète"
+    ],
+    "coach": "Le remplaçant du RDL quand le dos est sensible : même stimulus fessier, zéro compression sur la colonne. Sous-estimé.",
+    "variantes": {
+      "deb": "Charge légère, focus technique",
+      "int": "Charge modérée",
+      "av": "Tempo lent + pause"
+    },
+    "alternatives": "Hip Thrust · Glute Bridge · RDL léger"
+  },
+  "Bulgarian Split Squat": {
+    "groupe": "Jambes",
+    "primaires": "Quadriceps, grand fessier",
+    "secondaires": "Ischio-jambiers, adducteurs, stabilisateurs",
+    "diff": "Intermédiaire",
+    "materiel": "Banc + haltères (optionnel)",
+    "tempo": "2-1-1",
+    "repos": "75 s/jambe",
+    "depart": "Pied arrière posé sur le banc, pied avant à ~60 cm devant, buste droit.",
+    "arrivee": "Descente jusqu'à cuisse avant parallèle, genou avant aligné sur le pied, poussée dans le talon avant.",
+    "points": [
+      "Le poids sur la jambe AVANT",
+      "Genou avant qui suit l'axe du pied",
+      "Buste légèrement penché pour cibler le fessier",
+      "Contrôle la descente"
+    ],
+    "erreurs": [
+      "Trop de poids sur la jambe arrière",
+      "Genou avant qui rentre vers l'intérieur",
+      "Pas assez d'amplitude"
+    ],
+    "coach": "Redoutable pour construire des jambes et des fessiers symétriques. Il corrige les déséquilibres droite/gauche que la barre cache.",
+    "variantes": {
+      "deb": "Au poids de corps, appui léger sur un support",
+      "int": "Haltères",
+      "av": "Haltères lourds ou tempo 3 s"
+    },
+    "alternatives": "Fentes marchées · Split Squat classique · Step Up"
+  },
+  "Hip Abduction": {
+    "groupe": "Fessiers",
+    "primaires": "Moyen fessier",
+    "secondaires": "Petit fessier",
+    "diff": "Débutant",
+    "materiel": "Machine ou élastique",
+    "tempo": "2-1-2",
+    "repos": "60 s",
+    "depart": "Assis sur la machine (ou debout/couché avec élastique), genoux serrés, buste légèrement penché en avant.",
+    "arrivee": "Écartement contrôlé des cuisses, contraction du fessier latéral, retour freiné.",
+    "points": [
+      "Buste penché en avant cible mieux le moyen fessier",
+      "Contrôle le retour, ne relâche pas",
+      "Cherche la brûlure, pas la charge max"
+    ],
+    "erreurs": [
+      "Se pencher en arrière",
+      "Utiliser l'élan",
+      "Charge trop lourde qui casse la technique"
+    ],
+    "coach": "L'isolation parfaite pour finir une séance fessiers et travailler le galbe latéral. Le drop set ici est ton ami.",
+    "variantes": {
+      "deb": "Élastique couché sur le côté",
+      "int": "Machine",
+      "av": "Machine + drop set"
+    },
+    "alternatives": "Band Walk · Clamshell · Abduction couchée"
+  },
+  "Back Squat": {
+    "groupe": "Jambes",
+    "primaires": "Quadriceps, grand fessier",
+    "secondaires": "Ischio-jambiers, érecteurs, gainage",
+    "diff": "Intermédiaire à avancé",
+    "materiel": "Barre + rack",
+    "tempo": "2-0-1",
+    "repos": "2-3 min",
+    "depart": "Barre sur le haut du dos (trapèzes), pieds largeur d'épaules légèrement ouverts, gainage serré.",
+    "arrivee": "Descente hanches sous les genoux (ou parallèle), poussée dans les talons, extension complète.",
+    "points": [
+      "Genoux qui suivent l'axe des pieds",
+      "Dos neutre, poitrine haute",
+      "Descente contrôlée",
+      "Pousse le sol avec les pieds"
+    ],
+    "erreurs": [
+      "Genoux qui rentrent",
+      "Talons qui décollent",
+      "Dos qui s'arrondit en bas (butt wink)",
+      "Amplitude partielle sans raison"
+    ],
+    "coach": "Le roi des exercices de jambes. Va chercher l'amplitude que ta mobilité permet — mieux vaut moins lourd et complet que lourd et partiel.",
+    "variantes": {
+      "deb": "Goblet Squat ou Squat guidé",
+      "int": "Back Squat barre",
+      "av": "Back Squat pause ou tempo"
+    },
+    "alternatives": "Leg Press · Hack Squat · Goblet Squat (dos sensible)"
+  },
+  "Développé couché": {
+    "groupe": "Pectoraux",
+    "primaires": "Grand pectoral",
+    "secondaires": "Triceps, deltoïde antérieur",
+    "diff": "Intermédiaire",
+    "materiel": "Barre + banc",
+    "tempo": "2-1-1",
+    "repos": "2 min",
+    "depart": "Allongé, omoplates serrées et basses, léger arc lombaire, pieds ancrés au sol, prise un peu plus large que les épaules.",
+    "arrivee": "Barre descendue au niveau du bas des pectoraux, coudes ~45°, remontée en extension sans verrouiller brutalement.",
+    "points": [
+      "Omoplates serrées tout du long",
+      "Coudes ni collés ni à 90°",
+      "Barre touche le bas des pecs",
+      "Pieds qui poussent le sol"
+    ],
+    "erreurs": [
+      "Coudes trop écartés (épaule à risque)",
+      "Rebondir la barre sur la poitrine",
+      "Décoller les fessiers",
+      "Amplitude partielle"
+    ],
+    "coach": "Serre les omoplates comme si tu voulais casser une noix entre elles : c'est ta base stable et ta protection d'épaule.",
+    "variantes": {
+      "deb": "Développé haltères ou machine",
+      "int": "Barre",
+      "av": "Barre pause ou tempo"
+    },
+    "alternatives": "Développé haltères · Dips · Pompes lestées"
+  },
+  "Traction / Lat Pulldown": {
+    "groupe": "Dos",
+    "primaires": "Grand dorsal",
+    "secondaires": "Biceps, rhomboïdes, trapèzes",
+    "diff": "Débutant à avancé",
+    "materiel": "Barre de traction ou poulie haute",
+    "tempo": "2-0-2",
+    "repos": "90 s",
+    "depart": "Suspendu (traction) ou assis poulie haute, prise pronation un peu plus large que les épaules, épaules basses.",
+    "arrivee": "Menton au-dessus de la barre (ou barre à la poitrine), coudes vers le bas, omoplates serrées.",
+    "points": [
+      "Descends les épaules AVANT de tirer",
+      "Amène les coudes vers les hanches",
+      "Serre le dos en bas",
+      "Contrôle la remontée"
+    ],
+    "erreurs": [
+      "Tirer avec les bras sans engager le dos",
+      "Se balancer",
+      "Amplitude partielle",
+      "Monter les épaules"
+    ],
+    "coach": "Pense à tirer avec les coudes, pas les mains. Le dos se construit dans la connexion cerveau-muscle, pas dans la charge.",
+    "variantes": {
+      "deb": "Lat Pulldown assisté",
+      "int": "Traction assistée / Pulldown lourd",
+      "av": "Traction lestée"
+    },
+    "alternatives": "Rowing · Tirage machine · Traction élastique"
+  },
+  "Rowing barre": {
+    "groupe": "Dos",
+    "primaires": "Grand dorsal, rhomboïdes",
+    "secondaires": "Trapèzes, biceps, arrière d'épaule",
+    "diff": "Intermédiaire",
+    "materiel": "Barre",
+    "tempo": "2-1-2",
+    "repos": "90 s",
+    "depart": "Buste penché ~45°, dos plat, barre pendante bras tendus, genoux légèrement fléchis.",
+    "arrivee": "Barre tirée vers le nombril/bas des côtes, coudes le long du corps, omoplates serrées.",
+    "points": [
+      "Dos plat verrouillé tout du long",
+      "Tire vers le bas du ventre",
+      "Serre les omoplates en fin de tir",
+      "Pas d'élan de hanches"
+    ],
+    "erreurs": [
+      "Arrondir le dos",
+      "Se redresser pour tricher",
+      "Tirer trop haut (vers la poitrine)"
+    ],
+    "coach": "Le contrepoids du développé couché. Garde le dos comme une planche : si tu dois te balancer, c'est trop lourd.",
+    "variantes": {
+      "deb": "Rowing haltère un bras (appui banc)",
+      "int": "Rowing barre",
+      "av": "Rowing Pendlay (départ sol)"
+    },
+    "alternatives": "Rowing haltère · Tirage horizontal machine · Rowing élastique"
+  },
+  "Leg Press (pieds hauts)": {
+    "groupe": "Jambes",
+    "primaires": "Grand fessier, ischio-jambiers",
+    "secondaires": "Quadriceps",
+    "diff": "Débutant",
+    "materiel": "Presse à cuisses",
+    "tempo": "2-0-1",
+    "repos": "90 s",
+    "depart": "Assis dans la presse, pieds hauts et larges sur le plateau (cible fessiers), dos plaqué.",
+    "arrivee": "Flexion jusqu'à ~90° aux genoux, poussée dans les talons, sans verrouiller les genoux en fin.",
+    "points": [
+      "Pieds hauts = plus de fessier/ischios",
+      "Talons qui poussent",
+      "Dos et bassin plaqués",
+      "Ne verrouille pas les genoux à fond"
+    ],
+    "erreurs": [
+      "Décoller les fessiers du siège (dos rond)",
+      "Genoux qui rentrent",
+      "Amplitude trop courte"
+    ],
+    "coach": "Le placement des pieds change tout : hauts pour les fessiers, bas pour les quadriceps. Idéal pour charger sans stresser le dos.",
+    "variantes": {
+      "deb": "Charge modérée, technique",
+      "int": "Pieds hauts lourd",
+      "av": "Unilatéral ou tempo"
+    },
+    "alternatives": "Hack Squat · Squat · Fentes"
+  },
+  "Cable Kickback": {
+    "video": "https://vimeo.com/665090185",
+    "groupe": "Fessiers",
+    "primaires": "Grand fessier",
+    "secondaires": "Ischio-jambiers",
+    "diff": "Débutant",
+    "materiel": "Poulie basse + sangle cheville",
+    "tempo": "2-1-2",
+    "repos": "45 s",
+    "depart": "Face à la poulie, sangle à la cheville, léger buste penché, jambe de travail légèrement fléchie.",
+    "arrivee": "Extension de hanche vers l'arrière, contraction max du fessier, retour freiné sans relâcher.",
+    "points": [
+      "Mouvement lent et contrôlé",
+      "Serre le fessier en fin d'extension",
+      "Pas d'élan",
+      "Buste stable"
+    ],
+    "erreurs": [
+      "Cambrer le dos pour monter plus haut",
+      "Utiliser l'élan",
+      "Amplitude sans contraction"
+    ],
+    "coach": "Finisher d'isolation par excellence. Ici on cherche la connexion et la brûlure, jamais le lourd.",
+    "variantes": {
+      "deb": "Élastique ou poids de corps",
+      "int": "Poulie",
+      "av": "Poulie + tempo lent"
+    },
+    "alternatives": "Donkey Kick élastique · Kickback machine · Glute Bridge unilatéral"
+  },
+  "DB Step Up": {
+    "video": "https://vimeo.com/664572414",
+    "groupe": "Jambes",
+    "primaires": "Quadriceps, grand fessier",
+    "secondaires": "Ischio-jambiers, stabilisateurs",
+    "diff": "Débutant",
+    "materiel": "Banc/step + haltères",
+    "tempo": "1-0-2 (montée dynamique, descente freinée)",
+    "repos": "60 s/jambe",
+    "depart": "Face à un banc à hauteur genou, un pied posé dessus à plat, haltères le long du corps.",
+    "arrivee": "Montée en poussant dans le talon avant jusqu'à extension complète, descente contrôlée.",
+    "points": [
+      "Toute la poussée vient de la jambe SUR le banc",
+      "Ne pousse pas sur la jambe au sol",
+      "Descente lente",
+      "Buste droit"
+    ],
+    "erreurs": [
+      "S'aider de la jambe au sol (élan)",
+      "Genou qui rentre",
+      "Banc trop haut (dos qui compense)"
+    ],
+    "coach": "Fonctionnel et unilatéral : parfait pour corriger les asymétries. La descente freinée est la partie qui construit.",
+    "variantes": {
+      "deb": "Sans haltères, banc bas",
+      "int": "Haltères",
+      "av": "Banc haut ou tempo"
+    },
+    "alternatives": "Fentes · Bulgarian Split Squat · Montée sur chaise"
+  },
+  "Walking Lunges": {
+    "groupe": "Jambes",
+    "primaires": "Quadriceps, grand fessier",
+    "secondaires": "Ischio-jambiers, adducteurs",
+    "diff": "Intermédiaire",
+    "materiel": "Haltères (optionnel)",
+    "tempo": "Contrôlé",
+    "repos": "75 s",
+    "depart": "Debout, haltères le long du corps, gainage serré.",
+    "arrivee": "Grand pas en avant, descente genou arrière vers le sol, remontée en avançant, on alterne.",
+    "points": [
+      "Grand pas pour cibler le fessier",
+      "Genou avant aligné sur le pied",
+      "Buste droit",
+      "Descente contrôlée"
+    ],
+    "erreurs": [
+      "Pas trop court (stress genou)",
+      "Buste qui bascule en avant",
+      "Perte d'équilibre par manque de gainage"
+    ],
+    "coach": "Brûle les jambes et le cardio en même temps. Grand pas = fessier, petit pas = quadriceps.",
+    "variantes": {
+      "deb": "Fentes statiques sur place",
+      "int": "Fentes marchées haltères",
+      "av": "Fentes lestées longue distance"
+    },
+    "alternatives": "Fentes arrière · Split Squat · Step Up"
+  },
+  "Développé militaire": {
+    "groupe": "Épaules",
+    "primaires": "Deltoïde antérieur",
+    "secondaires": "Deltoïde latéral, triceps, trapèzes",
+    "diff": "Intermédiaire",
+    "materiel": "Barre ou haltères",
+    "tempo": "2-0-1",
+    "repos": "90 s",
+    "depart": "Debout ou assis, barre au niveau du haut des pectoraux, prise largeur épaules, gainage serré.",
+    "arrivee": "Barre poussée au-dessus de la tête bras tendus, tête qui avance légèrement en fin de mouvement.",
+    "points": [
+      "Serre les fessiers et le ventre (pas de cambrure)",
+      "Barre en ligne au-dessus du milieu du pied",
+      "Trajectoire verticale",
+      "Contrôle la descente"
+    ],
+    "erreurs": [
+      "Cambrer le bas du dos",
+      "Pousser la barre vers l'avant",
+      "Amplitude partielle"
+    ],
+    "coach": "Un vrai test de gainage. Si tu cambres pour pousser, baisse la charge : tes épaules te remercieront.",
+    "variantes": {
+      "deb": "Développé haltères assis",
+      "int": "Barre debout",
+      "av": "Push Press ou strict lourd"
+    },
+    "alternatives": "Développé haltères · Arnold Press · Développé machine"
+  },
+  "Lateral Raise": {
+    "groupe": "Épaules",
+    "primaires": "Deltoïde latéral",
+    "secondaires": "Trapèzes supérieurs",
+    "diff": "Débutant",
+    "materiel": "Haltères",
+    "tempo": "2-1-2",
+    "repos": "45 s",
+    "depart": "Debout, haltères le long du corps, léger fléchissement des coudes.",
+    "arrivee": "Bras montés sur les côtés jusqu'à hauteur d'épaules, coudes légèrement plus hauts que les mains.",
+    "points": [
+      "Monte comme si tu versais une bouteille (petit doigt en haut)",
+      "Coudes légèrement fléchis fixes",
+      "Contrôle la descente",
+      "Pas d'élan"
+    ],
+    "erreurs": [
+      "Balancer le corps",
+      "Monter trop haut (trapèzes)",
+      "Charge trop lourde"
+    ],
+    "coach": "L'exercice qui donne la largeur d'épaules. Léger et propre bat lourd et balancé, à tous les coups.",
+    "variantes": {
+      "deb": "Léger, assis",
+      "int": "Debout",
+      "av": "Drop set ou poulie"
+    },
+    "alternatives": "Élévations à la poulie · Élévations penché (arrière) · Machine"
+  },
+  "Triceps Pushdown": {
+    "groupe": "Bras",
+    "primaires": "Triceps",
+    "secondaires": "—",
+    "diff": "Débutant",
+    "materiel": "Poulie haute + corde/barre",
+    "tempo": "2-1-2",
+    "repos": "45 s",
+    "depart": "Face à la poulie haute, coudes collés au corps, avant-bras parallèles au sol.",
+    "arrivee": "Extension complète des coudes vers le bas, contraction du triceps, retour freiné.",
+    "points": [
+      "Coudes fixes collés au corps",
+      "Seuls les avant-bras bougent",
+      "Serre le triceps en bas",
+      "Contrôle la remontée"
+    ],
+    "erreurs": [
+      "Décoller les coudes",
+      "Se pencher pour pousser avec le corps",
+      "Amplitude partielle"
+    ],
+    "coach": "Isolation propre du triceps. Si tes coudes bougent, tu triches. Verrouille-les et sens le muscle.",
+    "variantes": {
+      "deb": "Corde légère",
+      "int": "Barre ou corde",
+      "av": "Drop set"
+    },
+    "alternatives": "Dips · Extension nuque haltère · Pompes serrées"
+  },
+  "Lat Pulldown": {
+    "groupe": "Dos",
+    "primaires": "Grand dorsal",
+    "secondaires": "Biceps, rhomboïdes",
+    "diff": "Débutant",
+    "materiel": "Poulie haute",
+    "tempo": "2-0-2",
+    "repos": "90 s",
+    "depart": "Assis, cuisses bloquées, prise large pronation, buste légèrement en arrière, épaules basses.",
+    "arrivee": "Barre tirée au niveau du haut de la poitrine, coudes vers le bas, dorsaux serrés.",
+    "points": [
+      "Descends les épaules d'abord",
+      "Tire les coudes vers les hanches",
+      "Poitrine haute",
+      "Contrôle la remontée"
+    ],
+    "erreurs": [
+      "Tirer derrière la nuque (risque épaule)",
+      "Se balancer",
+      "Tirer avec les bras seuls"
+    ],
+    "coach": "La version guidée de la traction, parfaite pour construire le dos avec le bon dosage. Coudes, pas mains.",
+    "variantes": {
+      "deb": "Charge modérée",
+      "int": "Lourd contrôlé",
+      "av": "Prise serrée ou pause"
+    },
+    "alternatives": "Traction assistée · Rowing · Tirage élastique"
+  },
+  "Seated Row": {
+    "groupe": "Dos",
+    "primaires": "Rhomboïdes, grand dorsal",
+    "secondaires": "Trapèzes, biceps",
+    "diff": "Débutant",
+    "materiel": "Poulie basse + poignée",
+    "tempo": "2-1-2",
+    "repos": "90 s",
+    "depart": "Assis, pieds calés, dos droit, bras tendus vers la poulie, léger étirement du dos.",
+    "arrivee": "Poignée tirée vers le nombril, coudes le long du corps, omoplates serrées, buste stable.",
+    "points": [
+      "Dos droit, ne pas se balancer",
+      "Tire avec les coudes",
+      "Serre les omoplates",
+      "Étire bien en avant sans arrondir"
+    ],
+    "erreurs": [
+      "Balancer le buste d'avant en arrière",
+      "Arrondir le dos à l'étirement",
+      "Hausser les épaules"
+    ],
+    "coach": "Épaississeur de dos. Cherche la contraction des omoplates, pas la charge : imagine tenir un crayon entre elles.",
+    "variantes": {
+      "deb": "Charge légère",
+      "int": "Modéré",
+      "av": "Pause en contraction"
+    },
+    "alternatives": "Rowing haltère · Rowing barre · Tirage machine"
+  },
+  "Fentes": {
+    "groupe": "Jambes",
+    "primaires": "Quadriceps, grand fessier",
+    "secondaires": "Ischio-jambiers, adducteurs",
+    "diff": "Débutant",
+    "materiel": "Poids de corps ou haltères",
+    "tempo": "2-0-1",
+    "repos": "60 s/jambe",
+    "depart": "Debout, gainage serré, mains sur les hanches ou haltères.",
+    "arrivee": "Pas en avant, descente du genou arrière vers le sol, genou avant à 90°, remontée.",
+    "points": [
+      "Genou avant aligné sur le pied",
+      "Buste droit",
+      "Descente contrôlée",
+      "Poussée dans le talon avant"
+    ],
+    "erreurs": [
+      "Genou avant qui dépasse trop les orteils",
+      "Buste penché",
+      "Pas trop court"
+    ],
+    "coach": "Simple, efficace, faisable partout. Excellent pour l'équilibre et corriger les asymétries.",
+    "variantes": {
+      "deb": "Fentes statiques",
+      "int": "Fentes marchées",
+      "av": "Fentes sautées ou lestées"
+    },
+    "alternatives": "Split Squat · Step Up · Bulgarian Split Squat"
+  },
+  "Gainage": {
+    "groupe": "Tronc",
+    "primaires": "Transverse, grand droit",
+    "secondaires": "Obliques, lombaires, épaules",
+    "diff": "Débutant",
+    "materiel": "Aucun",
+    "tempo": "Isométrique (tenir)",
+    "repos": "30-45 s",
+    "depart": "Appui sur les avant-bras et la pointe des pieds, corps aligné.",
+    "arrivee": "Maintien : corps en planche, bassin ni haut ni bas, gainage et fessiers serrés.",
+    "points": [
+      "Corps parfaitement aligné",
+      "Serre le ventre ET les fessiers",
+      "Ne creuse pas le bas du dos",
+      "Respire normalement"
+    ],
+    "erreurs": [
+      "Bassin trop haut (fesses en l'air)",
+      "Bas du dos qui creuse",
+      "Tête qui tombe"
+    ],
+    "coach": "La qualité bat la durée. 30 s parfaitement gainé valent mieux que 2 min affaissé.",
+    "variantes": {
+      "deb": "Gainage sur les genoux",
+      "int": "Gainage complet",
+      "av": "Gainage lesté ou instable"
+    },
+    "alternatives": "Dead Bug · Gainage latéral · Hollow Hold"
+  },
+  "Goblet Squat": {
+    "groupe": "Jambes",
+    "primaires": "Quadriceps, grand fessier",
+    "secondaires": "Gainage, adducteurs",
+    "diff": "Débutant",
+    "materiel": "Un haltère ou kettlebell",
+    "tempo": "2-1-1",
+    "repos": "60 s",
+    "depart": "Debout, un haltère tenu verticalement contre la poitrine, pieds largeur épaules.",
+    "arrivee": "Descente hanches sous les genoux, coudes qui passent à l'intérieur des genoux, poitrine haute.",
+    "points": [
+      "Poids contre la poitrine tout du long",
+      "Coudes entre les genoux en bas",
+      "Talons ancrés",
+      "Poitrine haute"
+    ],
+    "erreurs": [
+      "Pencher le buste en avant",
+      "Talons qui décollent",
+      "Genoux qui rentrent"
+    ],
+    "coach": "Le meilleur squat pour apprendre : le poids devant t'oblige à rester droit. Parfait pour débuter ou avec un genou fragile.",
+    "variantes": {
+      "deb": "Léger, amplitude progressive",
+      "int": "Kettlebell modérée",
+      "av": "Tempo 3 s ou pause"
+    },
+    "alternatives": "Back Squat · Leg Press · Squat sur chaise"
+  },
+  "DB Sumo Squat": {
+    "video": "https://vimeo.com/664566118",
+    "groupe": "Fessiers · Jambes",
+    "primaires": "Grand fessier, adducteurs",
+    "secondaires": "Quadriceps, ischio-jambiers",
+    "diff": "Débutant",
+    "materiel": "Un haltère (ou kettlebell)",
+    "tempo": "2-1-1",
+    "repos": "60 s",
+    "depart": "Debout, pieds larges et pointes ouvertes (~45°), un haltère tenu à deux mains devant le bassin.",
+    "arrivee": "Descente hanches basses, genoux dans l'axe des pointes, buste droit, poussée dans les talons.",
+    "points": [
+      "Pieds larges, pointes ouvertes",
+      "Genoux qui suivent les pointes de pied",
+      "Descends bas en gardant le buste droit",
+      "Serre les fessiers en haut"
+    ],
+    "erreurs": [
+      "Genoux qui rentrent",
+      "Buste qui bascule en avant",
+      "Amplitude trop courte"
+    ],
+    "coach": "L'ouverture des pieds recrute davantage l'intérieur des cuisses et les fessiers. Idéal en échauffement lourd ou en volume.",
+    "variantes": {
+      "deb": "Poids du corps",
+      "int": "Un haltère",
+      "av": "Sur élévation pour plus d'amplitude"
+    },
+    "alternatives": "Goblet Squat · Sumo à l'élastique · Presse pieds larges"
+  },
+  "DB Split Squat": {
+    "video": "https://vimeo.com/664578454",
+    "groupe": "Jambes · Fessiers",
+    "primaires": "Quadriceps, grand fessier",
+    "secondaires": "Ischio-jambiers, stabilisateurs",
+    "diff": "Débutant à intermédiaire",
+    "materiel": "Haltères (optionnel)",
+    "tempo": "2-1-1",
+    "repos": "60 s/jambe",
+    "depart": "Position de fente figée : un pied devant, un pied derrière, buste droit, haltères le long du corps.",
+    "arrivee": "Descente verticale du genou arrière vers le sol, genou avant à 90°, remontée sans avancer.",
+    "points": [
+      "Reste sur place, pas de pas",
+      "Descente verticale",
+      "Poids sur la jambe avant",
+      "Genou avant dans l'axe du pied"
+    ],
+    "erreurs": [
+      "Genou avant qui part en avant",
+      "Buste penché",
+      "Prendre appui sur la jambe arrière"
+    ],
+    "coach": "La version statique de la fente : plus stable, parfaite pour charger et sentir le fessier avant de passer aux versions marchées.",
+    "variantes": {
+      "deb": "Poids du corps, appui léger",
+      "int": "Haltères",
+      "av": "Bulgarian (pied arrière surélevé)"
+    },
+    "alternatives": "Bulgarian Split Squat · Fentes · Step Up"
+  },
+  "DB Single Leg RDL": {
+    "video": "https://vimeo.com/664570347",
+    "groupe": "Chaîne postérieure",
+    "primaires": "Ischio-jambiers, grand fessier",
+    "secondaires": "Érecteurs, stabilisateurs de hanche",
+    "diff": "Intermédiaire à avancé",
+    "materiel": "Un ou deux haltères",
+    "tempo": "3-0-1",
+    "repos": "60 s/jambe",
+    "depart": "Debout sur une jambe, léger fléchissement du genou d'appui, haltère(s) en main.",
+    "arrivee": "Buste qui descend en même temps que la jambe libre monte à l'arrière (comme une balance), dos plat, étirement de l'ischio d'appui.",
+    "points": [
+      "Le corps forme une ligne épaules-bassin-jambe arrière",
+      "Hanches restent alignées (pas de rotation)",
+      "Dos plat",
+      "Mouvement lent et contrôlé pour l'équilibre"
+    ],
+    "erreurs": [
+      "Arrondir le dos",
+      "Ouvrir la hanche vers l'extérieur",
+      "Aller trop vite et perdre l'équilibre"
+    ],
+    "coach": "Excellent pour la stabilité de hanche et corriger les asymétries. Commence léger : l'équilibre est le vrai défi, pas la charge.",
+    "variantes": {
+      "deb": "Sans charge, appui d'un doigt sur un mur",
+      "int": "Un haltère",
+      "av": "Deux haltères ou kettlebell"
+    },
+    "alternatives": "RDL classique · Good Morning · Cable Pull Through"
+  },
+  "BB Seated Jump Squat": {
+    "video": "https://vimeo.com/665086340",
+    "groupe": "Jambes · Explosivité",
+    "primaires": "Quadriceps, grand fessier",
+    "secondaires": "Mollets, ischio-jambiers",
+    "diff": "Intermédiaire",
+    "materiel": "Barre + banc bas",
+    "tempo": "Explosif à la montée",
+    "repos": "75 s",
+    "depart": "Assis sur un banc bas, barre sur le haut du dos, pieds à plat largeur épaules.",
+    "arrivee": "Extension explosive depuis la position assise jusqu'au décollage (ou quasi), réception contrôlée, retour assis.",
+    "points": [
+      "Départ complet depuis l'assise (pas d'élan)",
+      "Extension la plus explosive possible",
+      "Réception souple, genoux fléchis",
+      "Charge modérée — la vitesse prime"
+    ],
+    "erreurs": [
+      "Charge trop lourde qui tue la vitesse",
+      "Réception raide",
+      "Rebondir sur le banc"
+    ],
+    "coach": "Travail de puissance : on cherche la vitesse d'exécution, pas le poids. Utile pour le côté athlétique et la force-vitesse des fessiers.",
+    "variantes": {
+      "deb": "Sans barre (poids du corps)",
+      "int": "Barre légère",
+      "av": "Barre modérée contrôlée"
+    },
+    "alternatives": "Jump Squat · Box Jump · Kettlebell Swing"
+  },
+  "RB Donkey Kick": {
+    "video": "https://vimeo.com/664603644",
+    "groupe": "Fessiers",
+    "primaires": "Grand fessier",
+    "secondaires": "Ischio-jambiers",
+    "diff": "Débutant",
+    "materiel": "Élastique (band)",
+    "tempo": "2-1-2",
+    "repos": "45 s",
+    "depart": "À quatre pattes, élastique autour du pied de travail, mains sous les épaules, dos neutre.",
+    "arrivee": "Poussée du talon vers le plafond, genou fléchi à 90°, hanche en extension, contraction du fessier en haut.",
+    "points": [
+      "Pousse le talon vers le plafond",
+      "Ne cambre pas le bas du dos",
+      "Serre le fessier en haut",
+      "Contrôle la descente"
+    ],
+    "erreurs": [
+      "Cambrer le dos pour monter plus haut",
+      "Ouvrir la hanche sur le côté",
+      "Utiliser l'élan"
+    ],
+    "coach": "Un grand classique d'activation et de finition fessiers. L'élastique ajoute la tension juste où il faut. Cherche la contraction, pas l'amplitude.",
+    "variantes": {
+      "deb": "Sans élastique",
+      "int": "Élastique",
+      "av": "Élastique + pause en haut"
+    },
+    "alternatives": "Cable Kickback · Glute Bridge unilatéral · Hip Extension machine"
+  },
+  "RB Side Step": {
+    "video": "https://vimeo.com/665072998",
+    "groupe": "Fessiers",
+    "primaires": "Moyen fessier",
+    "secondaires": "Petit fessier, stabilisateurs de hanche",
+    "diff": "Débutant",
+    "materiel": "Élastique (band) au-dessus des genoux ou aux chevilles",
+    "tempo": "Contrôlé",
+    "repos": "45 s",
+    "depart": "Demi-squat, élastique en tension, pieds largeur bassin, buste légèrement penché.",
+    "arrivee": "Pas latéraux contrôlés en gardant la tension de l'élastique, sans laisser les genoux rentrer.",
+    "points": [
+      "Reste en demi-squat tout du long",
+      "Garde la tension sur l'élastique",
+      "Genoux qui ne rentrent jamais",
+      "Petits pas contrôlés"
+    ],
+    "erreurs": [
+      "Se redresser entre les pas",
+      "Laisser les genoux rentrer",
+      "Traîner les pieds sans contrôle"
+    ],
+    "coach": "L'activation reine du moyen fessier — celui qui stabilise le bassin. Parfait en échauffement fessiers ou football (prévention).",
+    "variantes": {
+      "deb": "Élastique au-dessus des genoux",
+      "int": "Élastique aux chevilles",
+      "av": "Élastique bas + amplitude"
+    },
+    "alternatives": "Lateral Band Walk · Hip Abduction · Clamshell"
+  },
+  "RB Hip Bridge": {
+    "video": "https://vimeo.com/665070297",
+    "groupe": "Fessiers",
+    "primaires": "Grand fessier",
+    "secondaires": "Ischio-jambiers, gainage",
+    "diff": "Débutant",
+    "materiel": "Élastique (optionnel)",
+    "tempo": "2-1-2 (pause 1 s en haut)",
+    "repos": "45 s",
+    "depart": "Allongé sur le dos, genoux fléchis, pieds à plat proches des fessiers, bras le long du corps.",
+    "arrivee": "Bassin soulevé jusqu'à aligner épaules-hanches-genoux, fessiers serrés à fond, pause en haut.",
+    "points": [
+      "Pousse dans les talons",
+      "Serre les fessiers en haut, ne cambre pas le dos",
+      "Pause 1 s en haut",
+      "Descente contrôlée"
+    ],
+    "erreurs": [
+      "Cambrer le bas du dos",
+      "Monter sur la pointe des pieds",
+      "Ne pas atteindre l'extension complète"
+    ],
+    "coach": "La version au sol du Hip Thrust : idéale à la maison ou en activation. L'élastique au-dessus des genoux ajoute le travail du moyen fessier.",
+    "variantes": {
+      "deb": "Sans élastique",
+      "int": "Élastique au-dessus des genoux",
+      "av": "Une jambe (unilatéral)"
+    },
+    "alternatives": "Hip Thrust · Glute Bridge lesté · Cable Pull Through"
+  },
+  "DB Curtsy Lunge": {
+    "video": "https://vimeo.com/664572414",
+    "groupe": "Fessiers · Jambes",
+    "primaires": "Grand et moyen fessier",
+    "secondaires": "Quadriceps, adducteurs",
+    "diff": "Intermédiaire",
+    "materiel": "Haltères (optionnel)",
+    "tempo": "2-0-1",
+    "repos": "60 s/jambe",
+    "depart": "Debout, haltères le long du corps, gainage serré.",
+    "arrivee": "Une jambe passe en diagonale derrière l'autre (révérence), descente contrôlée, remontée sur la jambe avant.",
+    "points": [
+      "Croise nettement derrière",
+      "Poids sur la jambe avant",
+      "Buste droit",
+      "Genou avant stable dans l'axe"
+    ],
+    "erreurs": [
+      "Perdre l'équilibre (gainage relâché)",
+      "Genou avant qui rentre",
+      "Pas assez de croisement"
+    ],
+    "coach": "Le mouvement latéral qui cible le galbe du fessier sous un autre angle. Va-y progressivement : l'équilibre demande un peu de pratique.",
+    "variantes": {
+      "deb": "Poids du corps",
+      "int": "Haltères",
+      "av": "Haltères lourds ou déficit"
+    },
+    "alternatives": "Fentes latérales · Bulgarian Split Squat · Step Up"
+  }
+};
