@@ -13,7 +13,7 @@ import { buildProgram, lundiCourant, phaseFor } from "@/lib/coaching/programme";
 import { locale, tc, traduireProgramme, ui } from "@/lib/i18n";
 import { getLang } from "@/lib/i18n/serveur";
 
-export const metadata = { title: "Client — PT Mouss IA" };
+export const metadata = { title: "Client — Baara" };
 
 const NOTE = { ko: "note-ko", gold: "note-gold", ok: "note-ok" } as const;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;

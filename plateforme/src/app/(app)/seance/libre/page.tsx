@@ -5,7 +5,7 @@ import { getUtilisateur } from "@/lib/data";
 import { ui } from "@/lib/i18n";
 import { getLang } from "@/lib/i18n/serveur";
 
-export const metadata = { title: "Séance libre — PT Mouss IA" };
+export const metadata = { title: "Séance libre — Baara" };
 
 export default async function Page() {
   await getUtilisateur();

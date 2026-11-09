@@ -4,7 +4,7 @@ import { buildProgram } from "@/lib/coaching/programme";
 import { ui } from "@/lib/i18n";
 import { getLang } from "@/lib/i18n/serveur";
 
-export const metadata = { title: "Exercices — PT Mouss IA" };
+export const metadata = { title: "Exercices — Baara" };
 
 export default async function Page() {
   const user = await getUtilisateur();

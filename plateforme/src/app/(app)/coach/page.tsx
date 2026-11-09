@@ -9,7 +9,7 @@ import { lundiCourant, phaseFor } from "@/lib/coaching/programme";
 import { tc, ui } from "@/lib/i18n";
 import { getLang } from "@/lib/i18n/serveur";
 
-export const metadata = { title: "Coach — PT Mouss IA" };
+export const metadata = { title: "Coach — Baara" };
 
 const PILL = { ko: "pill-ko", gold: "pill-gold", ok: "pill-ok" } as const;
 

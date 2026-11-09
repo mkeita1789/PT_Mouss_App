@@ -6,7 +6,7 @@ import { indexJourSuivant, prepareSeance } from "@/lib/coaching/seance";
 import { tc, ui } from "@/lib/i18n";
 import { getLang } from "@/lib/i18n/serveur";
 
-export const metadata = { title: "Séance — PT Mouss IA" };
+export const metadata = { title: "Séance — Baara" };
 
 export default async function Page() {
   const user = await getUtilisateur();

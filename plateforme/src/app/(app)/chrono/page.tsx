@@ -2,7 +2,7 @@ import { Chrono } from "@/components/Chrono";
 import { ui } from "@/lib/i18n";
 import { getLang } from "@/lib/i18n/serveur";
 
-export const metadata = { title: "Chrono — PT Mouss IA" };
+export const metadata = { title: "Chrono — Baara" };
 
 export default async function Page({ searchParams }: PageProps<"/chrono">) {
   const { mode } = await searchParams;

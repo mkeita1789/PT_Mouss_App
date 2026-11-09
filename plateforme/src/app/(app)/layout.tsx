@@ -7,6 +7,7 @@ import { deconnexion } from "@/app/(auth)/actions";
 import { getUtilisateur } from "@/lib/data";
 import { ui } from "@/lib/i18n";
 import { getLang } from "@/lib/i18n/serveur";
+import { Logo, Marque } from "@/components/Logo";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const user = await getUtilisateur();
@@ -17,11 +18,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     <div className="shell">
       <aside className="sidebar">
         <Link href="/" className="side-brand">
-          <span className="monogram">JC</span>
-          <span>
-            <div className="wordmark">PT MOUSS <b>IA</b></div>
-            <div className="wordmark-sub">JIGI Coaching</div>
-          </span>
+          <Logo />
+          <Marque />
         </Link>
         <SideNav coach={coach} />
         <div className="side-foot">
@@ -39,8 +37,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       </aside>
 
       <header className="topbar">
-        <span className="monogram">JC</span>
-        <div className="wordmark">PT MOUSS <b>IA</b></div>
+        <Logo />
+        <div className="wordmark">BAARA</div>
         <Link href="/profil" className="topbar-user" aria-label={T.nav.monProfil}>
           <Avatar url={user.avatar} nom={user.prenom || user.email} />
         </Link>

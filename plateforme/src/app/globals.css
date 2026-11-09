@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════
-   PT MOUSS IA — « La salle de nuit », édition plateforme
+   BAARA — « La salle de nuit », édition plateforme
    Une matière : le noir chaud. Une lumière : l'or.
    Oswald pour les titres et les chiffres, Inter pour lire.
    ═══════════════════════════════════════════════════════ */
@@ -96,14 +96,15 @@ input, textarea, select { font: inherit; color: inherit; }
   backdrop-filter: blur(20px) saturate(1.4); -webkit-backdrop-filter: blur(20px) saturate(1.4);
   border-bottom: 1px solid var(--line);
 }
+/* Tuile du logo : toujours sombre, le B prend la couleur du thème */
 .monogram {
-  width: 36px; height: 36px; border-radius: 11px; flex: none;
+  width: 36px; height: 36px; border-radius: 10px; flex: none;
   display: grid; place-items: center;
-  font-family: var(--font-oswald); font-weight: 700; font-size: 15px; letter-spacing: 0.02em; color: var(--gold-ink);
-  background: linear-gradient(145deg, var(--gold), var(--gold-deep));
-  box-shadow: 0 0 0 1px rgb(var(--a) / 0.35), 0 6px 18px rgb(var(--a) / 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  color: var(--gold);
+  background: radial-gradient(120% 120% at 30% 20%, #1a1813, #0b0a08 70%);
+  box-shadow: 0 0 0 1px rgb(var(--a) / 0.4), 0 6px 18px rgb(var(--a) / 0.18);
 }
-.wordmark { font-family: var(--font-oswald); font-weight: 600; font-size: 17px; letter-spacing: 0.06em; line-height: 1.1; }
+.wordmark { font-family: var(--font-oswald); font-weight: 600; font-size: 18px; letter-spacing: 0.22em; line-height: 1.1; }
 .wordmark b { color: var(--gold); font-weight: 600; }
 .wordmark-sub { font-size: 11.5px; color: var(--muted); margin-top: 1px; }
 .topbar-user { margin-left: auto; display: flex; align-items: center; gap: 10px; }
@@ -484,9 +485,9 @@ details.session[open] .chev { transform: rotate(90deg); }
     background: radial-gradient(90% 70% at 20% 10%, rgb(var(--a) / 0.16), transparent 60%), var(--auth-bg);
   }
   .auth-brand::after {
-    content: "JC"; position: absolute; right: -40px; bottom: -120px;
-    font-family: var(--font-oswald); font-weight: 700; font-size: 520px; line-height: 1;
-    color: transparent; -webkit-text-stroke: 1px rgb(var(--a) / 0.16); pointer-events: none;
+    /* Grand ballon en filigrane, au trait */
+    content: ""; position: absolute; right: -140px; bottom: -140px; width: 520px; height: 520px; pointer-events: none; opacity: 0.16;
+    background: no-repeat center / contain url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64' fill='none' stroke='%23f2b441' stroke-width='.35'%3E%3Ccircle cx='32' cy='32' r='30'/%3E%3Cpath d='M32 20.4L43.4 28.7L39 42.1H25L20.6 28.7Z'/%3E%3Cpath d='M32 20.4V2M43.4 28.7L60.5 23M39 42.1L49.6 56.4M25 42.1L14.4 56.4M20.6 28.7L3.5 23'/%3E%3C/svg%3E");
   }
 }
 .auth-quote { font-family: var(--font-oswald); font-weight: 500; font-size: 44px; line-height: 1.08; text-transform: uppercase; max-width: 13ch; }

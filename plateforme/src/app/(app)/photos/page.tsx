@@ -6,7 +6,7 @@ import { ui } from "@/lib/i18n";
 import { getLang } from "@/lib/i18n/serveur";
 import { donnerAccord } from "./actions";
 
-export const metadata = { title: "Photos — PT Mouss IA" };
+export const metadata = { title: "Photos — Baara" };
 
 export default async function Page() {
   const user = await getUtilisateur();

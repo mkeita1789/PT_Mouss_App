@@ -11,7 +11,7 @@ import { phaseFor } from "@/lib/coaching/programme";
 import { locale, tc, ui } from "@/lib/i18n";
 import { getLang } from "@/lib/i18n/serveur";
 
-export const metadata = { title: "Profil — PT Mouss IA" };
+export const metadata = { title: "Profil — Baara" };
 
 export default async function Page() {
   const user = await getUtilisateur();

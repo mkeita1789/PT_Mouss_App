@@ -9,10 +9,10 @@ import { APERCU } from "@/lib/theme";
 import { getTheme } from "@/lib/theme/serveur";
 
 export const metadata: Metadata = {
-  title: "PT Mouss IA — JIGI Coaching",
+  title: "Baara — JIGI Coaching",
   description: "JIGI Coaching : programme, séances, progression.",
-  appleWebApp: { capable: true, title: "PT Mouss", statusBarStyle: "black-translucent" },
-  icons: { icon: "/icon-192.png", apple: "/icon-192.png" },
+  appleWebApp: { capable: true, title: "Baara", statusBarStyle: "black-translucent" },
+  icons: { icon: "/icon-192.png", apple: "/apple-icon.png" },
 };
 
 export async function generateViewport(): Promise<Viewport> {

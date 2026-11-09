@@ -11,9 +11,9 @@ const LIEN = "https://pt-mouss-app.vercel.app/inscription";
 
 const MESSAGE: Record<Lang, (coach: string) => string> = {
   fr: (c) =>
-    `Salut ! 👋\n\nTon appli de coaching PT Mouss IA est prête 💪 Programme personnalisé, séances guidées et suivi de ta progression.\n\n👉 Crée ton compte : ${LIEN}\n\n📲 Pour l'installer : iPhone → Safari, Partager, « Sur l'écran d'accueil ». Android → Chrome, menu ⋮, « Installer l'application ».\n\nÀ très vite !\n${c} — JIGI Coaching`,
+    `Salut ! 👋\n\nTon appli de coaching Baara est prête 💪 Programme personnalisé, séances guidées et suivi de ta progression.\n\n👉 Crée ton compte : ${LIEN}\n\n📲 Pour l'installer : iPhone → Safari, Partager, « Sur l'écran d'accueil ». Android → Chrome, menu ⋮, « Installer l'application ».\n\nÀ très vite !\n${c} — JIGI Coaching`,
   en: (c) =>
-    `Hi! 👋\n\nYour PT Mouss IA coaching app is ready 💪 Personalised program, guided workouts and progress tracking.\n\n👉 Create your account: ${LIEN}\n\n📲 To install it: iPhone → Safari, Share, « Add to Home Screen ». Android → Chrome, menu ⋮, « Install app ».\n\nSee you soon!\n${c} — JIGI Coaching`,
+    `Hi! 👋\n\nYour Baara coaching app is ready 💪 Personalised program, guided workouts and progress tracking.\n\n👉 Create your account: ${LIEN}\n\n📲 To install it: iPhone → Safari, Share, « Add to Home Screen ». Android → Chrome, menu ⋮, « Install app ».\n\nSee you soon!\n${c} — JIGI Coaching`,
 };
 
 /** Inviter une cliente : partage du téléphone, WhatsApp, SMS, lien ou QR code à scanner */
@@ -38,7 +38,7 @@ export function Inviter({ coach }: { coach: string }) {
   }, [ouvert]);
 
   const partager = async () => {
-    try { await navigator.share({ title: "PT Mouss IA", text: texte }); } catch {}
+    try { await navigator.share({ title: "Baara", text: texte }); } catch {}
   };
   const copier = async (t: string) => {
     try { await navigator.clipboard.writeText(t); setCopie(true); setTimeout(() => setCopie(false), 2000); } catch {}

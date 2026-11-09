@@ -3,6 +3,7 @@ import { AncienHistoriqueNotice } from "@/components/Importeur";
 import { ChoixLangue } from "@/components/Langue";
 import { ui } from "@/lib/i18n";
 import { getLang } from "@/lib/i18n/serveur";
+import { Logo, Marque } from "@/components/Logo";
 
 export default async function AuthLayout({ children }: { children: React.ReactNode }) {
   const T = ui(await getLang());
@@ -11,11 +12,8 @@ export default async function AuthLayout({ children }: { children: React.ReactNo
     <main className="auth">
       <aside className="auth-brand">
         <div className="side-brand" style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <span className="monogram">JC</span>
-          <span>
-            <div className="wordmark">PT MOUSS <b>IA</b></div>
-            <div className="wordmark-sub">JIGI Coaching</div>
-          </span>
+          <Logo />
+          <Marque />
         </div>
         <div style={{ position: "relative", zIndex: 1 }}>
           <p className="auth-quote">{T.auth.citation[0]}<em>{T.auth.citation[1]}</em></p>
@@ -28,11 +26,8 @@ export default async function AuthLayout({ children }: { children: React.ReactNo
       <div className="auth-form-wrap">
         <div className="auth-mobile-brand" style={{ justifyContent: "space-between" }}>
           <span style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <span className="monogram">JC</span>
-            <span>
-              <div className="wordmark">PT MOUSS <b>IA</b></div>
-              <div className="wordmark-sub">JIGI Coaching</div>
-            </span>
+            <Logo />
+            <Marque />
           </span>
           <ChoixLangue compact />
         </div>

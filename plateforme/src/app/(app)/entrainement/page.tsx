@@ -8,7 +8,7 @@ import { lireProgramme } from "@/lib/coaching/programmes-speciaux";
 import { tc, ui } from "@/lib/i18n";
 import { getLang } from "@/lib/i18n/serveur";
 
-export const metadata = { title: "Entraînement — PT Mouss IA" };
+export const metadata = { title: "Entraînement — Baara" };
 
 type Entree = { href: string; ico: NomIcone; titre: string; sous: string };
 

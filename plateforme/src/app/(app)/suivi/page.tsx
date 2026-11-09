@@ -8,7 +8,7 @@ import { meilleureProgression } from "@/lib/coaching/alertes";
 import { nombre, tc, ui } from "@/lib/i18n";
 import { getLang } from "@/lib/i18n/serveur";
 
-export const metadata = { title: "Progression — PT Mouss IA" };
+export const metadata = { title: "Progression — Baara" };
 
 export default async function Page() {
   const user = await getUtilisateur();

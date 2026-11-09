@@ -1,4 +1,4 @@
-/* PT Mouss IA — service worker : notifications uniquement.
+/* Baara — service worker : notifications uniquement.
    Aucune page n'est mise en cache : l'appli est toujours servie en direct.
    Il remplace aussi l'ancien service worker de la PWA : s'il trouve des caches
    de l'ancienne appli, il les vide et recharge les onglets ouverts (une seule fois). */
@@ -26,7 +26,7 @@ self.addEventListener("push", (event) => {
     d = { titre: event.data ? event.data.text() : "" };
   }
   event.waitUntil(
-    self.registration.showNotification(d.titre || "PT Mouss IA", {
+    self.registration.showNotification(d.titre || "Baara", {
       body: d.corps || "",
       icon: "/icon-192.png",
       badge: "/icon-192.png",

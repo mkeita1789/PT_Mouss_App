@@ -2,7 +2,7 @@ import { FormAuth } from "@/components/FormAuth";
 import { ui } from "@/lib/i18n";
 import { getLang } from "@/lib/i18n/serveur";
 
-export const metadata = { title: "Inscription — PT Mouss IA" };
+export const metadata = { title: "Inscription — Baara" };
 
 export default async function Page({ searchParams }: PageProps<"/inscription">) {
   const { suite } = await searchParams;

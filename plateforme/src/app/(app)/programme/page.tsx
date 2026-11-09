@@ -7,7 +7,7 @@ import { buildProgram, cycleFor, nutri, phaseFor, SRA, volumeUF } from "@/lib/co
 import { tc, traduireProgramme, ui } from "@/lib/i18n";
 import { getLang } from "@/lib/i18n/serveur";
 
-export const metadata = { title: "Programme — PT Mouss IA" };
+export const metadata = { title: "Programme — Baara" };
 
 export default async function Page() {
   const user = await getUtilisateur();
