@@ -3,10 +3,11 @@ import { notFound } from "next/navigation";
 import { Avatar } from "@/components/Avatar";
 import { Comparaison, GrillePhotos } from "@/components/Comparaison";
 import { FormMot } from "@/components/FormMot";
+import { ReathCoach } from "@/components/ReathCoach";
 import { Icon } from "@/components/Icon";
 import { supprimerMot } from "../actions";
 import { HistoriqueSeances, ProgressionCharges } from "@/components/Progression";
-import { exigerCoach, getCheckinsRecents, getClient, getHistorique, getMots, getPhotos } from "@/lib/data";
+import { exigerCoach, getCheckinsRecents, getClient, getHistorique, getMots, getPhotos, getReath, getReathSeances } from "@/lib/data";
 import { alertesCoach } from "@/lib/coaching/alertes";
 import { buildProgram, lundiCourant, phaseFor } from "@/lib/coaching/programme";
 import { locale, tc, traduireProgramme, ui } from "@/lib/i18n";
@@ -26,7 +27,7 @@ export default async function Page({ params }: PageProps<"/coach/[id]">) {
   if (!client) notFound();
   const lang = await getLang();
   const T = ui(lang);
-  const [historique, checkins, mots, photos] = await Promise.all([getHistorique(id), getCheckinsRecents(14, id), getMots(id, 5), getPhotos(id)]);
+  const [historique, checkins, mots, photos, reath, reathSeances] = await Promise.all([getHistorique(id), getCheckinsRecents(14, id), getMots(id, 5), getPhotos(id), getReath(id), getReathSeances(id)]);
 
   const alertes = alertesCoach(historique, checkins.slice(0, 7), new Date(), lang, (n) => tc(lang, n));
   const b = client.bilan?.reponses;
@@ -92,6 +93,11 @@ export default async function Page({ params }: PageProps<"/coach/[id]">) {
           )}
         </section>
       </div>
+
+      <section className="section">
+        <div className="section-head"><h2 className="section-title">{T.reath.coachTitre}</h2></div>
+        <ReathCoach clientId={id} reath={reath} seances={reathSeances} lang={lang} />
+      </section>
 
       <section className="section">
         <div className="section-head"><h2 className="section-title">{T.mot.titre}</h2></div>

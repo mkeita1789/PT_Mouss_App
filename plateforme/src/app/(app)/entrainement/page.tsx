@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Icon, type NomIcone } from "@/components/Icon";
-import { getBilan, getHistorique, getUtilisateur } from "@/lib/data";
+import { getBilan, getHistorique, getReath, getUtilisateur } from "@/lib/data";
 import { EXDB } from "@/lib/coaching/exdb";
 import { buildProgram, phaseFor } from "@/lib/coaching/programme";
 import { indexJourSuivant } from "@/lib/coaching/seance";
@@ -36,7 +36,7 @@ export default async function Page() {
   const lang = await getLang();
   const T = ui(lang);
   const E = T.entrainement;
-  const [bilan, historique] = await Promise.all([getBilan(user.id), getHistorique(user.id)]);
+  const [bilan, historique, reath] = await Promise.all([getBilan(user.id), getHistorique(user.id), getReath(user.id)]);
 
   let sousProgramme = E.programmeSansBilan;
   let sousSeance = "";
@@ -58,6 +58,7 @@ export default async function Page() {
       <Liste
         titre={E.monEntrainement}
         entrees={[
+          ...(reath ? [{ href: "/reathletisation", ico: "drapeau" as const, titre: T.reath.titre, sous: reath.semaine > 6 ? T.reath.fini : T.reath.semaineSur(reath.semaine, 6) }] : []),
           { href: bilan ? "/programme" : "/bilan", ico: "programme", titre: E.programme, sous: sousProgramme },
           ...(bilan ? [{ href: "/seance", ico: "seance" as const, titre: E.seanceJour, sous: sousSeance }] : []),
           { href: "/seance/libre", ico: "crayon", titre: E.libre, sous: E.libreSous },

@@ -4,7 +4,7 @@ import { CheckinCard } from "@/components/CheckinCard";
 import { Icon } from "@/components/Icon";
 import { CarteMot } from "@/components/MotCoach";
 import { refaireCheckin } from "./actions";
-import { getBilan, getCheckinDuJour, getHistorique, getMots, getUtilisateur, jourParis, motRecent } from "@/lib/data";
+import { getBilan, getCheckinDuJour, getHistorique, getMots, getReath, getUtilisateur, jourParis, motRecent } from "@/lib/data";
 import { buildProgram, lundiCourant, scoreForme, SRA, verdictCheckin } from "@/lib/coaching/programme";
 import { indexJourSuivant } from "@/lib/coaching/seance";
 import { messagesClient } from "@/lib/coaching/alertes";
@@ -20,7 +20,7 @@ export default async function Accueil() {
 
   const lang = await getLang();
   const T = ui(lang);
-  const [historique, ci, mots] = await Promise.all([getHistorique(user.id), getCheckinDuJour(user.id), getMots(user.id, 1)]);
+  const [historique, ci, mots, reath] = await Promise.all([getHistorique(user.id), getCheckinDuJour(user.id), getMots(user.id, 1), getReath(user.id)]);
   const mot = motRecent(mots);
   const brut = buildProgram(bilan.reponses, bilan.debut);
   const P = traduireProgramme(brut, lang);
@@ -62,6 +62,13 @@ export default async function Accueil() {
       </header>
 
       {mot && <CarteMot mot={mot} titre={T.mot.titre} lang={lang} />}
+      {reath && reath.semaine <= 6 && (
+        <Link href="/reathletisation" className="panel row-link" style={{ marginBottom: 14, borderColor: "var(--gold-line)" }}>
+          <span className="note-icon"><Icon nom="drapeau" taille={17} /></span>
+          <span style={{ flex: 1 }}><b style={{ fontWeight: 600 }}>{T.reath.titre}</b><br /><span className="meta" style={{ fontSize: 13 }}>{T.reath.semaineSur(reath.semaine, 6)}</span></span>
+          <Icon nom="fleche" taille={18} className="muted" />
+        </Link>
+      )}
 
       <div className="layout-home">
         <section className="panel panel-hero" aria-labelledby="today">

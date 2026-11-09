@@ -310,3 +310,26 @@ export async function getActivites(limite = 12): Promise<Activite[]> {
     client: { id: a.client_id, prenom: a.client?.prenom ?? "", avatar: a.client?.avatar_path ? liens[a.client.avatar_path] ?? null : null },
   }));
 }
+
+/* ═══ Réathlétisation ═══ */
+
+export type Reath = { semaine: number; debut: string };
+export type ReathSeance = { semaine: number; jour: number; douleur: number | null; gonflement: boolean; note: string | null; fait_le: string };
+
+export async function getReath(clientId: string): Promise<Reath | null> {
+  if (DEMO) return demo.reath(clientId);
+  const supabase = await createClient();
+  const { data } = await supabase.from("reath").select("semaine, debut").eq("client_id", clientId).maybeSingle();
+  return data ?? null;
+}
+
+export async function getReathSeances(clientId: string): Promise<ReathSeance[]> {
+  if (DEMO) return demo.reathSeances(clientId);
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("reath_seances")
+    .select("semaine, jour, douleur, gonflement, note, fait_le")
+    .eq("client_id", clientId)
+    .order("fait_le", { ascending: false });
+  return data ?? [];
+}
