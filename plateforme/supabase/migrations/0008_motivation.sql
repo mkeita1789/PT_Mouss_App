@@ -55,6 +55,7 @@ begin
   end if;
   -- Deux appels simultanés (deux déploiements) : le second attend et ne renvoie rien de neuf
   perform pg_advisory_xact_lock(424242);
+  drop table if exists pg_temp.cibles;
 
   create temp table cibles on commit drop as
   -- Clientes sans séance depuis 3 jours (et sans douleur signalée récemment)
@@ -114,3 +115,6 @@ revoke execute on function public.rappels_du_jour(text) from public, authenticat
 revoke execute on function public.oublier_abonnements(text, text[]) from public, authenticated;
 grant execute on function public.rappels_du_jour(text) to anon;
 grant execute on function public.oublier_abonnements(text, text[]) to anon;
+
+-- Le secret est enregistré à part, jamais dans le code :
+-- insert into private.config (cle, valeur) values ('rappels', '<même valeur que CRON_SECRET sur Vercel>');
