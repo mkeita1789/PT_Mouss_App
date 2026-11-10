@@ -120,6 +120,7 @@ export function HistoriqueSeances({ historique, limite = 20, lang }: { historiqu
                         <span key={e.position}>
                           {tc(lang, e.nom)} <b className="num">{fmt(e.charge_kg!)} kg</b>
                           {e.amrap !== null && <span className={e.cible !== null && e.amrap < e.cible ? "ko" : "muted"}> ×{e.amrap}</span>}
+                          {e.ecart && e.charge_prevue != null && <span className="ko"> ({T.plan.prevu(fmt(e.charge_prevue))}, {T.plan.raisons[e.ecart].toLowerCase()})</span>}
                         </span>
                       ))}
                     </span>

@@ -24,7 +24,17 @@ export type LigneSeance = {
   changementPhase: boolean;
   cible: number | null;
   suivi: boolean; // exercice chargé (S/A/P) → saisie de charge + AMRAP
+  /** Charge fixée par le coach pour cette semaine (la cliente ne s'en écarte qu'avec une raison) */
+  imposee: number | null;
 };
+
+export type Imposee = { exercice: string; jour_code: string | null; charge: number };
+
+/** Charge du coach pour un exercice ce jour-là : le jour précis d'abord, sinon « tous les jours » */
+export function chargeImposee(imposees: Imposee[], jour: string, exercice: string): number | null {
+  const c = imposees.find((i) => i.exercice === exercice && i.jour_code === jour) ?? imposees.find((i) => i.exercice === exercice && i.jour_code === null);
+  return c ? c.charge : null;
+}
 
 /** Code des séances libres (hors programme) : ignorées pour le jour suivant et les charges */
 export const JOUR_LIBRE = "LIBRE";
@@ -48,6 +58,7 @@ export function prepareSeance(
   alleger: boolean,
   lang: "fr" | "en" = "fr",
   nomPhase: (n: string) => string = (n) => n,
+  imposees: Imposee[] = [],
 ): LigneSeance[] {
   const fmtKg = (n: number) => fmtKgL(n, lang);
   const derniere = historique.find((h) => h.jour_code === day.d);
@@ -83,7 +94,8 @@ export function prepareSeance(
       }
     }
 
-    const charge = suggestion !== null && suggestion !== lv ? fmtKg(suggestion) : lv !== null ? fmtKg(lv) : "";
+    const imposee = e.c !== "-" ? chargeImposee(imposees, day.d, e.n) : null;
+    const charge = imposee !== null ? fmtKg(imposee) : suggestion !== null && suggestion !== lv ? fmtKg(suggestion) : lv !== null ? fmtKg(lv) : "";
 
     return {
       n: e.n,
@@ -100,6 +112,7 @@ export function prepareSeance(
       changementPhase,
       cible,
       suivi: e.c !== "-",
+      imposee,
     };
   });
 }

@@ -2,11 +2,11 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { getBilan, getHistorique, getUtilisateur, jourParis } from "@/lib/data";
-import { nouveauxRecords, type NouveauRecord } from "@/lib/coaching/motivation";
+import { getBilan, getChargesImposees, getHistorique, getUtilisateur, jourParis, type Ecart } from "@/lib/data";
+import { lundiDe, nouveauxRecords, type NouveauRecord } from "@/lib/coaching/motivation";
 import { CHECKIN_Q, OBJECTIFS, phaseFor, questionsBilan } from "@/lib/coaching/programme";
 import { parseKg } from "@/lib/coaching/amrap";
-import { JOUR_LIBRE } from "@/lib/coaching/seance";
+import { chargeImposee, JOUR_LIBRE } from "@/lib/coaching/seance";
 import { minutesDepuisDebut, notifierCoach } from "@/lib/activite";
 import { tc } from "@/lib/i18n";
 import type { Bilan, Categorie, Checkin } from "@/lib/coaching/types";
@@ -82,7 +82,10 @@ export type ExerciceSaisi = {
   amrap: number | null;
   cible: number | null;
   note: string;
+  charge_prevue?: number | null;
+  ecart?: Ecart | null;
 };
+const ECARTS: Ecart[] = ["douleur", "lourd", "facile", "materiel"];
 
 export async function enregistrerSeance(payload: {
   jour_code: string;
@@ -101,6 +104,19 @@ export async function enregistrerSeance(payload: {
   const phase = phaseFor(bilan.reponses, bilan.debut);
   const supabase = await createClient();
 
+  /* Charges fixées par le coach cette semaine : on revérifie ici, le téléphone n'a pas le dernier mot */
+  const lundi = lundiDe(new Date());
+  const imposees = await getChargesImposees(user.id, lundi, lundi);
+  const jourCodeSaisi = String(payload.jour_code).slice(0, 40);
+  const L = await getLang();
+  for (const e of payload.exercices) {
+    const prevu = chargeImposee(imposees, jourCodeSaisi, String(e.nom));
+    if (prevu === null || !(Number(e.series) > 0)) continue;
+    const kg = parseKg(e.charge);
+    if (kg !== prevu && !(e.ecart && ECARTS.includes(e.ecart))) return { erreur: T.plan.raisonManquante(tc(L, String(e.nom))) };
+    if (e.cible && (e.amrap === null || e.amrap === undefined)) return { erreur: T.plan.repsManquantes(tc(L, String(e.nom))) };
+  }
+
   const { data: seance, error } = await supabase
     .from("seances")
     .insert({
@@ -117,6 +133,8 @@ export async function enregistrerSeance(payload: {
   const lignes = payload.exercices.map((e, i) => {
     const kg = parseKg(e.charge);
     const amrap = e.amrap === null || e.amrap === undefined ? null : Math.round(Number(e.amrap));
+    const prevu = chargeImposee(imposees, jourCodeSaisi, String(e.nom));
+    const kgOk = kg !== null && kg >= 0 && kg <= 1000 ? kg : null;
     return {
       seance_id: seance.id,
       user_id: user.id,
@@ -128,6 +146,8 @@ export async function enregistrerSeance(payload: {
       amrap: amrap !== null && amrap >= 0 && amrap <= 100 ? amrap : null,
       cible: e.cible ? Math.round(Number(e.cible)) : null,
       note: e.note ? String(e.note).slice(0, 500) : null,
+      charge_prevue: prevu,
+      ecart: prevu !== null && kgOk !== prevu && e.ecart && ECARTS.includes(e.ecart) ? e.ecart : null,
     };
   });
 
@@ -147,7 +167,12 @@ export async function enregistrerSeance(payload: {
   await notifierCoach(user, "fin", jourCode, (lang) => {
     const N = ui(lang).notifs;
     const record = recs.length ? `🏆 ${recs.map((r) => `${tc(lang, r.nom)} ${String(r.kg).replace(".", lang === "fr" ? "," : ".")} kg`).join(", ")}` : "";
-    return [jourCode, tc(lang, payload.focus), N.exos(faits), duree ? N.duree(duree) : "", record].filter(Boolean).join(" · ");
+    const v = (n: number) => String(n).replace(".", lang === "fr" ? "," : ".");
+    const ecarts = lignes
+      .filter((l) => l.ecart && l.charge_prevue !== null)
+      .map((l) => ui(lang).plan.notifEcart(tc(lang, l.nom), l.charge_kg === null ? "—" : v(l.charge_kg), v(l.charge_prevue!), ui(lang).plan.raisons[l.ecart!]))
+      .join(", ");
+    return [jourCode, tc(lang, payload.focus), N.exos(faits), duree ? N.duree(duree) : "", record, ecarts].filter(Boolean).join(" · ");
   });
 
   revalidatePath("/", "layout");

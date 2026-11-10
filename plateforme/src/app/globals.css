@@ -405,6 +405,18 @@ input, textarea, select { font: inherit; color: inherit; }
 .hint-ok { background: var(--ok-soft); color: var(--ok-text); }
 .hint-gold { background: var(--gold-soft); color: var(--gold-text); border-left: 2px solid var(--gold); }
 .hint-plain { color: var(--muted); padding: 0; margin-top: 10px; }
+.kg-verrou { background: var(--gold-soft); border-color: var(--gold-line); color: var(--gold-text); cursor: pointer; }
+.plan-hint { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 12px; }
+.plan-hint .link { font-size: 12.5px; }
+.plan-raisons { flex-basis: 100%; margin-top: 4px; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.chip { font: inherit; font-size: 13px; padding: 7px 12px; border-radius: 999px; border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink); cursor: pointer; }
+.chip:hover { border-color: var(--gold); }
+.plan-tbl th { vertical-align: bottom; font-size: 12.5px; min-width: 96px; }
+.plan-tbl td { vertical-align: middle; }
+.plan-kg { width: 76px; height: 40px; font-size: 15px; }
+.plan-courante td { background: var(--gold-soft); }
+.chip:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 .sets { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
 .set {
   width: 48px; height: 48px; border-radius: 14px;

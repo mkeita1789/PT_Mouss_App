@@ -121,6 +121,17 @@ export const demo = {
       : id === JOUEUR
         ? [1, 2, 3].flatMap((s) => [0, 1, 2, 4].map((j) => ({ semaine: s, jour: j, douleur: null, gonflement: false, rpe: 4 + s, note: null, fait_le: iso(20 - s * 5 - j) })))
         : [],
+  chargesImposees: () => {
+    const t = new Date(); const d = (t.getUTCDay() + 6) % 7;
+    const lundi = new Date(Date.UTC(t.getUTCFullYear(), t.getUTCMonth(), t.getUTCDate() - d)).toISOString().slice(0, 10);
+    const suiv = new Date(Date.parse(lundi) + 7 * 864e5).toISOString().slice(0, 10);
+    return [
+      { id: "c1", exercice: "Hip Thrust", jour_code: "DAY 1", lundi, charge: 67.5 },
+      { id: "c2", exercice: "Hip Abduction", jour_code: null, lundi, charge: 45 },
+      { id: "c3", exercice: "Hip Thrust", jour_code: "DAY 1", lundi: suiv, charge: 72.5 },
+      { id: "c4", exercice: "Hip Abduction", jour_code: null, lundi: suiv, charge: 47.5 },
+    ];
+  },
   defis: () => {
     const j = (n: number) => new Date(Date.now() + n * 864e5).toISOString().slice(0, 10);
     return [

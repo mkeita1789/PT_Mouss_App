@@ -88,3 +88,35 @@ export async function supprimerDefi(id: string) {
   revalidatePath("/coach");
   revalidatePath("/", "layout");
 }
+
+/* ─── Charges imposées : le coach remplace le plan des semaines affichées ─── */
+export type CellulePlan = { exercice: string; jour_code: string | null; lundi: string; charge: number | null };
+
+export async function enregistrerPlan(clientId: string, semaines: string[], cellules: CellulePlan[]): Promise<{ erreur?: string; ok?: string }> {
+  await exigerCoach();
+  const T = ui(await getLang());
+  const LUNDI = /^\d{4}-\d{2}-\d{2}$/;
+  const lundis = semaines.filter((l) => LUNDI.test(l) && new Date(l + "T12:00:00Z").getUTCDay() === 1);
+  if (!UUID.test(clientId) || !lundis.length || lundis.length > 26 || cellules.length > 500) return { erreur: T.plan.erreur };
+
+  const lignes = cellules
+    .filter((c) => lundis.includes(c.lundi) && c.charge !== null && Number.isFinite(c.charge) && c.charge > 0 && c.charge <= 1000)
+    .map((c) => ({
+      client_id: clientId,
+      exercice: String(c.exercice).trim().slice(0, 80),
+      jour_code: c.jour_code ? String(c.jour_code).slice(0, 40) : null,
+      lundi: c.lundi,
+      charge: Math.round(c.charge! * 100) / 100,
+    }))
+    .filter((c) => c.exercice);
+
+  const supabase = await createClient();
+  const { error: e1 } = await supabase.from("charges_imposees").delete().eq("client_id", clientId).in("lundi", lundis);
+  if (e1) return { erreur: T.plan.erreur };
+  if (lignes.length) {
+    const { error: e2 } = await supabase.from("charges_imposees").insert(lignes);
+    if (e2) return { erreur: T.plan.erreur };
+  }
+  revalidatePath(`/coach/${clientId}`);
+  return { ok: T.plan.enregistre };
+}

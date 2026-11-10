@@ -4,10 +4,12 @@ import { Avatar } from "@/components/Avatar";
 import { Comparaison, GrillePhotos } from "@/components/Comparaison";
 import { FormMot } from "@/components/FormMot";
 import { ReathCoach } from "@/components/ReathCoach";
+import { PlanCharges } from "@/components/PlanCharges";
+import { lundiDe } from "@/lib/coaching/motivation";
 import { Icon } from "@/components/Icon";
 import { supprimerMot } from "../actions";
 import { HistoriqueSeances, ProgressionCharges } from "@/components/Progression";
-import { exigerCoach, getCheckinsRecents, getClient, getHistorique, getMots, getPhotos, getReath, getReathSeances } from "@/lib/data";
+import { exigerCoach, getChargesImposees, getCheckinsRecents, getClient, getHistorique, getMots, getPhotos, getReath, getReathSeances } from "@/lib/data";
 import { alertesCoach } from "@/lib/coaching/alertes";
 import { buildProgram, lundiCourant, phaseFor } from "@/lib/coaching/programme";
 import { locale, tc, traduireProgramme, ui } from "@/lib/i18n";
@@ -27,12 +29,30 @@ export default async function Page({ params }: PageProps<"/coach/[id]">) {
   if (!client) notFound();
   const lang = await getLang();
   const T = ui(lang);
-  const [historique, checkins, mots, photos, reath, reathSeances] = await Promise.all([getHistorique(id), getCheckinsRecents(14, id), getMots(id, 5), getPhotos(id), getReath(id), getReathSeances(id)]);
+  /* Plan de charges : la semaine en cours et les 7 suivantes */
+  const lundi0 = lundiDe(new Date());
+  const lundis = Array.from({ length: 8 }, (_, k) => new Date(Date.parse(lundi0 + "T12:00:00Z") + k * 7 * 864e5).toISOString().slice(0, 10));
+  const [historique, checkins, mots, photos, reath, reathSeances, imposees] = await Promise.all([getHistorique(id), getCheckinsRecents(14, id), getMots(id, 5), getPhotos(id), getReath(id), getReathSeances(id), getChargesImposees(id, lundis[0], lundis[7])]);
 
   const alertes = alertesCoach(historique, checkins.slice(0, 7), new Date(), lang, (n) => tc(lang, n));
   const b = client.bilan?.reponses;
   const phase = client.bilan ? phaseFor(client.bilan.reponses, client.bilan.debut) : null;
   const P = client.bilan ? traduireProgramme(buildProgram(client.bilan.reponses, client.bilan.debut), lang) : null;
+  /* Exercices chargés du programme, avec leur jour ; « tous les jours » s'il revient plusieurs fois */
+  const optionsPlan = (() => {
+    if (!client.bilan) return [];
+    const days = buildProgram(client.bilan.reponses, client.bilan.debut).days;
+    const out: { exercice: string; jour_code: string | null }[] = [];
+    const vus = new Map<string, number>();
+    days.forEach((d) => d.ex.filter((e) => e.c !== "-").forEach((e) => { out.push({ exercice: e.n, jour_code: d.d }); vus.set(e.n, (vus.get(e.n) ?? 0) + 1); }));
+    vus.forEach((n, ex) => { if (n > 1) out.splice(out.findIndex((o) => o.exercice === ex), 0, { exercice: ex, jour_code: null }); });
+    return out;
+  })();
+  const semainesPlan = lundis.map((l, k) => ({
+    lundi: l,
+    courante: k === 0,
+    phase: client.bilan ? phaseFor(client.bilan.reponses, client.bilan.debut, new Date(Date.parse(l + "T12:00:00Z") + 3 * 864e5))?.n ?? "" : "",
+  }));
   const semaine = historique.filter((h) => new Date(h.realisee_le) >= lundiCourant()).length;
 
   return (
@@ -93,6 +113,13 @@ export default async function Page({ params }: PageProps<"/coach/[id]">) {
           )}
         </section>
       </div>
+
+      {optionsPlan.length > 0 && (
+        <section className="section">
+          <div className="section-head"><h2 className="section-title">{T.plan.titre}</h2></div>
+          <PlanCharges clientId={id} semaines={semainesPlan} options={optionsPlan} initiales={imposees} />
+        </section>
+      )}
 
       <section className="section">
         <div className="section-head"><h2 className="section-title">{T.reath.programmes}</h2></div>

@@ -40,7 +40,11 @@ export type ExerciceFait = {
   cible: number | null;
   note: string | null;
   position: number;
+  /** Charge fixée par le coach, et raison si la cliente s'en est écartée */
+  charge_prevue?: number | null;
+  ecart?: Ecart | null;
 };
+export type Ecart = "douleur" | "lourd" | "facile" | "materiel";
 
 export type SeanceFaite = {
   id: string;
@@ -107,7 +111,7 @@ export const getHistorique = cache(async (userId: string, limite = 200): Promise
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("seances")
-    .select("id, realisee_le, jour_code, focus, phase, allegee, seance_exercices(nom, categorie, charge_kg, series, amrap, cible, note, position)")
+    .select("id, realisee_le, jour_code, focus, phase, allegee, seance_exercices(nom, categorie, charge_kg, series, amrap, cible, note, position, charge_prevue, ecart)")
     .eq("user_id", userId)
     .order("realisee_le", { ascending: false })
     .limit(limite);
@@ -115,7 +119,7 @@ export const getHistorique = cache(async (userId: string, limite = 200): Promise
   return (data ?? []).map((s) => ({
     ...s,
     seance_exercices: [...(s.seance_exercices ?? [])]
-      .map((e) => ({ ...e, charge_kg: e.charge_kg === null ? null : Number(e.charge_kg) }) as ExerciceFait)
+      .map((e) => ({ ...e, charge_kg: e.charge_kg === null ? null : Number(e.charge_kg), charge_prevue: e.charge_prevue == null ? null : Number(e.charge_prevue) }) as ExerciceFait)
       .sort((a, b) => a.position - b.position),
   })) as SeanceFaite[];
 });
@@ -209,7 +213,7 @@ export async function getSeancesTousClients(limite = 1000) {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("seances")
-    .select("id, user_id, realisee_le, jour_code, focus, phase, allegee, seance_exercices(nom, categorie, charge_kg, series, amrap, cible, note, position)")
+    .select("id, user_id, realisee_le, jour_code, focus, phase, allegee, seance_exercices(nom, categorie, charge_kg, series, amrap, cible, note, position, charge_prevue, ecart)")
     .order("realisee_le", { ascending: false })
     .limit(limite);
   if (error) throw new Error(error.message);
@@ -218,7 +222,7 @@ export async function getSeancesTousClients(limite = 1000) {
     (parClient[s.user_id] ||= []).push({
       ...s,
       seance_exercices: [...(s.seance_exercices ?? [])]
-        .map((e) => ({ ...e, charge_kg: e.charge_kg === null ? null : Number(e.charge_kg) }) as ExerciceFait)
+        .map((e) => ({ ...e, charge_kg: e.charge_kg === null ? null : Number(e.charge_kg), charge_prevue: e.charge_prevue == null ? null : Number(e.charge_prevue) }) as ExerciceFait)
         .sort((a, b) => a.position - b.position),
     } as SeanceFaite);
   });
@@ -388,4 +392,19 @@ export async function getReathDatesTous(): Promise<Record<string, string[]>> {
   const out: Record<string, string[]> = {};
   (data ?? []).forEach((r) => (out[r.client_id] ||= []).push(r.fait_le));
   return out;
+}
+
+/* ─── Charges imposées par le coach ─── */
+export type ChargeImposee = { id: string; exercice: string; jour_code: string | null; lundi: string; charge: number };
+
+/** Charges du coach pour une cliente, à partir d'un lundi (AAAA-MM-JJ) */
+export async function getChargesImposees(clientId: string, depuis?: string, jusqua?: string): Promise<ChargeImposee[]> {
+  if (DEMO) return demo.chargesImposees();
+  const supabase = await createClient();
+  let q = supabase.from("charges_imposees").select("id, exercice, jour_code, lundi, charge").eq("client_id", clientId);
+  if (depuis) q = q.gte("lundi", depuis);
+  if (jusqua) q = q.lte("lundi", jusqua);
+  const { data, error } = await q.order("lundi").limit(500);
+  if (error) return [];
+  return (data ?? []).map((c) => ({ ...c, charge: Number(c.charge) }));
 }

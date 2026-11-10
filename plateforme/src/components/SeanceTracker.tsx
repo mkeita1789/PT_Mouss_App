@@ -14,7 +14,9 @@ import type { LigneSeance } from "@/lib/coaching/seance";
 
 export type JourPrepare = { d: string; f: string; crit: boolean; lignes: LigneSeance[] };
 
-type Etat = { done: number; charge: string; amrap: number | null; note: string };
+type Ecart = "douleur" | "lourd" | "facile" | "materiel";
+const ECARTS: Ecart[] = ["douleur", "lourd", "facile", "materiel"];
+type Etat = { done: number; charge: string; amrap: number | null; note: string; ecart?: Ecart | null };
 
 const REPOS_S = 60;
 const cleBrouillon = (jour: string) => `ptmouss.seance.${jour}`;
@@ -40,7 +42,7 @@ function effacerBrouillon(jour: string) {
   } catch {}
 }
 
-const etatsInitiaux = (j: JourPrepare): Etat[] => j.lignes.map((l) => ({ done: 0, charge: l.charge, amrap: null, note: "" }));
+const etatsInitiaux = (j: JourPrepare): Etat[] => j.lignes.map((l) => ({ done: 0, charge: l.charge, amrap: null, note: "", ecart: null }));
 
 export function SeanceTracker(props: {
   jours: JourPrepare[];
@@ -59,6 +61,7 @@ export function SeanceTracker(props: {
   const [warmOpen, setWarmOpen] = useState(false);
   const [repos, setRepos] = useState<number | null>(null);
   const [erreur, setErreur] = useState("");
+  const [raisonOuverte, setRaisonOuverte] = useState<number | null>(null);
   const [recordsBattus, setRecordsBattus] = useState<NouveauRecord[] | null>(null);
   const [pending, start] = useTransition();
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -132,6 +135,14 @@ export function SeanceTracker(props: {
 
   const enregistrer = () => {
     setErreur("");
+    /* Charges du coach : reps obligatoires, et une raison pour tout écart */
+    for (let i = 0; i < jour.lignes.length; i++) {
+      const l = jour.lignes[i], st = etats[i];
+      if (l.imposee === null || !st || st.done === 0) continue;
+      const kgFait = parseKg(st.charge);
+      if (kgFait !== l.imposee && !st.ecart) return setErreur(T.plan.raisonManquante(tc(lang, l.n)));
+      if (l.cible && l.rir !== "-" && st.amrap === null) return setErreur(T.plan.repsManquantes(tc(lang, l.n)));
+    }
     start(async () => {
       const r = await enregistrerSeance({
         jour_code: jour.d,
@@ -145,6 +156,8 @@ export function SeanceTracker(props: {
           amrap: etats[i].amrap,
           cible: l.cible,
           note: etats[i].note,
+          charge_prevue: l.imposee,
+          ecart: l.imposee !== null && parseKg(etats[i].charge) !== l.imposee ? etats[i].ecart ?? null : null,
         })),
       });
       if (r.erreur) return setErreur(r.erreur);
@@ -199,7 +212,8 @@ export function SeanceTracker(props: {
 
       <div className="stack">
         {jour.lignes.map((l, i) => {
-          const st = etats[i] ?? { done: 0, charge: "", amrap: null, note: "" };
+          const st = etats[i] ?? { done: 0, charge: "", amrap: null, note: "", ecart: null };
+          const verrou = l.imposee !== null && !st.ecart;
           const exFini = st.done >= l.sets;
           const lv = parseKg(st.charge);
           const r = st.amrap && l.cible && lv !== null ? amrapNext(st.amrap, l.cible, lv, l.c, props.deload) : null;
@@ -219,12 +233,34 @@ export function SeanceTracker(props: {
                 </div>
                 {l.suivi && (
                   <label className="kg-wrap">
-                    <input className="kg" placeholder="—" inputMode="decimal" aria-label={T.seance.charge(tc(lang, l.n))} value={st.charge} onChange={(e) => maj(i, { charge: e.target.value })} />
+                    <input className={`kg ${verrou ? "kg-verrou" : ""}`} placeholder="—" inputMode="decimal" aria-label={T.seance.charge(tc(lang, l.n))} value={st.charge} readOnly={verrou}
+                      onChange={(e) => maj(i, { charge: e.target.value })} onFocus={verrou ? () => setRaisonOuverte(i) : undefined} />
                   </label>
                 )}
               </div>
 
-              {l.suggestion !== null ? (
+              {l.imposee !== null ? (
+                <div className="hint hint-gold plan-hint">
+                  <span>🔒 {T.plan.imposee}{lang === "fr" ? " : " : ": "}<b className="num">{kg(l.imposee)} kg</b>
+                    {st.ecart && <> · <span className="ko">{T.plan.raisons[st.ecart]}</span></>}
+                  </span>
+                  {st.ecart ? (
+                    <button type="button" className="link" onClick={() => { maj(i, { ecart: null, charge: kg(l.imposee) }); setRaisonOuverte(null); }}>{T.plan.annuler}</button>
+                  ) : raisonOuverte !== i ? (
+                    <button type="button" className="link" onClick={() => setRaisonOuverte(i)}>{T.plan.changer}</button>
+                  ) : null}
+                  {raisonOuverte === i && !st.ecart && (
+                    <div className="plan-raisons">
+                      <div className="row-sub">{T.plan.pourquoi}</div>
+                      <div className="chips">
+                        {ECARTS.map((r) => (
+                          <button key={r} type="button" className="chip" onClick={() => { maj(i, { ecart: r }); setRaisonOuverte(null); }}>{T.plan.raisons[r]}</button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : l.suggestion !== null ? (
                 <div className={`hint ${l.changementPhase ? "hint-gold" : "hint-ok"}`}>
                   {l.changementPhase ? (
                     <>{l.suggestionTxt}. {T.seance.phase}</>
@@ -244,7 +280,7 @@ export function SeanceTracker(props: {
                 ))}
               </div>
 
-              {exFini && l.rir !== "-" && l.cible && (
+              {(exFini || (l.imposee !== null && st.done > 0)) && l.rir !== "-" && l.cible && (
                 <div className="amrap">
                   <div className="row-title">{T.seance.combienReps}</div>
                   <div className="row-sub">{T.seance.repMoche}</div>
@@ -254,7 +290,9 @@ export function SeanceTracker(props: {
                       value={st.amrap ?? ""} onChange={(e) => { const n = parseInt(e.target.value, 10); maj(i, { amrap: isNaN(n) ? null : Math.max(0, Math.min(100, n)) }); }} />
                     <button type="button" aria-label={T.seance.plusUne} onClick={() => maj(i, { amrap: Math.min(100, (st.amrap ?? l.cible ?? 0) + 1) })}><Icon nom="plus" taille={18} /></button>
                   </div>
-                  {r && lv !== null && (
+                  {l.imposee !== null ? (
+                    <div className="row-sub" style={{ marginTop: 8 }}>{T.plan.prochaineCoach}</div>
+                  ) : r && lv !== null && (
                     <div className="verdict" style={{ borderColor: rCol }}>
                       <div style={{ color: rCol, fontWeight: 600, fontSize: 14 }}>{T.seance.prochaine} : {amrapTexte(r, lv, lang)}</div>
                       <div className="row-sub">{raisonTexte(r.raison, lang)}</div>
