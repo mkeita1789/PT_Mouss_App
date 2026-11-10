@@ -7,25 +7,28 @@ import type { Lang } from "@/lib/i18n";
 import { Icon } from "./Icon";
 import { useLang } from "./Langue";
 
-const LIEN = "https://pt-mouss-app.vercel.app/inscription";
+const BASE = "https://pt-mouss-app.vercel.app/inscription";
 
-const MESSAGE: Record<Lang, (coach: string) => string> = {
-  fr: (c) =>
-    `Salut ! 👋\n\nTon appli de coaching Baara est prête 💪 Programme personnalisé, séances guidées et suivi de ta progression.\n\n👉 Crée ton compte : ${LIEN}\n\n📲 Pour l'installer : iPhone → Safari, Partager, « Sur l'écran d'accueil ». Android → Chrome, menu ⋮, « Installer l'application ».\n\nÀ très vite !\n${c} — JIGI Coaching`,
-  en: (c) =>
-    `Hi! 👋\n\nYour Baara coaching app is ready 💪 Personalised program, guided workouts and progress tracking.\n\n👉 Create your account: ${LIEN}\n\n📲 To install it: iPhone → Safari, Share, « Add to Home Screen ». Android → Chrome, menu ⋮, « Install app ».\n\nSee you soon!\n${c} — JIGI Coaching`,
+const MESSAGE: Record<Lang, (c: string, LIEN: string) => string> = {
+  fr: (c, LIEN) =>
+    `Salut ! 👋\n\nTon appli de coaching Baara est prête 💪 Programme personnalisé, séances guidées et suivi de ta progression.\n\n👉 Crée ton compte : ${LIEN}\n\n📲 Pour l'installer : iPhone → Safari, Partager, « Sur l'écran d'accueil ». Android → Chrome, menu ⋮, « Installer l'application ».\n\nÀ très vite !\n${c}`,
+  en: (c, LIEN) =>
+    `Hi! 👋\n\nYour Baara coaching app is ready 💪 Personalised program, guided workouts and progress tracking.\n\n👉 Create your account: ${LIEN}\n\n📲 To install it: iPhone → Safari, Share, « Add to Home Screen ». Android → Chrome, menu ⋮, « Install app ».\n\nSee you soon!\n${c}`,
 };
 
 /** Inviter une cliente : partage du téléphone, WhatsApp, SMS, lien ou QR code à scanner */
-export function Inviter({ coach }: { coach: string }) {
+export function Inviter({ coach, code, generique }: { coach: string; code?: string | null; generique?: boolean }) {
   const { lang, T } = useLang();
-  const I = T.inviter;
+  /* Le coach historique garde ses textes ; les autres professionnels ont des textes neutres */
+  const I = generique ? { ...T.inviter, bouton: T.metiers.inviter, titre: T.metiers.inviterTitre, aide: T.metiers.inviterAide } : T.inviter;
+  /* Avec le code, la personne est reliée au professionnel dès son inscription */
+  const LIEN = code ? `${BASE}?code=${code}` : BASE;
   const [ouvert, setOuvert] = useState(false);
   const [langue, setLangue] = useState<Lang>(lang);
   const [qr, setQr] = useState("");
   const [copie, setCopie] = useState(false);
   const [partage, setPartage] = useState(false);
-  const texte = MESSAGE[langue](coach || "Coach");
+  const texte = MESSAGE[langue](generique ? coach || "Coach" : `${coach || "Coach"} — JIGI Coaching`, LIEN);
 
   useEffect(() => {
     if (!ouvert) return;
@@ -35,7 +38,7 @@ export function Inviter({ coach }: { coach: string }) {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOuvert(false);
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [ouvert]);
+  }, [ouvert, LIEN]);
 
   const partager = async () => {
     try { await navigator.share({ title: "Baara", text: texte }); } catch {}

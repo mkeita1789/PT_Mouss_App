@@ -50,8 +50,11 @@ export async function proxy(request: NextRequest) {
   }
   if (connecte && (path === "/connexion" || path === "/inscription")) {
     const url = request.nextUrl.clone();
-    url.pathname = "/";
-    url.search = "";
+    /* Déjà inscrit et lien d'invitation : on l'emmène là où entrer le code (déjà rempli) */
+    const code = path === "/inscription" ? request.nextUrl.searchParams.get("code") ?? "" : "";
+    const valide = /^[A-Za-z0-9]{6}$/.test(code);
+    url.pathname = valide ? "/profil" : "/";
+    url.search = valide ? `?code=${code.toUpperCase()}` : "";
     return NextResponse.redirect(url);
   }
   return response;

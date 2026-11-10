@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Avatar } from "@/components/Avatar";
 import { Icon } from "@/components/Icon";
-import { exigerCoach, getActivites, getCheckinsRecents, getClients, getDefis, getReathDatesTous, getSeancesTousClients } from "@/lib/data";
+import { exigerCoach, getActivites, getCodeInvitation, getCheckinsRecents, getClients, getDefis, getReathDatesTous, getSeancesTousClients } from "@/lib/data";
 import { DefisCoach } from "@/components/DefisCoach";
 import { serieSemaines } from "@/lib/coaching/motivation";
 import { FilActivite } from "@/components/FilActivite";
@@ -20,6 +20,7 @@ export default async function Page() {
   const lang = await getLang();
   const T = ui(lang);
   const [clients, seances, checkins, activites, defis, reathDates, checkins120] = await Promise.all([getClients(coach.id), getSeancesTousClients(), getCheckinsRecents(7), getActivites(6), getDefis(), getReathDatesTous(), getCheckinsRecents(120)]);
+  const code = await getCodeInvitation();
   const lundi = lundiCourant();
 
   const lignes = clients.map((c) => {
@@ -52,7 +53,7 @@ export default async function Page() {
         <div className="meta">{T.coach.espace}</div>
         <h1 className="page-title" style={{ marginTop: 6 }}>{T.coach.titre}</h1>
         <p className="page-lede">{T.coach.lede}</p>
-        <div style={{ marginTop: 14 }}><Inviter coach={coach.prenom} /></div>
+        <div style={{ marginTop: 14 }}><Inviter coach={coach.prenom} code={code} /></div>
       </header>
 
       <div className="grid-3">

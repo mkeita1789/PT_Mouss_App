@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { ui } from "@/lib/i18n";
 import { getLang } from "@/lib/i18n/serveur";
 import type { TextesUI } from "@/lib/i18n/ui";
+import { estPro, lireMetier } from "@/lib/profils";
 
 export type EtatForm = { erreur?: string; ok?: string } | undefined;
 
@@ -40,18 +41,23 @@ export async function inscription(_: EtatForm, formData: FormData): Promise<Etat
   const T = ui(await getLang());
   if (!prenom || !email) return { erreur: T.erreurs.champsInscription };
   if (password.length < 8) return { erreur: T.erreurs.motDePasseCourt };
+  /* Adultes seulement pour l'instant */
+  if (formData.get("majeur") !== "on") return { erreur: T.metiers.majeurErreur };
+  const metier = lireMetier(formData.get("metier"));
+  const brut = String(formData.get("code") ?? "").trim().toUpperCase();
+  const code = /^[A-Z0-9]{6}$/.test(brut) ? brut : undefined;
 
   const origin = (await headers()).get("origin") ?? "";
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
-    options: { data: { prenom }, emailRedirectTo: `${origin}/auth/confirm` },
+    options: { data: { prenom, metier, ...(code ? { code } : {}) }, emailRedirectTo: `${origin}/auth/confirm` },
   });
   if (error) return { erreur: traduire(error.message, T) };
 
   /* Confirmation d'email désactivée dans Supabase → session immédiate */
-  if (data.session) redirect(suiteSure(formData.get("suite")) ?? "/bilan");
+  if (data.session) redirect(suiteSure(formData.get("suite")) ?? (estPro(metier) ? "/pro" : "/bilan"));
   return { ok: T.erreurs.compteCree };
 }
 

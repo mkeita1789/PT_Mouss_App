@@ -12,6 +12,7 @@ import { buildProgram, lundiCourant, scoreForme, SRA, verdictCheckin } from "@/l
 import { indexJourSuivant } from "@/lib/coaching/seance";
 import { messagesClient } from "@/lib/coaching/alertes";
 import { locale, tc, traduireProgramme, ui } from "@/lib/i18n";
+import { accueilSansBilan } from "@/lib/profils";
 import { getLang } from "@/lib/i18n/serveur";
 
 const NOTE = { ko: "note-ko", gold: "note-gold", ok: "note-ok" } as const;
@@ -19,7 +20,7 @@ const NOTE = { ko: "note-ko", gold: "note-gold", ok: "note-ok" } as const;
 export default async function Accueil() {
   const user = await getUtilisateur();
   const bilan = await getBilan(user.id);
-  if (!bilan) redirect(user.role === "coach" ? "/coach" : "/bilan");
+  if (!bilan) redirect(accueilSansBilan(user.metier, user.role === "coach"));
 
   const lang = await getLang();
   const T = ui(lang);

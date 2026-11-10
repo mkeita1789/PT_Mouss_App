@@ -301,6 +301,26 @@ input, textarea, select { font: inherit; color: inherit; }
   font-size: 15.5px; outline: none; transition: border-color 0.2s, box-shadow 0.2s;
 }
 .input::placeholder { color: var(--placeholder); }
+/* Choix du métier (inscription, profil) */
+.metiers { border: 0; padding: 0; margin: 20px 0 0; min-width: 0; }
+.metiers legend { font-size: 13px; font-weight: 500; color: var(--ink-2); padding: 0; }
+.metiers-groupe { font-size: 12.5px; color: var(--muted); margin: 14px 0 8px; }
+.metiers-grille { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+.metier { position: relative; display: flex; flex-direction: column; gap: 3px; padding: 12px 14px; border-radius: 14px; border: 1px solid var(--line-strong); background: var(--surface); cursor: pointer; transition: border-color 0.15s, background 0.15s; }
+.metier input { position: absolute; opacity: 0; inset: 0; cursor: pointer; }
+.metier b { font-size: 14.5px; font-weight: 600; color: var(--ink); }
+.metier span { font-size: 12.5px; line-height: 1.35; color: var(--muted); }
+.metier:hover { border-color: var(--gold-line); }
+.metier.on { border-color: var(--gold); background: var(--gold-soft); }
+.metier:has(input:focus-visible) { outline: 2px solid var(--gold); outline-offset: 2px; }
+.case { display: flex; align-items: center; gap: 10px; margin-top: 18px; font-size: 14px; color: var(--ink-2); cursor: pointer; }
+.case input { width: 20px; height: 20px; accent-color: var(--gold); flex: none; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+.code-input { text-transform: uppercase; letter-spacing: 0.18em; font-variant-numeric: tabular-nums; min-width: 0; }
+.code-input::placeholder { letter-spacing: 0.18em; }
+.code-pro { margin-top: 10px; font-family: var(--font-oswald); font-size: 34px; font-weight: 600; letter-spacing: 0.2em; color: var(--gold-text); user-select: all; }
+.lie-row { display: grid; grid-template-columns: 44px 1fr auto; gap: 14px; align-items: center; padding: 14px 18px; }
+.lie-row .avatar { width: 44px; height: 44px; font-size: 16px; }
 .input:focus { border-color: var(--gold); box-shadow: 0 0 0 4px rgb(var(--a) / 0.12); }
 .form-err { color: var(--ko); font-size: 13.5px; margin: 12px 0 0; }
 .form-ok { color: var(--ok); font-size: 13.5px; margin: 12px 0 0; }

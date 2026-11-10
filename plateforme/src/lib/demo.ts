@@ -4,9 +4,12 @@ import "server-only";
    Actif uniquement si PTMOUSS_DEMO=1 (jamais défini sur Vercel).
    PTMOUSS_DEMO_ROLE=coach pour voir l'espace coach. */
 import type { Bilan, Categorie, Checkin } from "@/lib/coaching/types";
+import { estPro, lireMetier, type MetierPro } from "@/lib/profils";
 
 export const DEMO = process.env.PTMOUSS_DEMO === "1";
 const ROLE = process.env.PTMOUSS_DEMO_ROLE === "coach" ? "coach" : "client";
+/* PTMOUSS_DEMO_METIER=joueur|coach|prepa|entraineur|kine|osteo pour voir l'accueil d'un métier */
+const METIER = lireMetier(process.env.PTMOUSS_DEMO_METIER);
 
 const J = 864e5;
 const now = Date.now();
@@ -86,9 +89,18 @@ const photoDemo = (vue: string, apres: number) =>
 export const demo = {
   utilisateur: () =>
     ROLE === "coach"
-      ? { id: COACH, email: "coach@demo.local", prenom: "Moustapha", role: "coach" as const, avatar: AVATARS[COACH], avatarPath: null, photosAccord: null }
-      : { id: CLIENTE, email: "ines@demo.local", prenom: "Inès", role: "client" as const, avatar: AVATARS[CLIENTE], avatarPath: null, photosAccord: process.env.PTMOUSS_DEMO_ACCORD === "0" ? null : iso(20) },
-  bilan: (id: string) => BILANS[id] ?? null,
+      ? { id: COACH, email: "coach@demo.local", prenom: "Moustapha", role: "coach" as const, metier: "coach" as const, avatar: AVATARS[COACH], avatarPath: null, photosAccord: null }
+      : { id: CLIENTE, email: "ines@demo.local", prenom: "Inès", role: "client" as const, metier: METIER, avatar: AVATARS[CLIENTE], avatarPath: null, photosAccord: process.env.PTMOUSS_DEMO_ACCORD === "0" ? null : iso(20) },
+  /* Un professionnel de démo n'a pas de bilan : il arrive sur son espace */
+  bilan: (id: string) => (ROLE === "client" && estPro(METIER) && id === CLIENTE ? null : BILANS[id] ?? null),
+  sportifs: () => [
+    { id: JOUEUR, prenom: "Yanis", metier: "joueur" as const, metierPro: (estPro(METIER) ? METIER : "coach") as MetierPro, depuis: iso(12) },
+    { id: NOUVELLE, prenom: "Léa", metier: "sportif" as const, metierPro: (estPro(METIER) ? METIER : "coach") as MetierPro, depuis: iso(2) },
+  ],
+  pros: () => [
+    { id: COACH, prenom: "Moustapha", metier: "coach" as const, metierPro: "coach" as const, depuis: iso(23) },
+    { id: "00000000-0000-4000-8000-0000000000k1", prenom: "Camille", metier: "kine" as const, metierPro: "kine" as const, depuis: iso(5) },
+  ],
   historique: (id: string) => HISTO[id] ?? [],
   checkinDuJour: (id: string): Checkin | null => {
     if (process.env.PTMOUSS_DEMO_CHECKIN === "0") return null;

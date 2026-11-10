@@ -21,12 +21,12 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           <Logo />
           <Marque />
         </Link>
-        <SideNav coach={coach} />
+        <SideNav coach={coach} metier={user.metier} />
         <div className="side-foot">
           <Avatar url={user.avatar} nom={user.prenom || user.email} />
           <div className="who">
             <div>{user.prenom || user.email}</div>
-            <span>{coach ? T.nav.coachRole : T.nav.clientRole}</span>
+            <span>{T.metiers.noms[coach ? "coach" : user.metier]}</span>
           </div>
           <form action={deconnexion}>
             <button type="submit" className="btn btn-ghost btn-sm" style={{ width: 38, padding: 0 }} aria-label={T.nav.deconnexion} title={T.nav.deconnexion}>
@@ -45,7 +45,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       </header>
 
       <main className="main"><TransfertEnAttente />{children}</main>
-      <TabBar coach={coach} />
+      <TabBar coach={coach} metier={user.metier} />
     </div>
   );
 }

@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import type { Bilan, Categorie, Checkin } from "@/lib/coaching/types";
 import { DEMO, demo } from "@/lib/demo";
+import { estPro, lireMetier, type Metier, type MetierPro } from "@/lib/profils";
 import { avancementDefi, badges, records, serieSemaines, type AvancementDefi, type Badge, type Defi, type RecordExo, type Serie } from "@/lib/coaching/motivation";
 
 /* ═══ Couche d'accès aux données ═══
@@ -12,6 +13,8 @@ import { avancementDefi, badges, records, serieSemaines, type AvancementDefi, ty
 
 export type Utilisateur = {
   id: string; email: string; prenom: string; role: "client" | "coach";
+  /** Qui est la personne (accueil, onglets). Ne donne aucun droit : voir src/lib/profils.ts */
+  metier: Metier;
   avatar: string | null;          // lien signé (1 h) vers la photo de profil
   avatarPath: string | null;
   photosAccord: string | null;    // date de l'accord pour les photos de progression
@@ -79,7 +82,7 @@ export const getUtilisateur = cache(async (): Promise<Utilisateur> => {
 
   const { data: profil } = await supabase
     .from("profiles")
-    .select("prenom, role, avatar_path, photos_accord")
+    .select("prenom, role, metier, avatar_path, photos_accord")
     .eq("id", claims.sub)
     .single();
   const liens = await signer("avatars", [profil?.avatar_path]);
@@ -89,6 +92,7 @@ export const getUtilisateur = cache(async (): Promise<Utilisateur> => {
     email: (claims.email as string) ?? "",
     prenom: profil?.prenom ?? "",
     role: profil?.role === "coach" ? "coach" : "client",
+    metier: lireMetier(profil?.metier),
     avatar: profil?.avatar_path ? liens[profil.avatar_path] ?? null : null,
     avatarPath: profil?.avatar_path ?? null,
     photosAccord: profil?.photos_accord ?? null,
@@ -407,4 +411,59 @@ export async function getChargesImposees(clientId: string, depuis?: string, jusq
   const { data, error } = await q.order("lundi").limit(500);
   if (error) return [];
   return (data ?? []).map((c) => ({ ...c, charge: Number(c.charge) }));
+}
+
+/* ─── Professionnels et sportifs liés (table suivis) ─── */
+export type Lie = { id: string; prenom: string; metier: Metier; metierPro: MetierPro; depuis: string };
+
+/** Professionnel (métier déclaré), hors coach historique qui a son propre espace */
+export async function exigerPro(): Promise<Utilisateur> {
+  const user = await getUtilisateur();
+  if (user.role === "coach") redirect("/coach");
+  if (!estPro(user.metier)) redirect("/");
+  return user;
+}
+
+async function lies(colonneMoi: "pro_id" | "sportif_id", moi: string): Promise<Lie[]> {
+  const autre = colonneMoi === "pro_id" ? "sportif_id" : "pro_id";
+  const supabase = await createClient();
+  const { data: liens, error } = await supabase.from("suivis").select("pro_id, sportif_id, metier_pro, cree_le").eq(colonneMoi, moi).order("cree_le", { ascending: false }).limit(500);
+  if (error || !liens?.length) return [];
+  const ids = liens.map((l) => l[autre] as string);
+  const { data: profils } = await supabase.from("profiles").select("id, prenom, metier").in("id", ids);
+  const par = new Map((profils ?? []).map((p) => [p.id, p]));
+  return liens.map((l) => {
+    const p = par.get(l[autre] as string);
+    return { id: l[autre] as string, prenom: p?.prenom ?? "", metier: lireMetier(p?.metier), metierPro: l.metier_pro as MetierPro, depuis: l.cree_le as string };
+  });
+}
+
+/** Les sportifs qui ont accepté d'être suivis par ce professionnel */
+export async function getMesSportifs(proId: string): Promise<Lie[]> {
+  if (DEMO) return demo.sportifs();
+  return lies("pro_id", proId);
+}
+
+/** Les professionnels que ce sportif a acceptés */
+export async function getMesPros(sportifId: string): Promise<Lie[]> {
+  if (DEMO) return demo.pros();
+  return lies("sportif_id", sportifId);
+}
+
+/** Code d'invitation personnel du professionnel (créé au premier appel) */
+export async function getCodeInvitation(): Promise<string | null> {
+  if (DEMO) return "BAARA7";
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("mon_code_invitation");
+  return error || typeof data !== "string" ? null : data;
+}
+
+/** À qui appartient un code d'invitation (page d'inscription, avant d'avoir un compte) */
+export async function getInvitation(code: string): Promise<{ prenom: string; metier: MetierPro } | null> {
+  if (!/^[A-Za-z0-9]{6}$/.test(code)) return null;
+  if (DEMO) return { prenom: "Moustapha", metier: "coach" };
+  const supabase = await createClient();
+  const { data } = await supabase.rpc("invitation_info", { p_code: code });
+  const l = Array.isArray(data) ? data[0] : null;
+  return l && estPro(lireMetier(l.metier)) ? { prenom: l.prenom ?? "", metier: l.metier as MetierPro } : null;
 }

@@ -6,29 +6,36 @@ import { ChoixTheme } from "@/components/ChoixTheme";
 import { PhotoProfil } from "@/components/PhotoProfil";
 import { Notifications } from "@/components/Notifications";
 import { getTheme } from "@/lib/theme/serveur";
-import { getBilan, getUtilisateur } from "@/lib/data";
+import { getBilan, getMesPros, getUtilisateur } from "@/lib/data";
+import { ChoixMetier, FormCode } from "@/components/Liens";
+import { rompre } from "./liens";
 import { phaseFor } from "@/lib/coaching/programme";
 import { locale, tc, ui } from "@/lib/i18n";
 import { getLang } from "@/lib/i18n/serveur";
 
 export const metadata = { title: "Profil — Baara" };
 
-export default async function Page() {
+export default async function Page({ searchParams }: PageProps<"/profil">) {
   const user = await getUtilisateur();
+  const { code } = await searchParams;
+  const codeRecu = typeof code === "string" && /^[A-Za-z0-9]{6}$/.test(code) ? code.toUpperCase() : undefined;
   const bilan = await getBilan(user.id);
   const lang = await getLang();
   const theme = await getTheme();
   const T = ui(lang);
   const phase = bilan ? phaseFor(bilan.reponses, bilan.debut) : null;
+  const pros = await getMesPros(user.id);
+  const M = T.metiers;
 
   return (
     <div className="reveal">
       <header className="page-head">
-        <div className="meta">{user.email}{user.role === "coach" ? ` · ${T.nav.coachRole}` : ""}</div>
+        <div className="meta">{user.email} · {M.noms[user.role === "coach" ? "coach" : user.metier]}</div>
         <h1 className="page-title" style={{ marginTop: 6 }}>{bilan?.reponses.prenom || user.prenom || T.profil.titre}</h1>
       </header>
 
       <div className="grid-2" style={{ alignItems: "start" }}>
+        <div className="stack">
         <section className="panel">
           <div className="section-head">
             <h2 className="section-title">{T.profil.tonBilan}</h2>
@@ -55,6 +62,36 @@ export default async function Page() {
             </p>
           )}
         </section>
+
+        <section className="panel">
+          <div className="section-title">{M.mesPros}</div>
+          <p className="meta" style={{ margin: "4px 0 0" }}>{pros.length ? M.mesProsAide : M.aucunPro}</p>
+          {pros.length > 0 && (
+            <div className="rows" style={{ marginTop: 10 }}>
+              {pros.map((p) => (
+                <div key={p.id} className="row-item">
+                  <div className="row-main">
+                    <div style={{ fontSize: 15, fontWeight: 600 }}>{p.prenom || M.noms[p.metierPro]}</div>
+                    <div className="row-sub">{M.noms[p.metierPro]} · {M.depuis(new Date(p.depuis).toLocaleDateString(locale(lang), { day: "numeric", month: "long", timeZone: "Europe/Paris" }))}</div>
+                  </div>
+                  <form action={rompre.bind(null, p.id, "sportif")}>
+                    <button type="submit" className="link" style={{ fontSize: 13, color: "var(--muted)" }}>{M.retirer}</button>
+                  </form>
+                </div>
+              ))}
+            </div>
+          )}
+          <FormCode initial={codeRecu} />
+        </section>
+
+        {user.role !== "coach" && (
+          <section className="panel">
+            <div className="section-title">{M.monMetier}</div>
+            <p className="meta" style={{ margin: "4px 0 0" }}>{M.metierAide}</p>
+            <ChoixMetier actuel={user.metier} />
+          </section>
+        )}
+        </div>
 
         <div className="stack">
           <section className="panel">

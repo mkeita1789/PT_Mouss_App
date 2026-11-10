@@ -1,23 +1,60 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { connexion, inscription, type EtatForm } from "@/app/(auth)/actions";
 import { useLang } from "./Langue";
+import { estPro, METIERS, type Metier, type MetierPro } from "@/lib/profils";
 
-export function FormAuth({ mode, suite }: { mode: "connexion" | "inscription"; suite?: string }) {
+export function FormAuth({ mode, suite, invitation, codeInvalide }: {
+  mode: "connexion" | "inscription"; suite?: string;
+  invitation?: { code: string; prenom: string; metier: MetierPro };
+  codeInvalide?: boolean;
+}) {
   const action = mode === "connexion" ? connexion : inscription;
   const [etat, formAction, pending] = useActionState<EtatForm, FormData>(action, undefined);
   const insc = mode === "inscription";
   const { T } = useLang();
+  const M = T.metiers;
+  /* Invité par un professionnel : on arrive en tant que sportif, sans avoir à choisir */
+  const [metier, setMetier] = useState<Metier>("sportif");
+  const groupes: [string, Metier[]][] = [[M.jePratique, METIERS.filter((m) => !estPro(m))], ...(invitation ? [] : [[M.jeSuisPro, METIERS.filter(estPro)] as [string, Metier[]]])];
 
   return (
     <form action={formAction} className="reveal">
       {suite === "/importer" && <input type="hidden" name="suite" value="/importer" />}
       <h1 className="page-title" style={{ fontSize: 38 }}>{insc ? T.auth.titreInscription : T.auth.titreConnexion}</h1>
       <p className="page-lede" style={{ marginBottom: 12 }}>
-        {insc ? T.auth.ledeInscription : T.auth.ledeConnexion}
+        {insc ? (estPro(metier) ? M.ledePro : T.auth.ledeInscription) : T.auth.ledeConnexion}
       </p>
+
+      {insc && invitation && (
+        <div className="note note-gold" style={{ marginTop: 14 }}>
+          <div>{M.invitePar(invitation.prenom || "Coach", M.noms[invitation.metier])}</div>
+          <input type="hidden" name="code" value={invitation.code} />
+        </div>
+      )}
+      {insc && codeInvalide && <p className="form-err" role="status">{M.codeInvalide}</p>}
+
+      {insc && (
+        <fieldset className="metiers">
+          <legend>{M.question}</legend>
+          {groupes.map(([titre, liste]) => (
+            <div key={titre}>
+              <div className="metiers-groupe">{titre}</div>
+              <div className="metiers-grille">
+                {liste.map((m) => (
+                  <label key={m} className={`metier ${metier === m ? "on" : ""}`}>
+                    <input type="radio" name="metier" value={m} checked={metier === m} onChange={() => setMetier(m)} />
+                    <b>{M.noms[m]}</b>
+                    <span>{M.sous[m]}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          ))}
+        </fieldset>
+      )}
 
       {insc && (
         <label className="field">
@@ -33,6 +70,13 @@ export function FormAuth({ mode, suite }: { mode: "connexion" | "inscription"; s
         <span>{T.auth.motDePasse}{insc && <span className="muted" style={{ fontWeight: 400 }}>{T.auth.huitCaracteres}</span>}</span>
         <input className="input" name="password" type="password" required minLength={insc ? 8 : undefined} autoComplete={insc ? "new-password" : "current-password"} />
       </label>
+
+      {insc && (
+        <label className="case">
+          <input type="checkbox" name="majeur" required />
+          <span>{M.majeur}</span>
+        </label>
+      )}
 
       {etat?.erreur && <p className="form-err" role="alert">{etat.erreur}</p>}
       {etat?.ok && <p className="form-ok" role="status">{etat.ok}</p>}

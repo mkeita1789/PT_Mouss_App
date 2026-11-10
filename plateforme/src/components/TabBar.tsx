@@ -5,8 +5,21 @@ import { usePathname } from "next/navigation";
 import { Icon, type NomIcone } from "./Icon";
 import { useLang } from "./Langue";
 import type { TextesUI } from "@/lib/i18n/ui";
+import { estPro, ongletsDe, type CleNav, type Metier } from "@/lib/profils";
 
 type Lien = { href: string; ico: NomIcone; lb: string };
+
+/** Tous les onglets possibles ; chaque métier en affiche une sélection (src/lib/profils.ts) */
+const onglet = (T: TextesUI, metier: Metier): Record<CleNav, Lien> => ({
+  accueil: { href: "/", ico: "accueil", lb: T.nav.accueil },
+  entrainement: { href: "/entrainement", ico: "outils", lb: T.nav.entrainement },
+  seance: { href: "/seance", ico: "seance", lb: T.nav.seance },
+  suivi: { href: "/suivi", ico: "suivi", lb: T.nav.progression },
+  profil: { href: "/profil", ico: "profil", lb: T.nav.profil },
+  coach: { href: "/coach", ico: "coach", lb: T.nav.coach },
+  pro: { href: "/pro", ico: "coach", lb: estPro(metier) ? T.metiers.nav[metier] : T.nav.coach },
+  exercices: { href: "/exercices", ico: "livre", lb: T.nav.exercices },
+});
 
 const liens = (T: TextesUI) => ({
   CLIENT: [
@@ -36,11 +49,11 @@ function useActif() {
 }
 
 /** Barre du bas (mobile) — la séance au centre, en évidence */
-export function TabBar({ coach }: { coach: boolean }) {
+export function TabBar({ coach, metier }: { coach: boolean; metier: Metier }) {
   const actif = useActif();
   const { T } = useLang();
-  const { CLIENT, COACH } = liens(T);
-  const tabs = coach ? [CLIENT[0], CLIENT[1], CLIENT[2], CLIENT[3], COACH] : CLIENT;
+  const tous = onglet(T, metier);
+  const tabs = ongletsDe(metier, coach).map((k) => tous[k]);
   return (
     <nav className="tabbar" aria-label="Navigation">
       {tabs.map((t) =>
@@ -61,10 +74,13 @@ export function TabBar({ coach }: { coach: boolean }) {
 }
 
 /** Menu latéral (ordinateur) */
-export function SideNav({ coach }: { coach: boolean }) {
+export function SideNav({ coach, metier }: { coach: boolean; metier: Metier }) {
   const actif = useActif();
   const { T } = useLang();
-  const { CLIENT, COACH, OUTILS } = liens(T);
+  const { COACH, OUTILS } = liens(T);
+  const tous = onglet(T, metier);
+  const pro = !coach && estPro(metier);
+  const CLIENT = ongletsDe(metier, coach).filter((k) => k !== "coach" && k !== "pro" && k !== "exercices").map((k) => tous[k]);
   const item = (t: Lien) => (
     <Link key={t.href} href={t.href} className={`nav-item ${actif(t.href, false) ? "on" : ""}`} aria-current={actif(t.href, false) ? "page" : undefined}>
       <Icon nom={t.ico} />
@@ -82,6 +98,12 @@ export function SideNav({ coach }: { coach: boolean }) {
         <nav className="side-nav" aria-label={T.nav.coach}>
           <div className="side-label">{T.nav.coaching}</div>
           {item({ ...COACH, lb: T.nav.mesClients })}
+        </nav>
+      )}
+      {pro && (
+        <nav className="side-nav" aria-label={T.metiers.espace}>
+          <div className="side-label">{T.metiers.espace}</div>
+          {item({ ...tous.pro, lb: T.metiers.titres[metier] })}
         </nav>
       )}
     </>
