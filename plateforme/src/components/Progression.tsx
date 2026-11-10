@@ -112,8 +112,18 @@ export function HistoriqueSeances({ historique, limite = 20, lang }: { historiqu
                     <span className="ink-2" style={{ fontWeight: 400 }}> · {tc(lang, s.focus)}</span>
                   </span>
                   <span className="row-sub" style={{ display: "block" }}>
-                    {s.phase ? `${tc(lang, s.phase)} · ` : ""}{T.suivi.nExos(s.seance_exercices.length)}{charges ? `, ${T.suivi.nCharges(charges)}` : ""}{s.allegee ? ` · ${T.suivi.allegee}` : ""}
+                    {s.phase ? `${tc(lang, s.phase)} · ` : ""}{T.suivi.nExos(s.seance_exercices.length)}{s.allegee ? ` · ${T.suivi.allegee}` : ""}
                   </span>
+                  {charges > 0 && (
+                    <span className="charges-ligne">
+                      {s.seance_exercices.filter((e) => e.charge_kg !== null).map((e) => (
+                        <span key={e.position}>
+                          {tc(lang, e.nom)} <b className="num">{fmt(e.charge_kg!)} kg</b>
+                          {e.amrap !== null && <span className={e.cible !== null && e.amrap < e.cible ? "ko" : "muted"}> ×{e.amrap}</span>}
+                        </span>
+                      ))}
+                    </span>
+                  )}
                 </span>
                 <span className="chev"><Icon nom="fleche" taille={18} /></span>
               </summary>

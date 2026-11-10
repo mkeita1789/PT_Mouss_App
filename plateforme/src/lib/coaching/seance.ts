@@ -53,7 +53,10 @@ export function prepareSeance(
   const derniere = historique.find((h) => h.jour_code === day.d);
 
   return day.ex.map((e) => {
-    const prev = derniere?.seance_exercices.find((x) => x.nom === e.n);
+    /* Même jour du programme d'abord ; sinon la dernière fois que l'exercice a été fait, n'importe quel jour */
+    const prev =
+      derniere?.seance_exercices.find((x) => x.nom === e.n && x.charge_kg !== null) ??
+      historique.flatMap((h) => h.seance_exercices).find((x) => x.nom === e.n && x.charge_kg !== null);
     const lv = prev?.charge_kg ?? null;
     const cible = targetReps(e.r);
     let suggestion: number | null = null;
