@@ -44,7 +44,7 @@ export default async function Page({ searchParams }: PageProps<"/profil">) {
           {bilan ? (
             <div className="rows">
               {Object.entries(T.profil.libelles).map(([k, lb]) => {
-                const v = (bilan.reponses as Record<string, string | undefined>)[k];
+                const v = (bilan.reponses as unknown as Record<string, string | undefined>)[k];
                 return v ? (
                   <div key={k} className="row-item">
                     <div className="row-main meta">{lb}</div>
@@ -74,9 +74,13 @@ export default async function Page({ searchParams }: PageProps<"/profil">) {
                     <div style={{ fontSize: 15, fontWeight: 600 }}>{p.prenom || M.noms[p.metierPro]}</div>
                     <div className="row-sub">{M.noms[p.metierPro]} · {M.depuis(new Date(p.depuis).toLocaleDateString(locale(lang), { day: "numeric", month: "long", timeZone: "Europe/Paris" }))}</div>
                   </div>
-                  <form action={rompre.bind(null, p.id, "sportif")}>
-                    <button type="submit" className="link" style={{ fontSize: 13, color: "var(--muted)" }}>{M.retirer}</button>
-                  </form>
+                  {p.admin ? (
+                    <span className="meta" style={{ fontSize: 12.5, textAlign: "right", maxWidth: 140 }}>{M.gereAppli}</span>
+                  ) : (
+                    <form action={rompre.bind(null, p.id, "sportif")}>
+                      <button type="submit" className="link" style={{ fontSize: 13, color: "var(--muted)" }}>{M.retirer}</button>
+                    </form>
+                  )}
                 </div>
               ))}
             </div>

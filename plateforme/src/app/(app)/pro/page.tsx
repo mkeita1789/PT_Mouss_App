@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Avatar } from "@/components/Avatar";
 import { joursDepuis } from "@/lib/coaching/alertes";
-import { lundiCourant } from "@/lib/coaching/programme";
+import { jourParis, lundiDe } from "@/lib/coaching/motivation";
 import { Icon } from "@/components/Icon";
 import { Inviter } from "@/components/Inviter";
 import { rompre } from "../profil/liens";
@@ -26,7 +26,7 @@ export default async function Page() {
   /* Coach et préparateur physique ouvrent la fiche des sportifs qui les ont acceptés comme tels */
   const suivables = sportifs.filter((s) => s.metierPro === "coach" || s.metierPro === "prepa").map((s) => s.id);
   const [seances, bilans] = suivables.length ? await Promise.all([getSeancesTousClients(), getBilans(suivables)]) : [{}, {}];
-  const lundi = lundiCourant();
+  const lundi = lundiDe(new Date());
   const aVenir = sante ? M.aVenir.sante : M.aVenir[metier];
   const jour = (d: string) => new Date(d).toLocaleDateString(locale(lang), { day: "numeric", month: "long", timeZone: "Europe/Paris" });
 
@@ -53,7 +53,7 @@ export default async function Page() {
                 const hist = (seances as Record<string, { realisee_le: string }[]>)[s.id] ?? [];
                 const b = (bilans as Record<string, { freq?: string; prenom?: string }>)[s.id];
                 const j = joursDepuis(hist[0]?.realisee_le);
-                const semaine = hist.filter((h) => new Date(h.realisee_le) >= lundi).length;
+                const semaine = hist.filter((h) => jourParis(h.realisee_le) >= lundi).length;
                 const nom = s.prenom || b?.prenom || T.coach.sansPrenom;
                 return (
                   <div key={s.id} className="panel lie-row">

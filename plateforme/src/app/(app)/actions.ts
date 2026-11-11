@@ -36,6 +36,7 @@ export async function enregistrerBilan(reponses: Partial<Bilan>, recommencer: bo
     }
   }
   if (!OBJECTIFS.includes(propre.objectif!)) return { erreur: T.bilan.objectifInconnu };
+  propre.v = 2;
 
   const supabase = await createClient();
   const existant = await getBilan(user.id);

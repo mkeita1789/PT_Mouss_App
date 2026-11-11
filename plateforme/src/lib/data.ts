@@ -428,7 +428,7 @@ export async function getChargesImposees(clientId: string, depuis?: string, jusq
 }
 
 /* ─── Professionnels et sportifs liés (table suivis) ─── */
-export type Lie = { id: string; prenom: string; metier: Metier; metierPro: MetierPro; depuis: string };
+export type Lie = { id: string; prenom: string; metier: Metier; metierPro: MetierPro; depuis: string; admin: boolean };
 
 /** Professionnel (métier déclaré), hors coach historique qui a son propre espace */
 export async function exigerPro(): Promise<Utilisateur> {
@@ -444,11 +444,11 @@ async function lies(colonneMoi: "pro_id" | "sportif_id", moi: string): Promise<L
   const { data: liens, error } = await supabase.from("suivis").select("pro_id, sportif_id, metier_pro, cree_le").eq(colonneMoi, moi).order("cree_le", { ascending: false }).limit(500);
   if (error || !liens?.length) return [];
   const ids = liens.map((l) => l[autre] as string);
-  const { data: profils } = await supabase.from("profiles").select("id, prenom, metier").in("id", ids);
+  const { data: profils } = await supabase.from("profiles").select("id, prenom, metier, role").in("id", ids);
   const par = new Map((profils ?? []).map((p) => [p.id, p]));
   return liens.map((l) => {
     const p = par.get(l[autre] as string);
-    return { id: l[autre] as string, prenom: p?.prenom ?? "", metier: lireMetier(p?.metier), metierPro: l.metier_pro as MetierPro, depuis: l.cree_le as string };
+    return { id: l[autre] as string, prenom: p?.prenom ?? "", metier: lireMetier(p?.metier), metierPro: l.metier_pro as MetierPro, depuis: l.cree_le as string, admin: p?.role === "coach" };
   });
 }
 

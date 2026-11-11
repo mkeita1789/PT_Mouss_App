@@ -163,7 +163,7 @@ export function buildProgram(p: Bilan, start: string | Date | null | undefined, 
   else if (p.objectif === "Maintien en saison 🔁") return maintienSaison(p, ctx);
   else if (p.objectif === "Préparer la saison 📅") base = preparerSaison(p, ctx);
   else if (p.objectif === "Tonifier mon corps ✨") base = tonifier(p, ctx);
-  else if (p.objectif === "Développer mes fessiers 🍑" && lieu(p).maison) {
+  else if (p.objectif === "Développer mes fessiers 🍑" && lieu(p).maison && (p.v ?? 1) >= 2) {
     base = {
       proto: "FESSIERS", icon: "🍑", officiel: true,
       cle: "Version maison : élastique, haltères ou sac lesté. Le Hip Thrust ouvre chaque jour fessiers, isolation en fin.",

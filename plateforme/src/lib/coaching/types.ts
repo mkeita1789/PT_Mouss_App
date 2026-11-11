@@ -31,6 +31,8 @@ export type Bilan = {
   sommeil: string;
   periode?: string;
   allure?: string;
+  /** Version du bilan : 2 = bilan par profil (les anciens bilans gardent leur programme) */
+  v?: number;
 };
 
 export type Exercice = {

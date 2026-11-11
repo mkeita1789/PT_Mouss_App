@@ -100,12 +100,12 @@ export const demo = {
   /* Un professionnel de démo n'a pas de bilan : il arrive sur son espace */
   bilan: (id: string) => (ROLE === "client" && estPro(METIER) && id === CLIENTE ? null : BILANS[id] ?? null),
   sportifs: () => [
-    { id: JOUEUR, prenom: "Yanis", metier: "joueur" as const, metierPro: (estPro(METIER) ? METIER : "coach") as MetierPro, depuis: iso(12) },
-    { id: NOUVELLE, prenom: "Léa", metier: "sportif" as const, metierPro: (estPro(METIER) ? METIER : "coach") as MetierPro, depuis: iso(2) },
+    { id: JOUEUR, prenom: "Yanis", metier: "joueur" as const, metierPro: (estPro(METIER) ? METIER : "coach") as MetierPro, depuis: iso(12), admin: false },
+    { id: NOUVELLE, prenom: "Léa", metier: "sportif" as const, metierPro: (estPro(METIER) ? METIER : "coach") as MetierPro, depuis: iso(2), admin: false },
   ],
   pros: () => [
-    { id: COACH, prenom: "Moustapha", metier: "coach" as const, metierPro: "coach" as const, depuis: iso(23) },
-    { id: "00000000-0000-4000-8000-0000000000k1", prenom: "Camille", metier: "kine" as const, metierPro: "kine" as const, depuis: iso(5) },
+    { id: COACH, prenom: "Moustapha", metier: "coach" as const, metierPro: "coach" as const, depuis: iso(23), admin: true },
+    { id: "00000000-0000-4000-8000-0000000000k1", prenom: "Camille", metier: "kine" as const, metierPro: "kine" as const, depuis: iso(5), admin: false },
   ],
   historique: (id: string) => HISTO[id] ?? [],
   checkinDuJour: (id: string): Checkin | null => {
