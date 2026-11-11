@@ -413,13 +413,13 @@ export async function getReathDatesTous(): Promise<Record<string, string[]>> {
 }
 
 /* ─── Charges imposées par le coach ─── */
-export type ChargeImposee = { id: string; exercice: string; jour_code: string | null; lundi: string; charge: number };
+export type ChargeImposee = { id: string; exercice: string; jour_code: string | null; lundi: string; charge: number; auteur_id?: string | null };
 
 /** Charges du coach pour une cliente, à partir d'un lundi (AAAA-MM-JJ) */
 export async function getChargesImposees(clientId: string, depuis?: string, jusqua?: string): Promise<ChargeImposee[]> {
   if (DEMO) return demo.chargesImposees();
   const supabase = await createClient();
-  let q = supabase.from("charges_imposees").select("id, exercice, jour_code, lundi, charge").eq("client_id", clientId);
+  let q = supabase.from("charges_imposees").select("id, exercice, jour_code, lundi, charge, auteur_id").eq("client_id", clientId);
   if (depuis) q = q.gte("lundi", depuis);
   if (jusqua) q = q.lte("lundi", jusqua);
   const { data, error } = await q.order("lundi").limit(500);

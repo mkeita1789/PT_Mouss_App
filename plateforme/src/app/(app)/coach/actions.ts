@@ -96,7 +96,7 @@ export type CellulePlan = { exercice: string; jour_code: string | null; lundi: s
 export async function enregistrerPlan(clientId: string, semaines: string[], cellules: CellulePlan[]): Promise<{ erreur?: string; ok?: string }> {
   const T = ui(await getLang());
   if (!UUID.test(clientId)) return { erreur: T.plan.erreur };
-  await exigerAccesSportif(clientId);
+  const moi = await exigerAccesSportif(clientId);
   const LUNDI = /^\d{4}-\d{2}-\d{2}$/;
   const lundis = semaines.filter((l) => LUNDI.test(l) && new Date(l + "T12:00:00Z").getUTCDay() === 1);
   if (!UUID.test(clientId) || !lundis.length || lundis.length > 26 || cellules.length > 500) return { erreur: T.plan.erreur };
@@ -113,11 +113,12 @@ export async function enregistrerPlan(clientId: string, semaines: string[], cell
     .filter((c) => c.exercice);
 
   const supabase = await createClient();
-  const { error: e1 } = await supabase.from("charges_imposees").delete().eq("client_id", clientId).in("lundi", lundis);
+  /* Chacun ne remplace que SES charges : le plan d'un autre professionnel reste intact */
+  const { error: e1 } = await supabase.from("charges_imposees").delete().eq("client_id", clientId).eq("auteur_id", moi.id).in("lundi", lundis);
   if (e1) return { erreur: T.plan.erreur };
   if (lignes.length) {
     const { error: e2 } = await supabase.from("charges_imposees").insert(lignes);
-    if (e2) return { erreur: T.plan.erreur };
+    if (e2) return { erreur: e2.code === "23505" ? T.plan.dejaFixee : T.plan.erreur };
   }
   revalidatePath(`/coach/${clientId}`);
   return { ok: T.plan.enregistre };

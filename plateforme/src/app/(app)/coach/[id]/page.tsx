@@ -119,7 +119,8 @@ export default async function Page({ params }: PageProps<"/coach/[id]">) {
       {optionsPlan.length > 0 && (
         <section className="section">
           <div className="section-head"><h2 className="section-title">{T.plan.titre}</h2></div>
-          <PlanCharges clientId={id} semaines={semainesPlan} options={optionsPlan} initiales={imposees} />
+          <PlanCharges clientId={id} semaines={semainesPlan} options={optionsPlan} initiales={imposees.filter((c) => !c.auteur_id || c.auteur_id === moi.id)} />
+          {imposees.some((c) => c.auteur_id && c.auteur_id !== moi.id) && <p className="meta" style={{ marginTop: 10 }}>{T.plan.autresPros(imposees.filter((c) => c.auteur_id && c.auteur_id !== moi.id).length)}</p>}
         </section>
       )}
 
