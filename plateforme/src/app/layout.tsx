@@ -9,8 +9,8 @@ import { APERCU } from "@/lib/theme";
 import { getTheme } from "@/lib/theme/serveur";
 
 export const metadata: Metadata = {
-  title: "Baara — JIGI Coaching",
-  description: "JIGI Coaching : programme, séances, progression.",
+  title: "Baara",
+  description: "Baara : programme, séances, progression, équipe.",
   appleWebApp: { capable: true, title: "Baara", statusBarStyle: "black-translucent" },
   icons: { icon: "/icon-192.png", apple: "/apple-icon.png" },
 };

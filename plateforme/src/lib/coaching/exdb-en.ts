@@ -13,7 +13,7 @@ const EN: Record<string, Texte> = {
     arrivee: "Hips fully extended, shoulders-hips-knees in line, glutes squeezed hard, chin slightly tucked (ribs down).",
     points: ["Drive through your heels", "Lock out by squeezing your glutes, not by arching your lower back", "Look forward/down, not at the ceiling", "Full range: lower until you almost touch the floor"],
     erreurs: ["Arching the lower back instead of extending the hips", "Coming up onto your toes", "Partial range of motion", "Tilting the pelvis forward (hyperlordosis)"],
-    coach: "THE king of glute exercises, and it opens every JIGI session. The 1 s pause at the top is gold: that's where the glutes work hardest.",
+    coach: "THE king of glute exercises, and it opens every glute session. The 1 s pause at the top is gold: that's where the glutes work hardest.",
     variantes: { deb: "Floor glute bridge (no bench, no bar)", int: "Classic barbell hip thrust", av: "Single-leg hip thrust or 3 s pause" },
     alternatives: "Floor version with feet on a chair · Banded hip thrust · Weighted glute bridge",
   },

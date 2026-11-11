@@ -123,3 +123,32 @@ export async function enregistrerPlan(clientId: string, semaines: string[], cell
   revalidatePath(`/coach/${clientId}`);
   return { ok: T.plan.enregistre };
 }
+
+/* ─── Demander à un autre professionnel de changer ses charges (il reste seul à pouvoir le faire) ─── */
+export async function demanderChangement(clientId: string, destinataireId: string, prev: EtatMot, formData: FormData): Promise<EtatMot> {
+  const T = ui(await getLang());
+  if (!UUID.test(clientId) || !UUID.test(destinataireId)) return { erreur: T.plan.erreur };
+  const moi = await exigerAccesSportif(clientId);
+  const message = String(formData.get("message") ?? "").trim().slice(0, 500);
+  if (!message) return { erreur: T.plan.demandeVide };
+  const supabase = await createClient();
+  const { data, error } = await supabase.from("demandes_charges").insert({ client_id: clientId, destinataire_id: destinataireId, message }).select("id").single();
+  if (error || !data) return { erreur: T.plan.erreur };
+  const { data: abos } = await supabase.rpc("abonnements_demande", { p_demande: data.id });
+  envoyerApres((abos ?? []) as Abonnement[], (lg) => ({
+    titre: ui(lg).plan.notifDemande(moi.prenom || "Coach"),
+    corps: message.length > 160 ? message.slice(0, 157) + "…" : message,
+    url: `/coach/${clientId}`,
+    tag: `demande-${clientId}`,
+  }));
+  revalidatePath(`/coach/${clientId}`);
+  return { ok: T.plan.demandeEnvoyee, n: (prev?.n ?? 0) + 1 };
+}
+
+export async function traiterDemande(id: string, clientId: string) {
+  if (!UUID.test(id) || !UUID.test(clientId)) return;
+  await exigerAccesSportif(clientId);
+  const supabase = await createClient();
+  await supabase.from("demandes_charges").update({ traitee_le: new Date().toISOString() }).eq("id", id);
+  revalidatePath(`/coach/${clientId}`);
+}

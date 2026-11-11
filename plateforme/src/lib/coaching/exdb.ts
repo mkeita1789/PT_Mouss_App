@@ -25,7 +25,7 @@ export const EXDB: Record<string, FicheExercice> = {
       "Amplitude partielle",
       "Basculer le bassin en avant (hyperlordose)"
     ],
-    "coach": "C'est LE roi des fessiers, et il ouvre chaque séance JIGI. La pause d'1 s en haut vaut de l'or : c'est là que le fessier travaille le plus.",
+    "coach": "C'est LE roi des fessiers, et il ouvre chaque séance fessiers. La pause d'1 s en haut vaut de l'or : c'est là que le fessier travaille le plus.",
     "variantes": {
       "deb": "Glute Bridge au sol (sans banc, sans barre)",
       "int": "Hip Thrust barre classique",

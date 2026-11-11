@@ -120,7 +120,7 @@ export function phaseFor(p: Bilan, start: string | Date | null | undefined, now?
 /* ═══ ÉCHAUFFEMENTS / NUTRITION ═══ */
 export function warmup(p: Bilan) {
   if (p.objectif === "Développer mes fessiers 🍑")
-    return { t: "Le rituel JIGI (10-15 min) — jamais sauté", ex: ["Glute Bridge — 2×15", "Lateral Band Walk — 2×20", "Donkey Kicks — 2×12/jambe", "Fire Hydrant — 2×12/jambe", "Hip Flexor Stretch — 30 s/côté", "90/90 — 30 s/côté", "Deep Squat Hold — 30 s"] };
+    return { t: "Le rituel fessiers (10-15 min) — jamais sauté", ex: ["Glute Bridge — 2×15", "Lateral Band Walk — 2×20", "Donkey Kicks — 2×12/jambe", "Fire Hydrant — 2×12/jambe", "Hip Flexor Stretch — 30 s/côté", "90/90 — 30 s/côté", "Deep Squat Hold — 30 s"] };
   if (FOOT(p.objectif))
     return { t: "Échauffement foot (10 min)", ex: ["Footing léger — 3 min", "Gammes : montées de genoux, talons-fesses, pas chassés — 2×20 m", "Fentes marchées avec rotation — ×8", "Balancés de jambe avant/côté — ×10", "2 accélérations progressives — 20 m"] };
   if (p.objectif === "Performance sportive ⚽")

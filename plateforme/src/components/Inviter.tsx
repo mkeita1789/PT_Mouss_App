@@ -28,7 +28,7 @@ export function Inviter({ coach, code, generique }: { coach: string; code?: stri
   const [qr, setQr] = useState("");
   const [copie, setCopie] = useState(false);
   const [partage, setPartage] = useState(false);
-  const texte = MESSAGE[langue](generique ? coach || "Coach" : `${coach || "Coach"} — JIGI Coaching`, LIEN);
+  const texte = MESSAGE[langue](generique ? coach || "Coach" : coach || "Coach", LIEN);
 
   useEffect(() => {
     if (!ouvert) return;

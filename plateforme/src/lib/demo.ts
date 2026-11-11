@@ -14,6 +14,7 @@ const METIER = lireMetier(process.env.PTMOUSS_DEMO_METIER);
 
 const J = 864e5;
 const EQUIPE = "00000000-0000-4000-8000-0000000000e1";
+const PREPA = "00000000-0000-4000-8000-0000000000p1";
 const now = Date.now();
 const iso = (joursAvant: number) => new Date(now - joursAvant * J).toISOString();
 
@@ -148,6 +149,10 @@ export const demo = {
       { id: "c2", exercice: "Hip Abduction", jour_code: null, lundi, charge: 45 },
       { id: "c3", exercice: "Hip Thrust", jour_code: "DAY 1", lundi: suiv, charge: 72.5 },
       { id: "c4", exercice: "Hip Abduction", jour_code: null, lundi: suiv, charge: 47.5 },
+      /* Charges d'un préparateur physique : le coach les voit sans pouvoir les changer */
+      { id: "c5", exercice: "Back Squat", jour_code: null, lundi, charge: 80, auteur_id: PREPA },
+      { id: "c6", exercice: "Back Squat", jour_code: null, lundi: suiv, charge: 85, auteur_id: PREPA },
+      { id: "c7", exercice: "Bulgarian Split Squat", jour_code: null, lundi, charge: 14, auteur_id: PREPA },
     ];
   },
   /* Équipe de démo : staff si le métier est pro, joueur sinon */

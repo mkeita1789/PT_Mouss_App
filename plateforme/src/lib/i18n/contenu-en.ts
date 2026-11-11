@@ -74,7 +74,7 @@ export const CONTENU_EN: Record<string, string> = {
   "On souffle. Marche, mobilité, plaisir.": "We breathe. Walking, mobility, fun.",
 
   /* ─── Échauffements ─── */
-  "Le rituel JIGI (10-15 min) — jamais sauté": "The JIGI ritual (10-15 min) — never skipped",
+  "Le rituel fessiers (10-15 min) — jamais sauté": "The glute ritual (10-15 min) — never skipped",
   "Donkey Kicks — 2×12/jambe": "Donkey Kicks — 2×12/leg",
   "Fire Hydrant — 2×12/jambe": "Fire Hydrant — 2×12/leg",
   "Hip Flexor Stretch — 30 s/côté": "Hip Flexor Stretch — 30 s/side",

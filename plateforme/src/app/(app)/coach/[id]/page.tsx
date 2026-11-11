@@ -5,11 +5,12 @@ import { Comparaison, GrillePhotos } from "@/components/Comparaison";
 import { FormMot } from "@/components/FormMot";
 import { ReathCoach } from "@/components/ReathCoach";
 import { PlanCharges } from "@/components/PlanCharges";
+import { ChargesAutres } from "@/components/ChargesAutres";
 import { lundiDe } from "@/lib/coaching/motivation";
 import { Icon } from "@/components/Icon";
 import { supprimerMot } from "../actions";
 import { HistoriqueSeances, ProgressionCharges } from "@/components/Progression";
-import { exigerAccesSportif, getChargesImposees, getCheckinsRecents, getClient, getHistorique, getMots, getPhotos, getReath, getReathSeances } from "@/lib/data";
+import { exigerAccesSportif, getAuteursCharges, getChargesImposees, getDemandes, getCheckinsRecents, getClient, getHistorique, getMots, getPhotos, getReath, getReathSeances } from "@/lib/data";
 import { alertesCoach } from "@/lib/coaching/alertes";
 import { buildProgram, lundiCourant, phaseFor } from "@/lib/coaching/programme";
 import { locale, tc, traduireProgramme, ui } from "@/lib/i18n";
@@ -34,7 +35,7 @@ export default async function Page({ params }: PageProps<"/coach/[id]">) {
   /* Plan de charges : la semaine en cours et les 7 suivantes */
   const lundi0 = lundiDe(new Date());
   const lundis = Array.from({ length: 8 }, (_, k) => new Date(Date.parse(lundi0 + "T12:00:00Z") + k * 7 * 864e5).toISOString().slice(0, 10));
-  const [historique, checkins, mots, photos, reath, reathSeances, imposees] = await Promise.all([getHistorique(id), getCheckinsRecents(14, id), getMots(id, 5), getPhotos(id), getReath(id), getReathSeances(id), getChargesImposees(id, lundis[0], lundis[7])]);
+  const [historique, checkins, mots, photos, reath, reathSeances, imposees, auteurs, demandes] = await Promise.all([getHistorique(id), getCheckinsRecents(14, id), getMots(id, 5), getPhotos(id), getReath(id), getReathSeances(id), getChargesImposees(id, lundis[0], lundis[7]), getAuteursCharges(id), getDemandes(id)]);
 
   const alertes = alertesCoach(historique, checkins.slice(0, 7), new Date(), lang, (n) => tc(lang, n));
   const b = client.bilan?.reponses;
@@ -120,7 +121,7 @@ export default async function Page({ params }: PageProps<"/coach/[id]">) {
         <section className="section">
           <div className="section-head"><h2 className="section-title">{T.plan.titre}</h2></div>
           <PlanCharges clientId={id} semaines={semainesPlan} options={optionsPlan} initiales={imposees.filter((c) => !c.auteur_id || c.auteur_id === moi.id)} />
-          {imposees.some((c) => c.auteur_id && c.auteur_id !== moi.id) && <p className="meta" style={{ marginTop: 10 }}>{T.plan.autresPros(imposees.filter((c) => c.auteur_id && c.auteur_id !== moi.id).length)}</p>}
+          <ChargesAutres clientId={id} moiId={moi.id} charges={imposees} auteurs={auteurs} demandes={demandes} lang={lang} T={T} />
         </section>
       )}
 

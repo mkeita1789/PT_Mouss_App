@@ -34,11 +34,10 @@ export function Logo() {
 }
 
 /** Nom + signature */
-export function Marque({ sous = true }: { sous?: boolean }) {
+export function Marque() {
   return (
     <span>
       <div className="wordmark">BAARA</div>
-      {sous && <div className="wordmark-sub">JIGI Coaching</div>}
     </span>
   );
 }

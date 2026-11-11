@@ -2,7 +2,7 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Baara — JIGI Coaching",
+    name: "Baara",
     short_name: "Baara",
     start_url: "/",
     display: "standalone",

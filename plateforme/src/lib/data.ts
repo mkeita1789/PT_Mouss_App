@@ -534,3 +534,21 @@ export async function getEquipe(equipeId: string, userId: string): Promise<Equip
     presences: (presences ?? []) as Presence[],
   };
 }
+
+/* ─── Demandes de changement de charges entre professionnels ─── */
+export type Demande = { id: string; client_id: string; auteur_id: string; destinataire_id: string; message: string; cree_le: string; traitee_le: string | null };
+
+export async function getDemandes(clientId: string): Promise<Demande[]> {
+  if (DEMO) return [];
+  const supabase = await createClient();
+  const { data, error } = await supabase.from("demandes_charges").select("id, client_id, auteur_id, destinataire_id, message, cree_le, traitee_le").eq("client_id", clientId).order("cree_le", { ascending: false }).limit(50);
+  return error ? [] : (data ?? []);
+}
+
+/** Qui a fixé les charges de ce sportif (prénom, métier) */
+export async function getAuteursCharges(clientId: string): Promise<Record<string, { prenom: string; metier: Metier }>> {
+  if (DEMO) return { "00000000-0000-4000-8000-0000000000p1": { prenom: "Karim", metier: "prepa" } };
+  const supabase = await createClient();
+  const { data } = await supabase.rpc("auteurs_charges", { p_client: clientId });
+  return Object.fromEntries(((data ?? []) as { id: string; prenom: string; metier: string }[]).map((a) => [a.id, { prenom: a.prenom, metier: lireMetier(a.metier) }]));
+}
