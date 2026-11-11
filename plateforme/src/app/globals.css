@@ -790,7 +790,8 @@ details.session .row-main { min-width: 0; }
 .evt-type { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--muted); }
 .evt-titre { margin-top: 3px; font-size: 16px; font-weight: 600; color: var(--ink); }
 .maj1::first-letter { text-transform: uppercase; }
-.evt-pied .reponse { min-height: 34px; padding: 0 12px; font-size: 13px; }
+.evt-pied .reponses { flex-wrap: nowrap; width: 100%; }
+.evt-pied .reponse { flex: 1; justify-content: center; min-height: 36px; padding: 0 8px; font-size: 13px; white-space: nowrap; }
 .evt-resume { margin-top: 6px; font-size: 13.5px; color: var(--ink-2); line-height: 1.45; }
 .evt-score { flex: none; font-size: 24px; font-weight: 600; color: var(--ink); align-self: center; }
 .evt-score.ok { color: var(--ok); }
@@ -820,4 +821,4 @@ details.session .row-main { min-width: 0; }
 .fiche-grille { display: grid; grid-template-columns: 1.6fr 1.2fr 0.6fr; gap: 10px; }
 .role-select { width: auto; height: 34px; padding: 0 30px 0 10px; font-size: 13px; }
 .effectif td { vertical-align: middle; }
-.effectif td.num { white-space: nowrap; }
+.effectif td.num { white-space: nowrap; color: var(--ink); }

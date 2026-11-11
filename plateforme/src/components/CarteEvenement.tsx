@@ -37,7 +37,7 @@ export function CarteEvenement({ e, equipeId, joueurs, presences, moi, staff, la
         <div className="evt-date"><b className="num">{jour}</b><span>{mois}</span></div>
         <div style={{ minWidth: 0, flex: 1 }}>
           <div className="evt-type"><Icon nom={ICONE[e.type]} taille={14} /> {E.types[e.type]}{e.type === "match" && e.domicile !== null ? ` · ${e.domicile ? E.domicile : E.exterieur}` : ""}</div>
-          <div className="evt-titre">{e.type === "match" ? (e.adversaire ? E.contre(e.adversaire) : E.types.match) : e.type === "rdv" ? e.titre || E.types.rdv : `${semaine} ${heure}`}</div>
+          <div className="evt-titre maj1">{e.type === "match" ? (e.adversaire ? E.contre(e.adversaire) : E.types.match) : e.type === "rdv" ? e.titre || E.types.rdv : `${semaine} ${heure}`}</div>
           <div className="row-sub">{e.type === "entrainement" ? e.lieu ?? "" : [`${semaine} ${heure}`, e.lieu].filter(Boolean).join(" · ")}</div>
           {passe && e.resume && <p className="evt-resume">{e.resume}</p>}
         </div>
