@@ -1,5 +1,7 @@
 "use client";
 
+import { URL_FOOT } from "@/lib/app";
+
 import { useActionState, useEffect, useOptimistic, useRef, useState, useTransition } from "react";
 import {
   ajouterEvenement, ajouterFiche, changerRole, creerEquipe, enregistrerFeuille, rejoindreEquipe, repondre,
@@ -243,7 +245,7 @@ export function InviterEquipe({ nom, code }: { nom: string; code: string }) {
   const [partage, setPartage] = useState(false);
   // eslint-disable-next-line react-hooks/set-state-in-effect -- capacité du navigateur, inconnue au rendu serveur
   useEffect(() => setPartage(typeof navigator.share === "function"), []);
-  const texte = E.inviterMessage(nom, code, `https://pt-mouss-app.vercel.app/equipe?code=${code}`);
+  const texte = E.inviterMessage(nom, code, `${URL_FOOT}/equipe?code=${code}`);
   const copier = async () => { try { await navigator.clipboard.writeText(texte); setCopie(true); setTimeout(() => setCopie(false), 2000); } catch {} };
   return (
     <div className="inviter-actions" style={{ marginTop: 12 }}>

@@ -1,3 +1,7 @@
+"use client";
+
+import { useApp } from "./AppContexte";
+
 /* Logo Baara (« travail » en bambara) : un ballon de foot monté sur une barre de musculation.
    Le doré suit la couleur du thème choisi ; les détails du ballon reprennent le fond de la tuile. */
 export const LOGO = {
@@ -35,9 +39,10 @@ export function Logo() {
 
 /** Nom + signature */
 export function Marque() {
+  const foot = useApp() === "foot";
   return (
     <span>
-      <div className="wordmark">BAARA</div>
+      <div className="wordmark">BAARA{foot && <span className="wordmark-foot">FOOT</span>}</div>
     </span>
   );
 }

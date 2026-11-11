@@ -4,7 +4,9 @@ import { Icon } from "@/components/Icon";
 import { TransfertEnAttente } from "@/components/Importeur";
 import { SideNav, TabBar } from "@/components/TabBar";
 import { deconnexion } from "@/app/(auth)/actions";
-import { getUtilisateur, membreDUneEquipe } from "@/lib/data";
+import { getMesEquipes, getUtilisateur } from "@/lib/data";
+import { getApp } from "@/lib/app-serveur";
+import { paletteClub } from "@/lib/couleurs-club";
 import { ui } from "@/lib/i18n";
 import { getLang } from "@/lib/i18n/serveur";
 import { Logo, Marque } from "@/components/Logo";
@@ -13,10 +15,14 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const user = await getUtilisateur();
   const coach = user.role === "coach";
   const T = ui(await getLang());
-  const enEquipe = await membreDUneEquipe(user.id);
+  const app = await getApp();
+  /* Baara Foot : l'appli prend les couleurs du club (la première équipe ; la page d'une équipe prend les siennes) */
+  const club = app === "foot" ? (await getMesEquipes(user.id))[0] : undefined;
+  const palette = club ? paletteClub(club.couleur1, club.couleur2) : null;
 
   return (
     <div className="shell">
+      {palette && <style>{palette}</style>}
       <aside className="sidebar">
         <Link href="/" className="side-brand">
           <Logo />
@@ -39,14 +45,14 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
       <header className="topbar">
         <Logo />
-        <div className="wordmark">BAARA</div>
+        <div className="wordmark">BAARA{app === "foot" && <span className="wordmark-foot">FOOT</span>}</div>
         <Link href="/profil" className="topbar-user" aria-label={T.nav.monProfil}>
           <Avatar url={user.avatar} nom={user.prenom || user.email} />
         </Link>
       </header>
 
       <main className="main"><TransfertEnAttente />{children}</main>
-      <TabBar coach={coach} metier={user.metier} enEquipe={enEquipe} />
+      <TabBar coach={coach} metier={user.metier} />
     </div>
   );
 }

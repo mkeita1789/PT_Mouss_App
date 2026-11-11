@@ -5,6 +5,16 @@ const s = (n: number) => (n > 1 ? "s" : "");
 
 export const UI_FR = {
   langue: "Langue",
+  foot: {
+    citation: ["Un club, ", "un vestiaire, une équipe."],
+    points: ["Calendrier, convocations et présences au même endroit", "Compositions, messages du staff et du président", "Préparation physique suivie joueur par joueur"],
+    specialites: "Entraîneurs · joueurs · staff · dirigeants",
+    auClub: "Je suis au club", membreClub: "Membre du club", membreClubSous: "Président, dirigeant, responsable média…",
+    couleursClub: "Les couleurs de l'appli suivent celles de ton club.",
+    autreApp: "Baara Foot", autreAppForme: "Baara",
+    versFoot: "Ton équipe est sur Baara Foot", versFootTexte: "Calendrier, compo, messages : l'espace équipe a sa propre appli. Même compte, mêmes identifiants.",
+    versForme: "Ton programme maison ou salle est sur Baara", ouvrir: "Ouvrir",
+  },
   theme: { titre: "Couleurs", aide: "Choisis l'ambiance de ton appli. Elle change tout de suite, sur ce téléphone.", noms: { or: "Or", rouge: "Rouge", rose: "Rose", lilas: "Lilas", peche: "Pêche", blush: "Blush" } },
   /* Navigation */
   nav: { accueil: "Accueil", programme: "Programme", seance: "Séance", progression: "Progression", profil: "Profil", coach: "Coach", mesClients: "Mes clients", coaching: "Coaching", deconnexion: "Se déconnecter", coachRole: "Coach", clientRole: "Client", monProfil: "Mon profil", entrainement: "Entraînement", outils: "Outils", exercices: "Exercices", chrono: "Chrono" },
@@ -643,6 +653,16 @@ export type TextesUI = typeof UI_FR;
 
 export const UI_EN: TextesUI = {
   langue: "Language",
+  foot: {
+    citation: ["One club, ", "one dressing room, one team."],
+    points: ["Calendar, call-ups and attendance in one place", "Line-ups, messages from the staff and the chairman", "Strength & conditioning tracked player by player"],
+    specialites: "Coaches · players · staff · board",
+    auClub: "I'm at the club", membreClub: "Club member", membreClubSous: "Chairman, board member, media officer…",
+    couleursClub: "The app's colours follow your club's.",
+    autreApp: "Baara Foot", autreAppForme: "Baara",
+    versFoot: "Your team is on Baara Foot", versFootTexte: "Calendar, line-ups, messages: the team space has its own app. Same account, same login.",
+    versForme: "Your home or gym programme is on Baara", ouvrir: "Open",
+  },
   theme: { titre: "Colours", aide: "Pick the look of your app. It changes right away, on this phone.", noms: { or: "Gold", rouge: "Red", rose: "Pink", lilas: "Lilac", peche: "Peach", blush: "Blush" } },
   nav: { accueil: "Home", programme: "Program", seance: "Workout", progression: "Progress", profil: "Profile", coach: "Coach", mesClients: "My clients", coaching: "Coaching", deconnexion: "Log out", coachRole: "Coach", clientRole: "Client", monProfil: "My profile", entrainement: "Training", outils: "Tools", exercices: "Exercises", chrono: "Timer" },
   auth: {

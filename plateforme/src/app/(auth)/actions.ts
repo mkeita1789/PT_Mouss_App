@@ -3,6 +3,7 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { suiteValide } from "@/lib/suite";
+import { getApp } from "@/lib/app-serveur";
 import { createClient } from "@/lib/supabase/server";
 import { ui } from "@/lib/i18n";
 import { getLang } from "@/lib/i18n/serveur";
@@ -58,7 +59,9 @@ export async function inscription(_: EtatForm, formData: FormData): Promise<Etat
   if (error) return { erreur: traduire(error.message, T) };
 
   /* Confirmation d'email désactivée dans Supabase → session immédiate */
-  if (data.session) redirect(suiteSure(formData.get("suite")) ?? (estPro(metier) ? "/pro" : "/bilan"));
+  const foot = (await getApp()) === "foot";
+  const accueil = foot ? (metier === "joueur" ? "/bilan" : "/equipe") : estPro(metier) ? "/pro" : "/bilan";
+  if (data.session) redirect(suiteSure(formData.get("suite")) ?? accueil);
   return { ok: T.erreurs.compteCree };
 }
 

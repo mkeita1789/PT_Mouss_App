@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { FormCreerEquipe, FormRejoindreEquipe } from "@/components/Equipe";
 import { Icon } from "@/components/Icon";
+import { Vestiaire } from "@/components/VisuelsFoot";
 import { getMesEquipes, getUtilisateur } from "@/lib/data";
 import { estStaff } from "@/lib/equipe";
 import { ui } from "@/lib/i18n";
@@ -34,7 +35,8 @@ export default async function Page({ searchParams }: PageProps<"/equipe">) {
 
   return (
     <div className="reveal" style={{ maxWidth: 760 }}>
-      <header className="page-head">
+      <header className="page-head vestiaire-tete">
+        <Vestiaire className="vestiaire-visuel" />
         <h1 className="page-title">{E.mesEquipes}</h1>
         <p className="page-lede">{E.lede}</p>
       </header>

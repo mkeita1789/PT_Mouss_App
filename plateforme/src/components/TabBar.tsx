@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Icon, type NomIcone } from "./Icon";
 import { useLang } from "./Langue";
+import { useApp } from "./AppContexte";
 import type { TextesUI } from "@/lib/i18n/ui";
 import { estPro, ongletsDe, type CleNav, type Metier } from "@/lib/profils";
 
@@ -50,11 +51,12 @@ function useActif() {
 }
 
 /** Barre du bas (mobile) — la séance au centre, en évidence */
-export function TabBar({ coach, metier, enEquipe = false }: { coach: boolean; metier: Metier; enEquipe?: boolean }) {
+export function TabBar({ coach, metier }: { coach: boolean; metier: Metier }) {
+  const app = useApp();
   const actif = useActif();
   const { T } = useLang();
   const tous = onglet(T, metier);
-  const tabs = ongletsDe(metier, coach, enEquipe).map((k) => tous[k]);
+  const tabs = ongletsDe(metier, coach, app).map((k) => tous[k]);
   return (
     <nav className="tabbar" aria-label="Navigation">
       {tabs.map((t) =>
@@ -76,12 +78,14 @@ export function TabBar({ coach, metier, enEquipe = false }: { coach: boolean; me
 
 /** Menu latéral (ordinateur) */
 export function SideNav({ coach, metier }: { coach: boolean; metier: Metier }) {
+  const app = useApp();
+  const foot = app === "foot";
   const actif = useActif();
   const { T } = useLang();
   const { COACH, OUTILS } = liens(T);
   const tous = onglet(T, metier);
   const pro = !coach && estPro(metier);
-  const CLIENT = ongletsDe(metier, coach).filter((k) => k !== "coach" && k !== "pro" && k !== "exercices" && k !== "equipe").map((k) => tous[k]);
+  const CLIENT = ongletsDe(metier, coach, app).filter((k) => k !== "coach" && k !== "pro" && k !== "exercices" && k !== "equipe").map((k) => tous[k]);
   const item = (t: Lien) => (
     <Link key={t.href} href={t.href} className={`nav-item ${actif(t.href, false) ? "on" : ""}`} aria-current={actif(t.href, false) ? "page" : undefined}>
       <Icon nom={t.ico} />
@@ -91,10 +95,12 @@ export function SideNav({ coach, metier }: { coach: boolean; metier: Metier }) {
   return (
     <>
       <nav className="side-nav" aria-label={T.nav.programme}>{CLIENT.map(item)}</nav>
-      <nav className="side-nav" aria-label={T.equipe.nav}>
-        <div className="side-label">{T.equipe.nav}</div>
-        {item({ ...tous.equipe, lb: T.equipe.mesEquipes })}
-      </nav>
+      {foot && (
+        <nav className="side-nav" aria-label={T.equipe.nav}>
+          <div className="side-label">{T.equipe.nav}</div>
+          {item({ ...tous.equipe, lb: T.equipe.mesEquipes })}
+        </nav>
+      )}
       <nav className="side-nav" aria-label={T.nav.outils}>
         <div className="side-label">{T.nav.outils}</div>
         {OUTILS.map(item)}

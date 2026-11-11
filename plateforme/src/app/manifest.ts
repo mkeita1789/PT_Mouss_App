@@ -1,17 +1,21 @@
 import type { MetadataRoute } from "next";
+import { getApp } from "@/lib/app-serveur";
 
-export default function manifest(): MetadataRoute.Manifest {
+export default async function manifest(): Promise<MetadataRoute.Manifest> {
+  const foot = (await getApp()) === "foot";
+  const p = foot ? "/foot-" : "/";
   return {
-    name: "Baara",
-    short_name: "Baara",
+    name: foot ? "Baara Foot" : "Baara",
+    short_name: foot ? "Baara Foot" : "Baara",
+    id: foot ? "/?app=foot" : "/",
     start_url: "/",
     display: "standalone",
-    background_color: "#0a0707",
-    theme_color: "#0a0707",
+    background_color: foot ? "#06100b" : "#0a0707",
+    theme_color: foot ? "#06100b" : "#0a0707",
     icons: [
-      { src: "/icon-192.png", sizes: "192x192", type: "image/png" },
-      { src: "/icon-512.png", sizes: "512x512", type: "image/png" },
-      { src: "/icon-maskable-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
+      { src: `${p}icon-192.png`, sizes: "192x192", type: "image/png" },
+      { src: `${p}icon-512.png`, sizes: "512x512", type: "image/png" },
+      { src: `${p}icon-maskable-512.png`, sizes: "512x512", type: "image/png", purpose: "maskable" },
     ],
   };
 }

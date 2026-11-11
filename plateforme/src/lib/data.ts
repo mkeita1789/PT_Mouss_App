@@ -510,7 +510,7 @@ export async function getMesEquipes(userId: string): Promise<EquipeResume[]> {
   if (!moi?.length) return [];
   const ids = moi.map((m) => m.equipe_id);
   const [{ data: equipes }, { data: membres }] = await Promise.all([
-    supabase.from("equipes").select("id, nom, saison, code, cree_par").in("id", ids).order("cree_le"),
+    supabase.from("equipes").select("id, nom, saison, code, cree_par, couleur1, couleur2").in("id", ids).order("cree_le"),
     supabase.from("equipe_membres").select("equipe_id").in("equipe_id", ids),
   ]);
   return (equipes ?? []).map((e) => ({

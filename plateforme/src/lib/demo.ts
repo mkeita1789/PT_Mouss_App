@@ -156,7 +156,7 @@ export const demo = {
     ];
   },
   /* Équipe de démo : staff si le métier est pro, joueur sinon */
-  equipes: () => [{ id: EQUIPE, nom: "FC Vincennes — Seniors B", saison: "2026-27", code: "K7MPQ3", cree_par: COACH, role: (ROLE === "coach" || ["entraineur", "prepa", "coach"].includes(METIER) ? "entraineur" : "joueur") as RoleEquipe, membres: MEMBRES().length }],
+  equipes: () => [{ id: EQUIPE, nom: "FC Vincennes — Seniors B", saison: "2026-27", code: "K7MPQ3", cree_par: COACH, couleur1: "#1e3a8a", couleur2: "#facc15", role: (ROLE === "coach" || ["entraineur", "prepa", "coach"].includes(METIER) ? "entraineur" : "joueur") as RoleEquipe, membres: MEMBRES().length }],
   equipe: (id: string) => {
     if (id !== EQUIPE) return null;
     const membres = MEMBRES();

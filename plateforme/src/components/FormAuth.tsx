@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useActionState, useState } from "react";
 import { connexion, inscription, type EtatForm } from "@/app/(auth)/actions";
 import { useLang } from "./Langue";
+import { useApp } from "./AppContexte";
 import { estPro, METIERS, type Metier, type MetierPro } from "@/lib/profils";
 
 export function FormAuth({ mode, suite, invitation, codeInvalide }: {
@@ -17,8 +18,14 @@ export function FormAuth({ mode, suite, invitation, codeInvalide }: {
   const { T } = useLang();
   const M = T.metiers;
   /* Invité par un professionnel : on arrive en tant que sportif, sans avoir à choisir */
-  const [metier, setMetier] = useState<Metier>("sportif");
-  const groupes: [string, Metier[]][] = [[M.jePratique, METIERS.filter((m) => !estPro(m))], ...(invitation ? [] : [[M.jeSuisPro, METIERS.filter(estPro)] as [string, Metier[]]])];
+  const foot = useApp() === "foot";
+  const [metier, setMetier] = useState<Metier>(foot ? "joueur" : "sportif");
+  /* Baara Foot : joueurs, membres du club et staff ; Baara : pratiquants et coachs (l'entraîneur est côté foot) */
+  const pratique: Metier[] = foot ? ["joueur", "sportif"] : ["sportif", "joueur"];
+  const pros: Metier[] = METIERS.filter((m) => estPro(m) && (foot ? m !== "coach" : m !== "entraineur"));
+  const groupes: [string, Metier[]][] = [[foot ? T.foot.auClub : M.jePratique, pratique], ...(invitation ? [] : [[M.jeSuisPro, pros] as [string, Metier[]]])];
+  const nom = (m: Metier) => (foot && m === "sportif" ? T.foot.membreClub : M.noms[m]);
+  const sous = (m: Metier) => (foot && m === "sportif" ? T.foot.membreClubSous : M.sous[m]);
 
   return (
     <form action={formAction} className="reveal">
@@ -46,8 +53,8 @@ export function FormAuth({ mode, suite, invitation, codeInvalide }: {
                 {liste.map((m) => (
                   <label key={m} className={`metier ${metier === m ? "on" : ""}`}>
                     <input type="radio" name="metier" value={m} checked={metier === m} onChange={() => setMetier(m)} />
-                    <b>{M.noms[m]}</b>
-                    <span>{M.sous[m]}</span>
+                    <b>{nom(m)}</b>
+                    <span>{sous(m)}</span>
                   </label>
                 ))}
               </div>

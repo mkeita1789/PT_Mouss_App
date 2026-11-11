@@ -1,3 +1,5 @@
+import { getApp } from "@/lib/app-serveur";
+import { URL_FOOT, URL_FORME } from "@/lib/app";
 import Link from "next/link";
 import { deconnexion } from "@/app/(auth)/actions";
 import { Icon } from "@/components/Icon";
@@ -6,7 +8,7 @@ import { ChoixTheme } from "@/components/ChoixTheme";
 import { PhotoProfil } from "@/components/PhotoProfil";
 import { Notifications } from "@/components/Notifications";
 import { getTheme } from "@/lib/theme/serveur";
-import { getBilan, getMesPros, getUtilisateur } from "@/lib/data";
+import { getBilan, getMesPros, getUtilisateur, membreDUneEquipe } from "@/lib/data";
 import { ChoixMetier, FormCode } from "@/components/Liens";
 import { rompre } from "./liens";
 import { phaseFor } from "@/lib/coaching/programme";
@@ -16,7 +18,9 @@ import { getLang } from "@/lib/i18n/serveur";
 export const metadata = { title: "Profil — Baara" };
 
 export default async function Page({ searchParams }: PageProps<"/profil">) {
+  const app = await getApp();
   const user = await getUtilisateur();
+  const enEquipe = app === "forme" && (await membreDUneEquipe(user.id));
   const { code } = await searchParams;
   const codeRecu = typeof code === "string" && /^[A-Za-z0-9]{6}$/.test(code) ? code.toUpperCase() : undefined;
   const bilan = await getBilan(user.id);
@@ -114,10 +118,26 @@ export default async function Page({ searchParams }: PageProps<"/profil">) {
             <div className="section-title">{T.notifs.titre}</div>
             <Notifications coach={user.role === "coach"} />
           </section>
+          {(enEquipe || app === "foot") && (
+            <a href={app === "foot" ? URL_FORME : URL_FOOT} className="panel row-link" target="_blank" rel="noopener noreferrer">
+              <span className="note-icon"><Icon nom={app === "foot" ? "seance" : "equipe"} taille={18} /></span>
+              <span style={{ flex: 1, minWidth: 0 }}>
+                <b style={{ fontWeight: 600 }}>{app === "foot" ? T.foot.versForme : T.foot.versFoot}</b>
+                {app === "forme" && <><br /><span className="meta" style={{ fontSize: 13 }}>{T.foot.versFootTexte}</span></>}
+              </span>
+              <span className="pill pill-gold" style={{ fontSize: 12 }}>{T.foot.ouvrir}</span>
+            </a>
+          )}
           <section className="panel">
             <div className="section-title">{T.theme.titre}</div>
-            <p className="meta" style={{ margin: "4px 0 14px" }}>{T.theme.aide}</p>
-            <ChoixTheme actuel={theme} />
+            {app === "foot" ? (
+              <p className="meta" style={{ marginTop: 4 }}>{T.foot.couleursClub}</p>
+            ) : (
+              <>
+                <p className="meta" style={{ margin: "4px 0 14px" }}>{T.theme.aide}</p>
+                <ChoixTheme actuel={theme} />
+              </>
+            )}
           </section>
           <section className="panel">
             <div className="section-title">{T.langue}</div>

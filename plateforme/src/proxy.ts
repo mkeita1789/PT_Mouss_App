@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { appDeHote, URL_FOOT } from "@/lib/app";
 
 /* Pages accessibles sans être connecté */
 const PUBLIC = ["/connexion", "/inscription", "/auth", "/importer", "/api/rappels"];
@@ -16,6 +17,12 @@ export async function proxy(request: NextRequest) {
   const hote = (request.headers.get("x-forwarded-host") ?? request.headers.get("host") ?? "").split(":")[0];
   if (ANCIENNES.includes(hote)) {
     return NextResponse.redirect(`https://${ADRESSE}${request.nextUrl.pathname}${request.nextUrl.search}`, 308);
+  }
+
+  /* L'espace équipe vit dans Baara Foot */
+  const chemin = request.nextUrl.pathname;
+  if (appDeHote(hote) === "forme" && (chemin === "/equipe" || chemin.startsWith("/equipe/"))) {
+    return NextResponse.redirect(`${URL_FOOT}${chemin}${request.nextUrl.search}`, 307);
   }
 
   let response = NextResponse.next({ request });
@@ -62,5 +69,5 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|icon-.*\\.png|apple-icon\\.png|manifest.webmanifest|manifest\\.json|sw\\.js).*)"],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|icon-.*\\.png|apple-icon\\.png|foot-icon-.*\\.png|foot-apple-icon\\.png|manifest.webmanifest|manifest\\.json|sw\\.js).*)"],
 };

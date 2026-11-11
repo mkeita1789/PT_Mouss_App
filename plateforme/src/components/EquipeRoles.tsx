@@ -1,5 +1,7 @@
 "use client";
 
+import { URL_FOOT } from "@/lib/app";
+
 import { useActionState, useRef, useState, useTransition } from "react";
 import { accepterSuiviEquipe, creerInvitation, envoyerMessageEquipe, type EtatEquipe } from "@/app/(app)/equipe/actions";
 import { ROLES_INVITES, type CibleMessage, type Membre, type RoleInvite } from "@/lib/equipe";
@@ -16,7 +18,7 @@ export function InviterStaff({ equipeId, nomEquipe }: { equipeId: string; nomEqu
   const [erreur, setErreur] = useState("");
   const [copie, setCopie] = useState(false);
   const [pending, start] = useTransition();
-  const texte = code ? E.messageInvitation(nomEquipe, E.roles[role].toLowerCase(), code, `https://pt-mouss-app.vercel.app/equipe?code=${code}`) : "";
+  const texte = code ? E.messageInvitation(nomEquipe, E.roles[role].toLowerCase(), code, `${URL_FOOT}/equipe?code=${code}`) : "";
   const creer = () => start(async () => {
     setErreur(""); setCode(null);
     const r = await creerInvitation(equipeId, role);

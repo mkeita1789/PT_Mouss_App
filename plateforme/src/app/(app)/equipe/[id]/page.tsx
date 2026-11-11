@@ -11,6 +11,8 @@ import { Composition } from "@/components/Composition";
 import { FormClub, PhotoMembre } from "@/components/Club";
 import { bilanSaison, compteurs, estStaff, gereClub, gerePhotos, peutEcrire, resumeSemaine, separer, texteSur } from "@/lib/equipe";
 import { locale, ui } from "@/lib/i18n";
+import { paletteClub } from "@/lib/couleurs-club";
+import { Terrain } from "@/components/VisuelsFoot";
 import { getLang } from "@/lib/i18n/serveur";
 
 export const metadata = { title: "Équipe — Baara" };
@@ -55,11 +57,14 @@ export default async function Page({ params, searchParams }: PageProps<"/equipe/
   const compo = onglet === "compo" ? await getComposition(id, null) : null;
   const prochain = aVenir[0];
   const semaine = staff && onglet === "calendrier" ? resumeSemaine(evenements, joueurs, presences) : null;
+  const palette = paletteClub(equipe.couleur1, equipe.couleur2);
   const club = { "--club1": equipe.couleur1 || "var(--gold)", "--club2": equipe.couleur2 || "var(--surface-2)", "--club1-texte": texteSur(equipe.couleur1) } as React.CSSProperties;
 
   return (
     <div className="reveal" style={club}>
-      <header className="page-head">
+      {palette && <style>{palette}</style>}
+      <header className="page-head club-tete">
+        <Terrain className="club-tete-terrain" />
         <Link href="/equipe" className="meta" style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
           <Icon nom="retour" taille={16} /> {E.mesEquipes}
         </Link>
