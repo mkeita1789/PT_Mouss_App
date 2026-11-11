@@ -1,6 +1,7 @@
 import type { EmailOtpType } from "@supabase/supabase-js";
 import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { suiteValide } from "@/lib/suite";
 
 /* Lien reçu par email (confirmation d'inscription). Gère les deux formats Supabase :
    ?code=…  (PKCE, modèle d'email par défaut)  ou  ?token_hash=…&type=… */
@@ -18,5 +19,5 @@ export async function GET(request: NextRequest) {
     ok = !(await supabase.auth.verifyOtp({ type, token_hash: tokenHash })).error;
   }
 
-  return NextResponse.redirect(ok ? `${origin}/bilan` : `${origin}/connexion?lien=expire`);
+  return NextResponse.redirect(ok ? `${origin}${suiteValide(searchParams.get("suite")) ?? "/bilan"}` : `${origin}/connexion?lien=expire`);
 }

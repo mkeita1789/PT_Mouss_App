@@ -6,7 +6,6 @@ import { ROLES_INVITES, type CibleMessage, type Membre, type RoleInvite } from "
 import { Icon } from "./Icon";
 import { useLang } from "./Langue";
 
-const LIEN = "https://pt-mouss-app.vercel.app/inscription";
 
 /** L'entraîneur invite le staff : un code personnel par personne, avec son rôle */
 export function InviterStaff({ equipeId, nomEquipe }: { equipeId: string; nomEquipe: string }) {
@@ -17,7 +16,7 @@ export function InviterStaff({ equipeId, nomEquipe }: { equipeId: string; nomEqu
   const [erreur, setErreur] = useState("");
   const [copie, setCopie] = useState(false);
   const [pending, start] = useTransition();
-  const texte = code ? E.messageInvitation(nomEquipe, E.roles[role].toLowerCase(), code, LIEN) : "";
+  const texte = code ? E.messageInvitation(nomEquipe, E.roles[role].toLowerCase(), code, `https://pt-mouss-app.vercel.app/equipe?code=${code}`) : "";
   const creer = () => start(async () => {
     setErreur(""); setCode(null);
     const r = await creerInvitation(equipeId, role);

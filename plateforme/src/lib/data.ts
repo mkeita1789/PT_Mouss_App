@@ -495,6 +495,14 @@ export async function getBilans(ids: string[]): Promise<Record<string, Bilan>> {
 export type EquipeResume = Equipe & { role: RoleEquipe; membres: number };
 
 /** Les équipes dont je fais partie (et mon rôle dans chacune) */
+/** Fait partie d'au moins une équipe (pour afficher l'onglet Équipe) */
+export async function membreDUneEquipe(userId: string): Promise<boolean> {
+  if (DEMO) return true;
+  const supabase = await createClient();
+  const { count } = await supabase.from("equipe_membres").select("id", { count: "exact", head: true }).eq("user_id", userId);
+  return (count ?? 0) > 0;
+}
+
 export async function getMesEquipes(userId: string): Promise<EquipeResume[]> {
   if (DEMO) return demo.equipes();
   const supabase = await createClient();

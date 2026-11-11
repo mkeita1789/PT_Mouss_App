@@ -2,6 +2,7 @@
 
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { suiteValide } from "@/lib/suite";
 import { createClient } from "@/lib/supabase/server";
 import { ui } from "@/lib/i18n";
 import { getLang } from "@/lib/i18n/serveur";
@@ -11,7 +12,7 @@ import { estPro, lireMetier } from "@/lib/profils";
 export type EtatForm = { erreur?: string; ok?: string } | undefined;
 
 /* Seule destination de retour autorisée après connexion (évite les redirections ouvertes) */
-const suiteSure = (v: FormDataEntryValue | null) => (v === "/importer" ? "/importer" : null);
+const suiteSure = (v: FormDataEntryValue | null) => suiteValide(v);
 
 const traduire = (msg: string, T: TextesUI) => {
   if (/invalid login credentials/i.test(msg)) return T.erreurs.identifiants;
@@ -52,7 +53,7 @@ export async function inscription(_: EtatForm, formData: FormData): Promise<Etat
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
-    options: { data: { prenom, metier, ...(code ? { code } : {}) }, emailRedirectTo: `${origin}/auth/confirm` },
+    options: { data: { prenom, metier, ...(code ? { code } : {}) }, emailRedirectTo: `${origin}/auth/confirm${suiteSure(formData.get("suite")) ? `?suite=${encodeURIComponent(suiteSure(formData.get("suite"))!)}` : ""}` },
   });
   if (error) return { erreur: traduire(error.message, T) };
 

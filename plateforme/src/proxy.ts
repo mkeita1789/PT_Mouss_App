@@ -44,8 +44,9 @@ export async function proxy(request: NextRequest) {
 
   if (!connecte && !estPublic) {
     const url = request.nextUrl.clone();
-    url.pathname = "/connexion";
-    url.search = "";
+    const code = path === "/equipe" ? (request.nextUrl.searchParams.get("code") ?? "").toUpperCase() : "";
+    url.pathname = /^[A-Z0-9]{6}$/.test(code) ? "/inscription" : "/connexion";
+    url.search = url.pathname === "/inscription" ? `?suite=${encodeURIComponent(`/equipe?code=${code}`)}` : "";
     return NextResponse.redirect(url);
   }
   if (connecte && (path === "/connexion" || path === "/inscription")) {

@@ -50,11 +50,11 @@ function useActif() {
 }
 
 /** Barre du bas (mobile) — la séance au centre, en évidence */
-export function TabBar({ coach, metier }: { coach: boolean; metier: Metier }) {
+export function TabBar({ coach, metier, enEquipe = false }: { coach: boolean; metier: Metier; enEquipe?: boolean }) {
   const actif = useActif();
   const { T } = useLang();
   const tous = onglet(T, metier);
-  const tabs = ongletsDe(metier, coach).map((k) => tous[k]);
+  const tabs = ongletsDe(metier, coach, enEquipe).map((k) => tous[k]);
   return (
     <nav className="tabbar" aria-label="Navigation">
       {tabs.map((t) =>

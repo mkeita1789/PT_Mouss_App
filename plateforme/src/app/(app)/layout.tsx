@@ -4,7 +4,7 @@ import { Icon } from "@/components/Icon";
 import { TransfertEnAttente } from "@/components/Importeur";
 import { SideNav, TabBar } from "@/components/TabBar";
 import { deconnexion } from "@/app/(auth)/actions";
-import { getUtilisateur } from "@/lib/data";
+import { getUtilisateur, membreDUneEquipe } from "@/lib/data";
 import { ui } from "@/lib/i18n";
 import { getLang } from "@/lib/i18n/serveur";
 import { Logo, Marque } from "@/components/Logo";
@@ -13,6 +13,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const user = await getUtilisateur();
   const coach = user.role === "coach";
   const T = ui(await getLang());
+  const enEquipe = await membreDUneEquipe(user.id);
 
   return (
     <div className="shell">
@@ -45,7 +46,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       </header>
 
       <main className="main"><TransfertEnAttente />{children}</main>
-      <TabBar coach={coach} metier={user.metier} />
+      <TabBar coach={coach} metier={user.metier} enEquipe={enEquipe} />
     </div>
   );
 }

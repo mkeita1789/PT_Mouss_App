@@ -5,14 +5,14 @@ import { Icon } from "@/components/Icon";
 import { CarteMot } from "@/components/MotCoach";
 import { lireProgramme } from "@/lib/coaching/programmes-speciaux";
 import { refaireCheckin } from "./actions";
-import { getBilan, getCheckinDuJour, getHistorique, getMotivation, getMots, getReath, getUtilisateur, jourParis, motRecent } from "@/lib/data";
+import { getBilan, getCheckinDuJour, getHistorique, getMotivation, getMots, getReath, getUtilisateur, jourParis, membreDUneEquipe, motRecent } from "@/lib/data";
 import { CarteDefi } from "@/components/Defis";
 import { phaseFor } from "@/lib/coaching/programme";
 import { buildProgram, lundiCourant, scoreForme, SRA, verdictCheckin } from "@/lib/coaching/programme";
 import { indexJourSuivant } from "@/lib/coaching/seance";
 import { messagesClient } from "@/lib/coaching/alertes";
 import { locale, tc, traduireProgramme, ui } from "@/lib/i18n";
-import { accueilSansBilan } from "@/lib/profils";
+import { accueilSansBilan, estPro } from "@/lib/profils";
 import { getLang } from "@/lib/i18n/serveur";
 
 const NOTE = { ko: "note-ko", gold: "note-gold", ok: "note-ok" } as const;
@@ -20,7 +20,7 @@ const NOTE = { ko: "note-ko", gold: "note-gold", ok: "note-ok" } as const;
 export default async function Accueil() {
   const user = await getUtilisateur();
   const bilan = await getBilan(user.id);
-  if (!bilan) redirect(accueilSansBilan(user.metier, user.role === "coach"));
+  if (!bilan) redirect(!estPro(user.metier) && user.metier !== "joueur" && user.role !== "coach" && (await membreDUneEquipe(user.id)) ? "/equipe" : accueilSansBilan(user.metier, user.role === "coach"));
 
   const lang = await getLang();
   const T = ui(lang);

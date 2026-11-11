@@ -9,7 +9,9 @@ import { estPro } from "@/lib/profils";
 
 export const metadata = { title: "Équipe — Baara" };
 
-export default async function Page() {
+export default async function Page({ searchParams }: PageProps<"/equipe">) {
+  const brut = (await searchParams).code;
+  const code = typeof brut === "string" && /^[A-Za-z0-9]{6}$/.test(brut) ? brut.toUpperCase() : undefined;
   const user = await getUtilisateur();
   const T = ui(await getLang());
   const E = T.equipe;
@@ -26,7 +28,7 @@ export default async function Page() {
   const rejoindre = (
     <section className="panel" key="rejoindre">
       <div className="section-title" style={{ marginBottom: 12 }}>{E.rejoindre}</div>
-      <FormRejoindreEquipe />
+      <FormRejoindreEquipe code={code} />
     </section>
   );
 
@@ -58,7 +60,7 @@ export default async function Page() {
         </div>
       )}
 
-      <div className="stack">{encadre ? [creer, rejoindre] : [rejoindre, creer]}</div>
+      <div className="stack">{encadre && !code ? [creer, rejoindre] : [rejoindre, creer]}</div>
     </div>
   );
 }

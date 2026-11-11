@@ -1,4 +1,5 @@
 import { FormAuth } from "@/components/FormAuth";
+import { suiteValide } from "@/lib/suite";
 import { getInvitation } from "@/lib/data";
 import { ui } from "@/lib/i18n";
 import { getLang } from "@/lib/i18n/serveur";
@@ -15,7 +16,7 @@ export default async function Page({ searchParams }: PageProps<"/inscription">) 
     <>
       <FormAuth
         mode="inscription"
-        suite={suite === "/importer" ? suite : undefined}
+        suite={suiteValide(suite) ?? undefined}
         invitation={invitation ? { code: brut, prenom: invitation.prenom, metier: invitation.metier } : undefined}
         codeInvalide={!!brut && !invitation}
       />

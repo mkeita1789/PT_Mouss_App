@@ -22,7 +22,7 @@ export function FormAuth({ mode, suite, invitation, codeInvalide }: {
 
   return (
     <form action={formAction} className="reveal">
-      {suite === "/importer" && <input type="hidden" name="suite" value="/importer" />}
+      {suite && <input type="hidden" name="suite" value={suite} />}
       <h1 className="page-title" style={{ fontSize: 38 }}>{insc ? T.auth.titreInscription : T.auth.titreConnexion}</h1>
       <p className="page-lede" style={{ marginBottom: 12 }}>
         {insc ? (estPro(metier) ? M.ledePro : T.auth.ledeInscription) : T.auth.ledeConnexion}
@@ -87,9 +87,9 @@ export function FormAuth({ mode, suite, invitation, codeInvalide }: {
 
       <p className="meta" style={{ textAlign: "center", marginTop: 20, fontSize: 14 }}>
         {insc ? (
-          <>{T.auth.dejaInscrit} <Link className="link" href={suite ? `/connexion?suite=${suite}` : "/connexion"}>{T.auth.seConnecter}</Link></>
+          <>{T.auth.dejaInscrit} <Link className="link" href={suite ? `/connexion?suite=${encodeURIComponent(suite)}` : "/connexion"}>{T.auth.seConnecter}</Link></>
         ) : (
-          <>{T.auth.pasDeCompte} <Link className="link" href={suite ? `/inscription?suite=${suite}` : "/inscription"}>{T.auth.creerUnCompte}</Link></>
+          <>{T.auth.pasDeCompte} <Link className="link" href={suite ? `/inscription?suite=${encodeURIComponent(suite)}` : "/inscription"}>{T.auth.creerUnCompte}</Link></>
         )}
       </p>
     </form>

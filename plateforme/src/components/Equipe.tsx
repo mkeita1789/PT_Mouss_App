@@ -42,7 +42,7 @@ export function FormCreerEquipe({ roleParDefaut }: { roleParDefaut: RoleEquipe }
   );
 }
 
-export function FormRejoindreEquipe() {
+export function FormRejoindreEquipe({ code }: { code?: string } = {}) {
   const { T } = useLang();
   const E = T.equipe;
   const [etat, action, pending] = useActionState<EtatEquipe, FormData>(rejoindreEquipe, undefined);
@@ -50,7 +50,7 @@ export function FormRejoindreEquipe() {
     <form action={action}>
       <label className="field" style={{ marginTop: 0 }}><span>{E.code}</span>
         <div style={{ display: "flex", gap: 8 }}>
-          <input className="input code-input" name="code" required minLength={6} maxLength={6} autoCapitalize="characters" autoComplete="off" spellCheck={false} placeholder="K7MPQ3" />
+          <input className="input code-input" name="code" required minLength={6} maxLength={6} autoCapitalize="characters" autoComplete="off" spellCheck={false} placeholder="K7MPQ3" defaultValue={code} />
           <button type="submit" className="btn btn-primary" disabled={pending}>{pending ? T.auth.unInstant : E.rejoindreBouton}</button>
         </div>
       </label>
@@ -243,7 +243,7 @@ export function InviterEquipe({ nom, code }: { nom: string; code: string }) {
   const [partage, setPartage] = useState(false);
   // eslint-disable-next-line react-hooks/set-state-in-effect -- capacité du navigateur, inconnue au rendu serveur
   useEffect(() => setPartage(typeof navigator.share === "function"), []);
-  const texte = E.inviterMessage(nom, code, "https://pt-mouss-app.vercel.app/inscription");
+  const texte = E.inviterMessage(nom, code, `https://pt-mouss-app.vercel.app/equipe?code=${code}`);
   const copier = async () => { try { await navigator.clipboard.writeText(texte); setCopie(true); setTimeout(() => setCopie(false), 2000); } catch {} };
   return (
     <div className="inviter-actions" style={{ marginTop: 12 }}>
