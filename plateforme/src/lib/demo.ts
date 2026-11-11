@@ -5,6 +5,7 @@ import "server-only";
    PTMOUSS_DEMO_ROLE=coach pour voir l'espace coach. */
 import type { Bilan, Categorie, Checkin } from "@/lib/coaching/types";
 import { estPro, lireMetier, type MetierPro } from "@/lib/profils";
+import type { Evenement, Membre, Presence, RoleEquipe } from "@/lib/equipe";
 
 export const DEMO = process.env.PTMOUSS_DEMO === "1";
 const ROLE = process.env.PTMOUSS_DEMO_ROLE === "coach" ? "coach" : "client";
@@ -12,6 +13,7 @@ const ROLE = process.env.PTMOUSS_DEMO_ROLE === "coach" ? "coach" : "client";
 const METIER = lireMetier(process.env.PTMOUSS_DEMO_METIER);
 
 const J = 864e5;
+const EQUIPE = "00000000-0000-4000-8000-0000000000e1";
 const now = Date.now();
 const iso = (joursAvant: number) => new Date(now - joursAvant * J).toISOString();
 
@@ -144,6 +146,20 @@ export const demo = {
       { id: "c4", exercice: "Hip Abduction", jour_code: null, lundi: suiv, charge: 47.5 },
     ];
   },
+  /* Équipe de démo : staff si le métier est pro, joueur sinon */
+  equipes: () => [{ id: EQUIPE, nom: "FC Vincennes — Seniors B", saison: "2026-27", code: "K7MPQ3", cree_par: COACH, role: (ROLE === "coach" || ["entraineur", "prepa", "coach"].includes(METIER) ? "entraineur" : "joueur") as RoleEquipe, membres: MEMBRES().length }],
+  equipe: (id: string) => {
+    if (id !== EQUIPE) return null;
+    const membres = MEMBRES();
+    const staff = ROLE === "coach" || ["entraineur", "prepa", "coach"].includes(METIER);
+    const moiId = staff ? "m0" : "m1";
+    const evts = EVENEMENTS();
+    return {
+      equipe: { id: EQUIPE, nom: "FC Vincennes — Seniors B", saison: "2026-27", code: "K7MPQ3", cree_par: COACH },
+      moi: membres.find((m) => m.id === moiId) ?? null,
+      membres, evenements: evts, presences: PRESENCES(evts, membres),
+    };
+  },
   defis: () => {
     const j = (n: number) => new Date(Date.now() + n * 864e5).toISOString().slice(0, 10);
     return [
@@ -168,3 +184,48 @@ export const demo = {
         ])
       : [],
 };
+
+/* ─── Équipe de démo ─── */
+function MEMBRES(): Membre[] {
+  const j = (id: string, nom: string, numero: number | null, poste: string | null, user_id: string | null = null): Membre => ({ id, user_id, nom, role: "joueur", poste, numero });
+  return [
+    { id: "m0", user_id: ROLE === "coach" ? COACH : CLIENTE, nom: "Moustapha", role: "entraineur", poste: null, numero: null },
+    { id: "ma", user_id: null, nom: "Karim", role: "adjoint", poste: null, numero: null },
+    j("m1", "Yanis", 10, "Milieu", ROLE === "coach" ? JOUEUR : CLIENTE),
+    j("m2", "Bilal", 1, "Gardien"), j("m3", "Hugo", 4, "Défenseur"), j("m4", "Sékou", 5, "Défenseur"),
+    j("m5", "Mehdi", 8, "Milieu"), j("m6", "Lucas", 7, "Ailier"), j("m7", "Omar", 9, "Attaquant"),
+    j("m8", "Théo", 3, "Latéral"), j("m9", "Adama", 6, "Milieu"), j("m10", "Nathan", 11, "Ailier"),
+  ];
+}
+const EV = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
+function EVENEMENTS(): Evenement[] {
+  const ev = (id: string, type: Evenement["type"], jours: number, heure: number, extra: Partial<Evenement> = {}): Evenement => {
+    const d = new Date(Date.now() + jours * J); d.setUTCHours(heure - 1, 0, 0, 0);
+    return { id, type, titre: null, debut: d.toISOString(), lieu: type === "match" ? null : "Stade Léo-Lagrange", adversaire: null, domicile: null, score_pour: null, score_contre: null, resume: null, ...extra };
+  };
+  return [
+    ev(EV(1), "entrainement", -13, 19, { resume: "Possession 6c6, finitions côté droit." }),
+    ev(EV(2), "entrainement", -11, 19, { resume: "Pressing haut, transitions." }),
+    ev(EV(3), "match", -9, 15, { adversaire: "AS Montreuil", domicile: true, lieu: "Stade Léo-Lagrange", score_pour: 2, score_contre: 1, resume: "Bonne réaction après l'ouverture du score adverse." }),
+    ev(EV(4), "entrainement", -6, 19, { resume: "Récupération active, coups de pied arrêtés." }),
+    ev(EV(5), "entrainement", -4, 19),
+    ev(EV(6), "match", -2, 15, { adversaire: "US Fontenay", domicile: false, lieu: "Stade de la Redoute", score_pour: 0, score_contre: 0 }),
+    ev(EV(7), "entrainement", 1, 19),
+    ev(EV(8), "rdv", 2, 18, { titre: "Réunion d'avant-match", lieu: "Club-house" }),
+    ev(EV(9), "entrainement", 3, 19),
+    ev(EV(10), "match", 5, 15, { adversaire: "RC Saint-Mandé", domicile: true, lieu: "Stade Léo-Lagrange" }),
+  ];
+}
+function PRESENCES(evts: Evenement[], membres: Membre[]): Presence[] {
+  const joueurs = membres.filter((m) => m.role === "joueur");
+  const out: Presence[] = [];
+  evts.forEach((e, i) => {
+    const passe = Date.parse(e.debut) < Date.now();
+    joueurs.forEach((m, k) => {
+      const absent = (i + k) % 5 === 0;
+      if (passe && e.id !== EV(5)) out.push({ evenement_id: e.id, membre_id: m.id, reponse: absent ? "non" : "oui", present: !absent, minutes: e.type === "match" && !absent ? (k % 3 === 0 ? 30 : 90) : null });
+      else if (!passe && k % 4 !== 3) out.push({ evenement_id: e.id, membre_id: m.id, reponse: k % 6 === 1 ? "incertain" : absent ? "non" : "oui", present: null, minutes: null });
+    });
+  });
+  return out;
+}

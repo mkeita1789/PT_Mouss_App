@@ -19,6 +19,7 @@ const onglet = (T: TextesUI, metier: Metier): Record<CleNav, Lien> => ({
   coach: { href: "/coach", ico: "coach", lb: T.nav.coach },
   pro: { href: "/pro", ico: "coach", lb: estPro(metier) ? T.metiers.nav[metier] : T.nav.coach },
   exercices: { href: "/exercices", ico: "livre", lb: T.nav.exercices },
+  equipe: { href: "/equipe", ico: "equipe", lb: T.equipe.nav },
 });
 
 const liens = (T: TextesUI) => ({
@@ -80,7 +81,7 @@ export function SideNav({ coach, metier }: { coach: boolean; metier: Metier }) {
   const { COACH, OUTILS } = liens(T);
   const tous = onglet(T, metier);
   const pro = !coach && estPro(metier);
-  const CLIENT = ongletsDe(metier, coach).filter((k) => k !== "coach" && k !== "pro" && k !== "exercices").map((k) => tous[k]);
+  const CLIENT = ongletsDe(metier, coach).filter((k) => k !== "coach" && k !== "pro" && k !== "exercices" && k !== "equipe").map((k) => tous[k]);
   const item = (t: Lien) => (
     <Link key={t.href} href={t.href} className={`nav-item ${actif(t.href, false) ? "on" : ""}`} aria-current={actif(t.href, false) ? "page" : undefined}>
       <Icon nom={t.ico} />
@@ -90,6 +91,10 @@ export function SideNav({ coach, metier }: { coach: boolean; metier: Metier }) {
   return (
     <>
       <nav className="side-nav" aria-label={T.nav.programme}>{CLIENT.map(item)}</nav>
+      <nav className="side-nav" aria-label={T.equipe.nav}>
+        <div className="side-label">{T.equipe.nav}</div>
+        {item({ ...tous.equipe, lb: T.equipe.mesEquipes })}
+      </nav>
       <nav className="side-nav" aria-label={T.nav.outils}>
         <div className="side-label">{T.nav.outils}</div>
         {OUTILS.map(item)}

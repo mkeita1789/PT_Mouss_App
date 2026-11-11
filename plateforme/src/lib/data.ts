@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import type { Bilan, Categorie, Checkin } from "@/lib/coaching/types";
 import { DEMO, demo } from "@/lib/demo";
 import { estPro, lireMetier, type Metier, type MetierPro } from "@/lib/profils";
+import type { Equipe, Evenement, Membre, Presence, RoleEquipe } from "@/lib/equipe";
 import { avancementDefi, badges, records, serieSemaines, type AvancementDefi, type Badge, type Defi, type RecordExo, type Serie } from "@/lib/coaching/motivation";
 
 /* ═══ Couche d'accès aux données ═══
@@ -488,4 +489,48 @@ export async function getBilans(ids: string[]): Promise<Record<string, Bilan>> {
   const supabase = await createClient();
   const { data } = await supabase.from("bilans").select("user_id, reponses").in("user_id", ids);
   return Object.fromEntries((data ?? []).map((b) => [b.user_id, b.reponses as Bilan]));
+}
+
+/* ─── Équipes ─── */
+export type EquipeResume = Equipe & { role: RoleEquipe; membres: number };
+
+/** Les équipes dont je fais partie (et mon rôle dans chacune) */
+export async function getMesEquipes(userId: string): Promise<EquipeResume[]> {
+  if (DEMO) return demo.equipes();
+  const supabase = await createClient();
+  const { data: moi } = await supabase.from("equipe_membres").select("equipe_id, role").eq("user_id", userId);
+  if (!moi?.length) return [];
+  const ids = moi.map((m) => m.equipe_id);
+  const [{ data: equipes }, { data: membres }] = await Promise.all([
+    supabase.from("equipes").select("id, nom, saison, code, cree_par").in("id", ids).order("cree_le"),
+    supabase.from("equipe_membres").select("equipe_id").in("equipe_id", ids),
+  ]);
+  return (equipes ?? []).map((e) => ({
+    ...e,
+    role: moi.find((m) => m.equipe_id === e.id)!.role as RoleEquipe,
+    membres: (membres ?? []).filter((m) => m.equipe_id === e.id).length,
+  }));
+}
+
+export type EquipeComplete = { equipe: Equipe; moi: Membre | null; membres: Membre[]; evenements: Evenement[]; presences: Presence[] };
+
+/** Tout ce qu'il faut pour la page d'une équipe (null si je n'en fais pas partie) */
+export async function getEquipe(equipeId: string, userId: string): Promise<EquipeComplete | null> {
+  if (DEMO) return demo.equipe(equipeId);
+  const supabase = await createClient();
+  const [{ data: equipe }, { data: membres }, { data: evenements }, { data: presences }] = await Promise.all([
+    supabase.from("equipes").select("id, nom, saison, code, cree_par").eq("id", equipeId).maybeSingle(),
+    supabase.from("equipe_membres").select("id, user_id, nom, role, poste, numero").eq("equipe_id", equipeId).order("numero", { nullsFirst: false }).order("nom"),
+    supabase.from("evenements").select("id, type, titre, debut, lieu, adversaire, domicile, score_pour, score_contre, resume").eq("equipe_id", equipeId).order("debut").limit(1000),
+    supabase.from("presences").select("evenement_id, membre_id, reponse, present, minutes").eq("equipe_id", equipeId).limit(20000),
+  ]);
+  if (!equipe) return null;
+  const liste = (membres ?? []) as Membre[];
+  return {
+    equipe,
+    moi: liste.find((m) => m.user_id === userId) ?? null,
+    membres: liste,
+    evenements: (evenements ?? []) as Evenement[],
+    presences: (presences ?? []) as Presence[],
+  };
 }

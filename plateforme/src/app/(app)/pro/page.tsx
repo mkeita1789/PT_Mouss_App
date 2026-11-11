@@ -9,11 +9,14 @@ import { exigerPro, getBilans, getCodeInvitation, getMesSportifs, getSeancesTous
 import { locale, ui } from "@/lib/i18n";
 import { getLang } from "@/lib/i18n/serveur";
 import { estPro } from "@/lib/profils";
+import { redirect } from "next/navigation";
 
 export const metadata = { title: "Espace professionnel — Baara" };
 
 export default async function Page() {
   const user = await exigerPro();
+  /* L'entraîneur gère ses joueurs dans son équipe */
+  if (user.metier === "entraineur") redirect("/equipe");
   const metier = estPro(user.metier) ? user.metier : "coach";
   const lang = await getLang();
   const T = ui(lang);

@@ -70,6 +70,7 @@ export default async function Page() {
           ...(bilan ? [{ href: "/seance", ico: "seance" as const, titre: E.seanceJour, sous: sousSeance }] : []),
           { href: "/seance/libre", ico: "crayon", titre: E.libre, sous: E.libreSous },
           { href: "/suivi#historique", ico: "drapeau", titre: E.historique, sous: E.historiqueSous(historique.length) },
+          { href: "/equipe", ico: "equipe", titre: T.equipe.mesEquipes, sous: T.equipe.lede },
         ]}
       />
       <Liste
