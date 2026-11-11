@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { dateEvenement, titreEvenement } from "@/components/CarteEvenement";
 import { BoutonsReponse, FeuillePresence } from "@/components/Equipe";
+import { PointAvant } from "@/components/EquipeStaff";
 import { Icon } from "@/components/Icon";
 import { supprimerEvenement } from "../../actions";
 import { getEquipe, getUtilisateur } from "@/lib/data";
@@ -21,7 +22,7 @@ export default async function Page({ params }: PageProps<"/equipe/[id]/[evenemen
   const data = await getEquipe(id, user.id);
   const e = data?.evenements.find((x) => x.id === eid);
   if (!data || !e) notFound();
-  const { moi, membres, presences } = data;
+  const { moi, membres, presences, evenements } = data;
   const staff = estStaff(moi?.role);
   const joueurs = membres.filter((m) => m.role === "joueur");
   const avenir = estAVenir(e);
@@ -56,7 +57,9 @@ export default async function Page({ params }: PageProps<"/equipe/[id]/[evenemen
         </section>
       )}
 
-      <section className="panel" style={{ marginBottom: 16 }}>
+      {staff && avenir && <PointAvant e={e} joueurs={joueurs} presences={presences} evenements={evenements} E={E} />}
+
+      {!(staff && avenir) && <section className="panel" style={{ marginBottom: 16 }}>
         <div className="section-head"><h2 className="section-title">{E.qui}</h2><span className="section-note">{E.reponses(r.oui.length, r.non.length, r.incertain.length, r.sans.length)}</span></div>
         <div className="rows">
           {([["oui", r.oui], ["incertain", r.incertain], ["non", r.non]] as const).map(([k, l]) => l.length > 0 && (
@@ -72,7 +75,7 @@ export default async function Page({ params }: PageProps<"/equipe/[id]/[evenemen
             </div>
           )}
         </div>
-      </section>
+      </section>}
 
       {staff && (
         <>

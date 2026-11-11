@@ -214,6 +214,7 @@ function EVENEMENTS(): Evenement[] {
     ev(EV(4), "entrainement", -6, 19, { resume: "Récupération active, coups de pied arrêtés." }),
     ev(EV(5), "entrainement", -4, 19),
     ev(EV(6), "match", -2, 15, { adversaire: "US Fontenay", domicile: false, lieu: "Stade de la Redoute", score_pour: 0, score_contre: 0 }),
+    ev(EV(11), "entrainement", -1, 19, { resume: "Séance courte, conservation et jeu réduit." }),
     ev(EV(7), "entrainement", 1, 19),
     ev(EV(8), "rdv", 2, 18, { titre: "Réunion d'avant-match", lieu: "Club-house" }),
     ev(EV(9), "entrainement", 3, 19),
@@ -226,7 +227,8 @@ function PRESENCES(evts: Evenement[], membres: Membre[]): Presence[] {
   evts.forEach((e, i) => {
     const passe = Date.parse(e.debut) < Date.now();
     joueurs.forEach((m, k) => {
-      const absent = (i + k) % 5 === 0;
+      /* Hugo manque les derniers entraînements : de quoi montrer « à relancer » au staff */
+      const absent = (i + k) % 5 === 0 || (m.id === "m3" && e.type === "entrainement");
       if (passe && e.id !== EV(5)) out.push({ evenement_id: e.id, membre_id: m.id, reponse: absent ? "non" : "oui", present: !absent, minutes: e.type === "match" && !absent ? (k % 3 === 0 ? 30 : 90) : null });
       else if (!passe && k % 4 !== 3) out.push({ evenement_id: e.id, membre_id: m.id, reponse: k % 6 === 1 ? "incertain" : absent ? "non" : "oui", present: null, minutes: null });
     });
