@@ -176,6 +176,10 @@ export const demo = {
     remplacants: [] as string[],
     publiee: evenementId !== null,
   }),
+  messagesEquipe: () => [
+    { id: "msg1", auteur_id: COACH, auteur_nom: "Moustapha", auteur_role: "entraineur" as const, cible: "tous" as const, destinataires: [] as string[], texte: "Rendez-vous samedi 14 h au stade, tenue noire. On joue pour le maillot.", cree_le: iso(1) },
+    { id: "msg2", auteur_id: "00000000-0000-4000-8000-0000000000d1", auteur_nom: "M. Diallo", auteur_role: "president" as const, cible: "joueurs" as const, destinataires: [] as string[], texte: "Bravo pour la victoire contre Montreuil. Le club est fier de vous.", cree_le: iso(8) },
+  ],
   defis: () => {
     const j = (n: number) => new Date(Date.now() + n * 864e5).toISOString().slice(0, 10);
     return [

@@ -230,7 +230,7 @@ export function ChoixRole({ equipeId, membreId, role }: { equipeId: string; memb
   return (
     <select className="input role-select" aria-label={E.role} defaultValue={role} disabled={pending}
       onChange={(e) => { const r = e.target.value as RoleEquipe; start(() => changerRole(equipeId, membreId, r)); }}>
-      {(["joueur", "entraineur", "adjoint", "prepa", "media"] as const).map((r) => <option key={r} value={r}>{E.roles[r]}</option>)}
+      {(["joueur", "entraineur", "adjoint", "prepa", "media", "president", "dirigeant"] as const).map((r) => <option key={r} value={r}>{E.roles[r]}</option>)}
     </select>
   );
 }

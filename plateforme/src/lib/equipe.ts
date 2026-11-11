@@ -1,7 +1,7 @@
 /* ═══ Équipe : calendrier, convocations, présences ═══
    Calculs purs, partagés par les pages et les tests. Aucune donnée de forme ici. */
 
-export type RoleEquipe = "entraineur" | "adjoint" | "prepa" | "media" | "joueur";
+export type RoleEquipe = "entraineur" | "adjoint" | "prepa" | "media" | "president" | "dirigeant" | "joueur";
 export type TypeEvenement = "entrainement" | "match" | "rdv";
 export type Reponse = "oui" | "non" | "incertain";
 
@@ -9,6 +9,16 @@ export const ROLES_STAFF: RoleEquipe[] = ["entraineur", "adjoint", "prepa"];
 export const estStaff = (r: RoleEquipe | null | undefined) => !!r && ROLES_STAFF.includes(r);
 /** Le staff et le responsable média gèrent les photos */
 export const gerePhotos = (r: RoleEquipe | null | undefined) => estStaff(r) || r === "media";
+/** Ceux qui écrivent aux membres : staff, président, dirigeants */
+export const peutEcrire = (r: RoleEquipe | null | undefined) => estStaff(r) || r === "president" || r === "dirigeant";
+/** Identité du club : le staff et le président */
+export const gereClub = (r: RoleEquipe | null | undefined) => estStaff(r) || r === "president";
+/** Rôles qu'on invite avec un code personnel (le code d'équipe, lui, fait entrer un joueur) */
+export const ROLES_INVITES = ["adjoint", "prepa", "president", "dirigeant", "media", "entraineur"] as const;
+export type RoleInvite = (typeof ROLES_INVITES)[number];
+export type CibleMessage = "tous" | "joueurs" | "staff" | "selection";
+export type MessageEquipe = { id: string; auteur_id: string; auteur_nom: string; auteur_role: RoleEquipe; cible: CibleMessage; destinataires: string[]; texte: string; cree_le: string };
+export type InvitationEquipe = { code: string; role: RoleInvite; expire_le: string; utilisee_par: string | null };
 
 export type Equipe = {
   id: string; nom: string; saison: string | null; code: string; cree_par: string;

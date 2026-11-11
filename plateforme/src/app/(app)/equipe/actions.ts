@@ -7,7 +7,7 @@ import { getUtilisateur } from "@/lib/data";
 import { locale, ui, type Lang } from "@/lib/i18n";
 import { getLang } from "@/lib/i18n/serveur";
 import { envoyerApres, type Abonnement } from "@/lib/push";
-import { nettoyerComposition, parisVersISO, serieHebdo, type Composition, type Reponse, type RoleEquipe, type TypeEvenement } from "@/lib/equipe";
+import { nettoyerComposition, parisVersISO, ROLES_INVITES, serieHebdo, type CibleMessage, type Composition, type Reponse, type RoleEquipe, type TypeEvenement } from "@/lib/equipe";
 
 /* La sécurité réelle est dans la base (migration 0013) : seul le staff écrit,
    un joueur ne fait que répondre à ses convocations. Ici on valide la forme. */
@@ -150,7 +150,7 @@ export async function ajouterFiche(equipeId: string, prev: EtatEquipe, f: FormDa
 
 export async function changerRole(equipeId: string, membreId: string, role: RoleEquipe) {
   await getUtilisateur();
-  if (!UUID.test(equipeId) || !UUID.test(membreId) || !["entraineur", "adjoint", "prepa", "media", "joueur"].includes(role)) return;
+  if (!UUID.test(equipeId) || !UUID.test(membreId) || !["entraineur", "adjoint", "prepa", "media", "president", "dirigeant", "joueur"].includes(role)) return;
   const supabase = await createClient();
   await supabase.from("equipe_membres").update({ role }).eq("id", membreId).eq("equipe_id", equipeId);
   revalidatePath(`/equipe/${equipeId}`);
@@ -245,4 +245,69 @@ export async function enregistrerComposition(equipeId: string, evenementId: stri
   }
   revalidatePath(evenementId ? `/equipe/${equipeId}/${evenementId}` : `/equipe/${equipeId}`);
   return { ok: propre.publiee ? T.compoPubliee : T.compoEnregistree };
+}
+
+/* ─── Invitations du staff (entraîneur) ─── */
+export async function creerInvitation(equipeId: string, role: string): Promise<{ code?: string; erreur?: string }> {
+  await getUtilisateur();
+  const T = ui(await getLang()).equipe;
+  if (!UUID.test(equipeId) || !(ROLES_INVITES as readonly string[]).includes(role)) return { erreur: T.erreur };
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("creer_invitation_equipe", { p_equipe: equipeId, p_role: role });
+  if (error || typeof data !== "string") return { erreur: T.erreur };
+  revalidatePath(`/equipe/${equipeId}`);
+  return { code: data };
+}
+
+export async function annulerInvitation(equipeId: string, code: string) {
+  await getUtilisateur();
+  if (!UUID.test(equipeId) || !/^[A-Z0-9]{6}$/.test(code)) return;
+  const supabase = await createClient();
+  await supabase.from("equipe_invitations").delete().eq("code", code).eq("equipe_id", equipeId);
+  revalidatePath(`/equipe/${equipeId}`);
+}
+
+/* ─── Messages aux membres ─── */
+export async function envoyerMessageEquipe(equipeId: string, prev: EtatEquipe, f: FormData): Promise<EtatEquipe> {
+  const user = await getUtilisateur();
+  const T = ui(await getLang()).equipe;
+  const cible = String(f.get("cible") ?? "tous") as CibleMessage;
+  const texte = txt(f, "texte", 1000);
+  const destinataires = cible === "selection" ? f.getAll("destinataires").map(String).filter((x) => UUID.test(x)).slice(0, 60) : [];
+  if (!UUID.test(equipeId) || !["tous", "joueurs", "staff", "selection"].includes(cible) || !texte || (cible === "selection" && !destinataires.length)) return { erreur: T.messageVide };
+  const supabase = await createClient();
+  const { data: moi } = await supabase.from("equipe_membres").select("nom, role").eq("equipe_id", equipeId).eq("user_id", user.id).maybeSingle();
+  if (!moi) return { erreur: T.erreur };
+  const { data, error } = await supabase.from("equipe_messages")
+    .insert({ equipe_id: equipeId, auteur_nom: (moi.nom || user.prenom || "Coach").slice(0, 60), auteur_role: moi.role, cible, destinataires, texte })
+    .select("id").single();
+  if (error || !data) return { erreur: T.erreur };
+  const { data: abos } = await supabase.rpc("abonnements_message", { p_message: data.id });
+  envoyerApres((abos ?? []) as Abonnement[], (lg) => {
+    const E = ui(lg).equipe;
+    return { titre: E.notifMessage(moi.nom, E.roles[moi.role as RoleEquipe] ?? ""), corps: texte.length > 160 ? texte.slice(0, 157) + "…" : texte, url: `/equipe/${equipeId}?vue=messages`, tag: `msg-${equipeId}` };
+  });
+  revalidatePath(`/equipe/${equipeId}`);
+  return { ok: T.messageEnvoye, n: (prev?.n ?? 0) + 1 };
+}
+
+export async function supprimerMessageEquipe(equipeId: string, id: string) {
+  await getUtilisateur();
+  if (!UUID.test(equipeId) || !UUID.test(id)) return;
+  const supabase = await createClient();
+  await supabase.from("equipe_messages").delete().eq("id", id);
+  revalidatePath(`/equipe/${equipeId}`);
+}
+
+/* ─── Le joueur accepte le suivi du préparateur de l'équipe ─── */
+export async function accepterSuiviEquipe(equipeId: string, proMembreId: string): Promise<{ erreur?: string; ok?: string }> {
+  await getUtilisateur();
+  const T = ui(await getLang()).equipe;
+  if (!UUID.test(equipeId) || !UUID.test(proMembreId)) return { erreur: T.erreur };
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("accepter_suivi_equipe", { p_equipe: equipeId, p_pro_membre: proMembreId });
+  if (error) return { erreur: T.erreur };
+  revalidatePath(`/equipe/${equipeId}`);
+  revalidatePath("/profil");
+  return { ok: T.suiviAccepte };
 }

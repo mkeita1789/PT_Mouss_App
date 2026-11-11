@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import type { Bilan, Categorie, Checkin } from "@/lib/coaching/types";
 import { DEMO, demo } from "@/lib/demo";
 import { estPro, lireMetier, type Metier, type MetierPro } from "@/lib/profils";
-import type { Composition, Equipe, Evenement, Formation, Membre, Presence, RoleEquipe } from "@/lib/equipe";
+import type { Composition, Equipe, Evenement, Formation, InvitationEquipe, Membre, MessageEquipe, Presence, RoleEquipe } from "@/lib/equipe";
 import { avancementDefi, badges, records, serieSemaines, type AvancementDefi, type Badge, type Defi, type RecordExo, type Serie } from "@/lib/coaching/motivation";
 
 /* ═══ Couche d'accès aux données ═══
@@ -155,8 +155,8 @@ export async function exigerCoach(): Promise<Utilisateur> {
 export async function exigerAccesSportif(sportifId: string): Promise<Utilisateur & { admin: boolean }> {
   const user = await getUtilisateur();
   if (user.role === "coach") return { ...user, admin: true };
-  if (!estPro(user.metier)) redirect("/");
   if (DEMO) return { ...user, admin: false };
+  /* Le lien accepté par le sportif suffit, quel que soit le métier déclaré (ex. préparateur d'une équipe) */
   const supabase = await createClient();
   const { data } = await supabase.from("suivis").select("sportif_id").eq("pro_id", user.id).eq("sportif_id", sportifId).in("metier_pro", ["coach", "prepa"]).maybeSingle();
   if (!data) redirect("/pro");
@@ -564,4 +564,20 @@ export async function getComposition(equipeId: string, evenementId: string | nul
   q = evenementId ? q.eq("evenement_id", evenementId) : q.is("evenement_id", null);
   const { data } = await q.maybeSingle();
   return data ? { formation: data.formation as Formation, titulaires: data.titulaires as Record<string, string>, remplacants: data.remplacants as string[], publiee: data.publiee } : null;
+}
+
+/** Messages de l'équipe que je peux lire (la base filtre selon le destinataire) */
+export async function getMessagesEquipe(equipeId: string): Promise<MessageEquipe[]> {
+  if (DEMO) return demo.messagesEquipe();
+  const supabase = await createClient();
+  const { data, error } = await supabase.from("equipe_messages").select("id, auteur_id, auteur_nom, auteur_role, cible, destinataires, texte, cree_le").eq("equipe_id", equipeId).order("cree_le", { ascending: false }).limit(50);
+  return error ? [] : ((data ?? []) as MessageEquipe[]);
+}
+
+/** Invitations du staff en cours (visibles de l'entraîneur seulement) */
+export async function getInvitationsEquipe(equipeId: string): Promise<InvitationEquipe[]> {
+  if (DEMO) return [];
+  const supabase = await createClient();
+  const { data, error } = await supabase.from("equipe_invitations").select("code, role, expire_le, utilisee_par").eq("equipe_id", equipeId).is("utilisee_par", null).gt("expire_le", new Date().toISOString()).order("cree_le", { ascending: false });
+  return error ? [] : ((data ?? []) as InvitationEquipe[]);
 }
