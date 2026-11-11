@@ -2,10 +2,11 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CarteEvenement, dateEvenement, titreEvenement } from "@/components/CarteEvenement";
 import { ChoixRole, FormEvenement, FormFiche, InviterEquipe } from "@/components/Equipe";
+import { EncartSemaine } from "@/components/EquipeStaff";
 import { Icon } from "@/components/Icon";
 import { retirerMembre } from "../actions";
 import { getEquipe, getUtilisateur } from "@/lib/data";
-import { bilanSaison, compteurs, estStaff, separer } from "@/lib/equipe";
+import { bilanSaison, compteurs, estStaff, resumeSemaine, separer } from "@/lib/equipe";
 import { ui } from "@/lib/i18n";
 import { getLang } from "@/lib/i18n/serveur";
 
@@ -31,6 +32,7 @@ export default async function Page({ params, searchParams }: PageProps<"/equipe/
   const saison = bilanSaison(evenements);
   const effectif = vue === "effectif";
   const prochain = aVenir[0];
+  const semaine = staff && !effectif ? resumeSemaine(evenements, joueurs, presences) : null;
 
   return (
     <div className="reveal">
@@ -77,6 +79,7 @@ export default async function Page({ params, searchParams }: PageProps<"/equipe/
       {!effectif ? (
         <div className="grid-2 equipe-grille" style={{ alignItems: "start" }}>
           <div className="stack">
+            {semaine && <EncartSemaine r={semaine} equipeId={id} sansJoueur={joueurs.length === 0} lang={lang} E={E} />}
             <section className="stack" aria-label={E.aVenir}>
               <h2 className="section-title">{E.aVenir}</h2>
               {aVenir.length ? aVenir.slice(0, 12).map((e) => (
