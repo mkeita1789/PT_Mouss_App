@@ -4,12 +4,14 @@ import { CarteEvenement, dateEvenement, titreEvenement } from "@/components/Cart
 import { ChoixRole, FormEvenement, FormFiche, InviterEquipe } from "@/components/Equipe";
 import { EncartSemaine } from "@/components/EquipeStaff";
 import { Icon } from "@/components/Icon";
-import { annulerInvitation, retirerMembre, supprimerMessageEquipe } from "../actions";
+import { annulerInvitation, retirerMembre, supprimerMessageEquipe, supprimerTactique } from "../actions";
+import { ChoixLigne, CodeParents, FormContact, FormTactique } from "@/components/ClubFoot";
+import { ContactClub, ListeTactique, SaisonCalendrier, VueParents } from "@/components/ClubVues";
 import { AccepterSuivi, EcrireMembres, InviterStaff } from "@/components/EquipeRoles";
-import { getComposition, getEquipe, getInvitationsEquipe, getMesPros, getMesSportifs, getMessagesEquipe, getUtilisateur } from "@/lib/data";
+import { getComposition, getEquipe, getFaits, getInvitationsEquipe, getMesPros, getMesSportifs, getMessagesEquipe, getTactiques, getUtilisateur } from "@/lib/data";
 import { Composition } from "@/components/Composition";
 import { FormClub, PhotoMembre } from "@/components/Club";
-import { bilanSaison, compteurs, estStaff, gereClub, gerePhotos, peutEcrire, resumeSemaine, separer, texteSur } from "@/lib/equipe";
+import { bilanSaison, ceWeekend, compteurs, estStaff, gereClub, gerePhotos, groupesEffectif, peutEcrire, resumeSemaine, separer, statsJoueurs, texteSur } from "@/lib/equipe";
 import { locale, ui } from "@/lib/i18n";
 import { paletteClub } from "@/lib/couleurs-club";
 import { Terrain } from "@/components/VisuelsFoot";
@@ -20,36 +22,41 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export default async function Page({ params, searchParams }: PageProps<"/equipe/[id]">) {
   const { id } = await params;
-  const { vue, tout } = await searchParams;
+  const { vue, tout, saison: vueSaison } = await searchParams;
   if (!UUID.test(id)) notFound();
   const user = await getUtilisateur();
   const lang = await getLang();
   const T = ui(lang);
   const E = T.equipe;
+  const C = T.club;
   const data = await getEquipe(id, user.id);
   if (!data) notFound();
   const { equipe, moi, membres, evenements, presences, photos, logo } = data;
   const photosOk = gerePhotos(moi?.role);
   const staff = estStaff(moi?.role);
   const joueurs = membres.filter((m) => m.role === "joueur");
-  const encadrement = membres.filter((m) => m.role !== "joueur");
+  const groupes = groupesEffectif(membres);
   const { aVenir, passes } = separer(evenements);
   const montrerPasses = tout === "1" ? passes : passes.slice(0, 5);
   const saison = bilanSaison(evenements);
   const role = moi?.role;
   const prepa = role === "prepa";
   const onglets: [string, string][] = [
-    ["calendrier", E.onglets.calendrier], ["effectif", E.onglets.effectif], ["compo", E.compo], ["messages", E.messages],
+    ["calendrier", E.onglets.calendrier], ["effectif", E.onglets.effectif], ["compo", E.compo], ["tactique", C.tactique], ["messages", E.messages],
     ...(prepa ? [["preparation", E.preparation] as [string, string]] : []),
     ...(gereClub(role) ? [["club", E.club] as [string, string]] : []),
   ];
   const onglet = onglets.some(([k]) => k === vue) ? (vue as string) : "calendrier";
-  const [messages, invitations, mesSportifs, mesPros] = await Promise.all([
+  const parent = role === "parent";
+  const [messages, invitations, mesSportifs, mesPros, faits, tactiques] = await Promise.all([
     onglet === "messages" ? getMessagesEquipe(id) : Promise.resolve([]),
     onglet === "effectif" && role === "entraineur" ? getInvitationsEquipe(id) : Promise.resolve([]),
     onglet === "preparation" && prepa ? getMesSportifs(user.id) : Promise.resolve([]),
     onglet === "calendrier" && role === "joueur" ? getMesPros(user.id) : Promise.resolve([]),
+    onglet === "effectif" && !parent ? getFaits(id) : Promise.resolve([]),
+    onglet === "tactique" && !parent ? getTactiques(id) : Promise.resolve([]),
   ]);
+  const stats = statsJoueurs(faits);
   /* Préparateurs de l'équipe que le joueur n'a pas encore acceptés */
   const prepasAProposer = role === "joueur" ? membres.filter((m) => m.role === "prepa" && m.user_id && !mesPros.some((p) => p.id === m.user_id)) : [];
   const dateCourte = (iso: string) => new Date(iso).toLocaleDateString(locale(lang), { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", timeZone: "Europe/Paris" });
@@ -79,10 +86,13 @@ export default async function Page({ params, searchParams }: PageProps<"/equipe/
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 12 }}>
           {equipe.saison && <span className="pill">{E.saison} {equipe.saison}</span>}
           {moi && <span className={`pill ${staff ? "pill-gold" : ""}`}>{E.roles[moi.role]}</span>}
-          <span className="pill">{E.nMembres(membres.length)}</span>
+          {!parent && <span className="pill">{E.nMembres(membres.filter((m) => m.role !== "parent").length)}</span>}
         </div>
       </header>
 
+      {parent ? (
+        <VueParents equipe={equipe} evenements={evenements} weekend={ceWeekend(evenements)} aVenir={aVenir} lang={lang} E={E} C={C} />
+      ) : (<>
       <div className="grid-3 equipe-stats">
         <div className="stat">
           <div className="stat-value">{saison.joues ? `${saison.victoires}-${saison.nuls}-${saison.defaites}` : "–"}</div>
@@ -171,11 +181,40 @@ export default async function Page({ params, searchParams }: PageProps<"/equipe/
             })}
           </div>
         </section>
+      ) : onglet === "tactique" ? (
+        <div className="grid-2 equipe-grille" style={{ alignItems: "start" }}>
+          <ListeTactique tactiques={tactiques} membres={membres} moi={moi} staff={staff} C={C} lang={lang}
+            supprimer={(tid) => (
+              <form action={supprimerTactique.bind(null, id, tid)} style={{ marginTop: 6 }}>
+                <button type="submit" className="link" style={{ fontSize: 12.5, color: "var(--muted)" }}>{E.retirer}</button>
+              </form>
+            )} />
+          {staff && (
+            <aside className="panel">
+              <div className="section-title" style={{ marginBottom: 12 }}>{C.nouveau}</div>
+              <FormTactique equipeId={id} joueurs={joueurs.map((m) => ({ id: m.id, nom: m.nom, numero: m.numero }))} />
+            </aside>
+          )}
+        </div>
       ) : onglet === "club" ? (
-        <section className="panel" style={{ maxWidth: 640 }}>
-          <div className="section-head"><h2 className="section-title">{E.personnaliser}</h2></div>
-          <FormClub equipe={equipe} logo={logo} />
-        </section>
+        <div className="grid-2 equipe-grille" style={{ alignItems: "start" }}>
+          <section className="panel">
+            <div className="section-head"><h2 className="section-title">{E.personnaliser}</h2></div>
+            <FormClub equipe={equipe} logo={logo} />
+          </section>
+          <div className="stack">
+            <section className="panel">
+              <div className="section-head"><h2 className="section-title">{C.contact}</h2></div>
+              <FormContact equipe={equipe} />
+            </section>
+            {staff && (
+              <section className="panel">
+                <div className="section-title">{C.codeParents}</div>
+                <CodeParents equipeId={id} nomEquipe={equipe.nom} code={equipe.code_parents ?? null} />
+              </section>
+            )}
+          </div>
+        </div>
       ) : !effectif ? (
         <div className="grid-2 equipe-grille" style={{ alignItems: "start" }}>
           <div className="stack">
@@ -195,8 +234,9 @@ export default async function Page({ params, searchParams }: PageProps<"/equipe/
               {tout !== "1" && passes.length > 5 && <Link href={`/equipe/${id}?tout=1`} className="link" style={{ fontSize: 14 }}>{E.voirTout(passes.length)}</Link>}
             </section>
           </div>
-          {staff && (
-            <aside className="stack">
+          <aside className="stack">
+            <ContactClub equipe={equipe} C={C} />
+            {staff && (<>
               <section className="panel">
                 <div className="section-title" style={{ marginBottom: 12 }}>{E.ajouterEvenement}</div>
                 <FormEvenement equipeId={id} />
@@ -207,8 +247,9 @@ export default async function Page({ params, searchParams }: PageProps<"/equipe/
                 <p className="meta" style={{ marginTop: 8 }}>{E.codeAide}</p>
                 <InviterEquipe nom={equipe.nom} code={equipe.code} />
               </section>
-            </aside>
-          )}
+            </>)}
+            <SaisonCalendrier evenements={evenements} equipeId={id} lang={lang} E={E} C={C} liens matchsSeulement={vueSaison !== "tout"} />
+          </aside>
         </div>
       ) : (
         <div className="grid-2 equipe-grille" style={{ alignItems: "start" }}>
@@ -231,6 +272,7 @@ export default async function Page({ params, searchParams }: PageProps<"/equipe/
                           <div>
                             <b style={{ fontWeight: 600 }}>{m.numero !== null && <span className="num muted">{m.numero} </span>}{m.nom}</b>
                             <div className="row-sub">{[m.poste, m.user_id ? null : E.sansCompte].filter(Boolean).join(" · ")}</div>
+                            {stats[m.id] && <div className="row-sub stats-joueur">{C.stats(stats[m.id].buts, stats[m.id].passes, stats[m.id].jaunes, stats[m.id].rouges)}</div>}
                           </div>
                         </div>
                       </td>
@@ -239,6 +281,7 @@ export default async function Page({ params, searchParams }: PageProps<"/equipe/
                       <td className="num">{c.minutes}</td>
                       {staff && (
                         <td style={{ whiteSpace: "nowrap" }}>
+                          <ChoixLigne equipeId={id} membreId={m.id} ligne={m.ligne} />{" "}
                           {m.user_id ? <ChoixRole equipeId={id} membreId={m.id} role={m.role} /> : null}
                           <form action={retirerMembre.bind(null, id, m.id, false)} style={{ display: "inline" }}>
                             <button type="submit" className="link" style={{ fontSize: 12.5, color: "var(--muted)", marginLeft: 8 }}>{E.retirer}</button>
@@ -253,20 +296,23 @@ export default async function Page({ params, searchParams }: PageProps<"/equipe/
           </section>
 
           <div className="stack">
-            <section className="panel">
-              <div className="section-title">{E.staff}</div>
-              <div className="rows" style={{ marginTop: 6 }}>
-                {encadrement.map((m) => (
-                  <div key={m.id} className="row-item">
-                    <div className="row-main">
-                      <div style={{ fontSize: 15, fontWeight: 600 }}>{m.nom}</div>
-                      <div className="row-sub">{E.roles[m.role]}{m.user_id ? "" : ` · ${E.sansCompte}`}</div>
+            {([[C.staff, groupes.staff], [C.president, groupes.president], [C.dirigeants, groupes.dirigeants]] as const).map(([titre, liste]) => liste.length > 0 && (
+              <section key={titre} className="panel">
+                <div className="section-head"><div className="section-title">{titre}</div><span className="section-note">{liste.length}</span></div>
+                <div className="rows" style={{ marginTop: 6 }}>
+                  {liste.map((m) => (
+                    <div key={m.id} className="row-item">
+                      <div className="row-main">
+                        <div style={{ fontSize: 15, fontWeight: 600 }}>{m.nom}</div>
+                        <div className="row-sub">{E.roles[m.role]}{m.user_id ? "" : ` · ${E.sansCompte}`}</div>
+                      </div>
+                      {staff && m.user_id && m.user_id !== user.id && <ChoixRole equipeId={id} membreId={m.id} role={m.role} />}
                     </div>
-                    {staff && m.user_id && m.user_id !== user.id && <ChoixRole equipeId={id} membreId={m.id} role={m.role} />}
-                  </div>
-                ))}
-              </div>
-            </section>
+                  ))}
+                </div>
+              </section>
+            ))}
+            {staff && groupes.parents > 0 && <p className="meta">{C.nParents(groupes.parents)}</p>}
             {role === "entraineur" && (
               <section className="panel">
                 <div className="section-title" style={{ marginBottom: 6 }}>{E.inviterStaff}</div>
@@ -304,6 +350,7 @@ export default async function Page({ params, searchParams }: PageProps<"/equipe/
           </div>
         </div>
       )}
+      </>)}
     </div>
   );
 }

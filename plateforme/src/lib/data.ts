@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import type { Bilan, Categorie, Checkin } from "@/lib/coaching/types";
 import { DEMO, demo } from "@/lib/demo";
 import { estPro, lireMetier, type Metier, type MetierPro } from "@/lib/profils";
-import type { Composition, Equipe, Evenement, Formation, InvitationEquipe, Membre, MessageEquipe, Presence, RoleEquipe } from "@/lib/equipe";
+import type { Composition, Equipe, Evenement, Formation, InvitationEquipe, MatchFait, Membre, MessageEquipe, Presence, RoleEquipe, Tactique } from "@/lib/equipe";
 import { avancementDefi, badges, records, serieSemaines, type AvancementDefi, type Badge, type Defi, type RecordExo, type Serie } from "@/lib/coaching/motivation";
 
 /* ═══ Couche d'accès aux données ═══
@@ -527,9 +527,9 @@ export async function getEquipe(equipeId: string, userId: string): Promise<Equip
   if (DEMO) return demo.equipe(equipeId);
   const supabase = await createClient();
   const [{ data: equipe }, { data: membres }, { data: evenements }, { data: presences }] = await Promise.all([
-    supabase.from("equipes").select("id, nom, saison, code, cree_par, couleur1, couleur2, logo_path, valeurs").eq("id", equipeId).maybeSingle(),
-    supabase.from("equipe_membres").select("id, user_id, nom, role, poste, numero, photo_path").eq("equipe_id", equipeId).order("numero", { nullsFirst: false }).order("nom"),
-    supabase.from("evenements").select("id, type, titre, debut, lieu, adversaire, domicile, score_pour, score_contre, resume").eq("equipe_id", equipeId).order("debut").limit(1000),
+    supabase.from("equipes").select("id, nom, saison, code, cree_par, couleur1, couleur2, logo_path, valeurs, telephone, contact_nom, reseaux, code_parents").eq("id", equipeId).maybeSingle(),
+    supabase.from("equipe_membres").select("id, user_id, nom, role, poste, numero, photo_path, ligne").eq("equipe_id", equipeId).order("numero", { nullsFirst: false }).order("nom"),
+    supabase.from("evenements").select("id, type, titre, debut, lieu, adversaire, domicile, score_pour, score_contre, resume, convoques, duree").eq("equipe_id", equipeId).order("debut").limit(1000),
     supabase.from("presences").select("evenement_id, membre_id, reponse, present, minutes").eq("equipe_id", equipeId).limit(20000),
   ]);
   if (!equipe) return null;
@@ -568,10 +568,26 @@ export async function getAuteursCharges(clientId: string): Promise<Record<string
 export async function getComposition(equipeId: string, evenementId: string | null): Promise<Composition | null> {
   if (DEMO) return demo.composition(evenementId);
   const supabase = await createClient();
-  let q = supabase.from("compositions").select("formation, titulaires, remplacants, publiee").eq("equipe_id", equipeId);
+  let q = supabase.from("compositions").select("formation, titulaires, remplacants, publiee, positions").eq("equipe_id", equipeId);
   q = evenementId ? q.eq("evenement_id", evenementId) : q.is("evenement_id", null);
   const { data } = await q.maybeSingle();
-  return data ? { formation: data.formation as Formation, titulaires: data.titulaires as Record<string, string>, remplacants: data.remplacants as string[], publiee: data.publiee } : null;
+  return data ? { formation: data.formation as Formation, titulaires: data.titulaires as Record<string, string>, remplacants: data.remplacants as string[], publiee: data.publiee, positions: (data.positions ?? {}) as Composition["positions"] } : null;
+}
+
+/** Feuilles de match de l'équipe (buts, cartons, remplacements) */
+export async function getFaits(equipeId: string): Promise<MatchFait[]> {
+  if (DEMO) return demo.faits();
+  const supabase = await createClient();
+  const { data, error } = await supabase.from("match_faits").select("id, evenement_id, type, membre_id, membre2_id, minute").eq("equipe_id", equipeId).order("minute", { nullsFirst: false }).limit(5000);
+  return error ? [] : ((data ?? []) as MatchFait[]);
+}
+
+/** Tactique visible (la base filtre : tout pour le staff ; équipe, ligne et soi pour un joueur) */
+export async function getTactiques(equipeId: string): Promise<Tactique[]> {
+  if (DEMO) return demo.tactiques();
+  const supabase = await createClient();
+  const { data, error } = await supabase.from("tactiques").select("id, genre, cible, ligne, membre_id, titre, texte, url, auteur_nom, cree_le").eq("equipe_id", equipeId).order("cree_le", { ascending: false }).limit(300);
+  return error ? [] : ((data ?? []) as Tactique[]);
 }
 
 /** Messages de l'équipe que je peux lire (la base filtre selon le destinataire) */

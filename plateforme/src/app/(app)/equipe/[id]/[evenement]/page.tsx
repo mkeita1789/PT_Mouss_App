@@ -1,13 +1,14 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
+import { Convocation, FeuilleMatch, PartagerWhatsApp } from "@/components/ClubFoot";
 import { dateEvenement, titreEvenement } from "@/components/CarteEvenement";
 import { BoutonsReponse, FeuillePresence } from "@/components/Equipe";
 import { PointAvant } from "@/components/EquipeStaff";
 import { Icon } from "@/components/Icon";
 import { supprimerEvenement } from "../../actions";
-import { getComposition, getEquipe, getUtilisateur } from "@/lib/data";
+import { getComposition, getEquipe, getFaits, getUtilisateur } from "@/lib/data";
 import { Composition } from "@/components/Composition";
-import { bilanReponses, estAVenir, estCommence, estStaff, type Membre } from "@/lib/equipe";
+import { bilanReponses, estAVenir, estCommence, estConvoque, estStaff, tempsDeJeu, type Membre } from "@/lib/equipe";
 import { ui } from "@/lib/i18n";
 import { getLang } from "@/lib/i18n/serveur";
 
@@ -19,13 +20,20 @@ export default async function Page({ params }: PageProps<"/equipe/[id]/[evenemen
   if (!UUID.test(id) || !UUID.test(eid)) notFound();
   const user = await getUtilisateur();
   const lang = await getLang();
-  const E = ui(lang).equipe;
+  const T = ui(lang);
+  const E = T.equipe;
+  const C = T.club;
   const data = await getEquipe(id, user.id);
   const e = data?.evenements.find((x) => x.id === eid);
   if (!data || !e) notFound();
   const { moi, membres, presences, evenements, photos, equipe } = data;
+  /* Les parents ne voient que le calendrier */
+  if (moi?.role === "parent") redirect(`/equipe/${id}`);
   const staff = estStaff(moi?.role);
-  const joueurs = membres.filter((m) => m.role === "joueur");
+  const effectif = membres.filter((m) => m.role === "joueur");
+  /* Seuls les convoqués comptent pour les réponses et la composition */
+  const joueurs = effectif.filter((m) => estConvoque(e, m.id));
+  const convoque = !moi || estConvoque(e, moi.id);
   const avenir = estAVenir(e);
   const r = bilanReponses(e.id, joueurs, presences);
   const maReponse = moi ? presences.find((p) => p.evenement_id === e.id && p.membre_id === moi.id)?.reponse ?? null : null;
@@ -35,6 +43,13 @@ export default async function Page({ params }: PageProps<"/equipe/[id]/[evenemen
   const compoMatch = e.type === "match" ? await getComposition(id, e.id) : null;
   const compoType = e.type === "match" && staff && !compoMatch ? await getComposition(id, null) : null;
   const compo = compoMatch ?? (compoType ? { ...compoType, publiee: false } : null);
+  /* Feuille de match : une fois le match commencé */
+  const feuille = e.type === "match" && estCommence(e);
+  const faits = feuille ? (await getFaits(id)).filter((f) => f.evenement_id === e.id) : [];
+  const duree = e.duree ?? 90;
+  const minutes = feuille && compoMatch ? tempsDeJeu(Object.values(compoMatch.titulaires), faits, duree) : {};
+  const quandTxt = dateEvenement(e.debut, lang);
+  const texteWA = C.texteWhatsApp(titreEvenement(e, E), quandTxt, e.lieu ?? "", e.convoques ? joueurs.map((m) => m.nom).join(", ") : "");
 
   return (
     <div className="reveal" style={{ maxWidth: 820 }}>
@@ -46,9 +61,19 @@ export default async function Page({ params }: PageProps<"/equipe/[id]/[evenemen
         <h1 className="page-title" style={{ marginTop: 6 }}>{titreEvenement(e, E)}</h1>
         <p className="page-lede maj1">{dateEvenement(e.debut, lang)}{e.lieu ? ` · ${e.lieu}` : ""}</p>
         {score && <div className="evt-score-grand num">{e.score_pour} – {e.score_contre}</div>}
+        {staff && <div style={{ marginTop: 12 }}><PartagerWhatsApp texte={texteWA} /></div>}
       </header>
 
-      {avenir && moi && !staff && (
+      {staff && avenir && e.type === "match" && (
+        <section className="panel" style={{ marginBottom: 16 }}>
+          <div className="section-head"><h2 className="section-title">{C.convocation}</h2><span className="section-note">{e.convoques ? C.nConvoques(e.convoques.length) : C.toutLeMonde}</span></div>
+          <Convocation equipeId={id} evenementId={e.id} joueurs={effectif.map((m) => ({ id: m.id, nom: m.nom, numero: m.numero }))} convoques={e.convoques ?? null}
+            partage={{ titre: titreEvenement(e, E), quand: quandTxt, lieu: e.lieu ?? "" }} />
+        </section>
+      )}
+      {avenir && moi && !staff && !convoque && <p className="note" style={{ marginBottom: 16 }}>{C.pasConvoque}</p>}
+
+      {avenir && moi && !staff && convoque && (
         <section className="panel" style={{ marginBottom: 16 }}>
           <div className="section-title" style={{ marginBottom: 10 }}>{E.tuViens}</div>
           <BoutonsReponse equipeId={id} evenementId={e.id} actuelle={maReponse} />
@@ -90,6 +115,14 @@ export default async function Page({ params }: PageProps<"/equipe/[id]/[evenemen
         </section>
       )}
       {e.type === "match" && !staff && !compo?.publiee && <p className="meta" style={{ marginBottom: 16 }}>{E.pasDeCompo}</p>}
+
+      {feuille && (staff || faits.length > 0) && (
+        <section className="panel" style={{ marginBottom: 16 }}>
+          <div className="section-head"><h2 className="section-title">{C.feuilleMatch}</h2><span className="section-note">{C.saisieStaff}</span></div>
+          <FeuilleMatch equipeId={id} evenementId={e.id} faits={faits} editable={staff} minutes={minutes} duree={duree}
+            joueurs={effectif.map((m) => ({ id: m.id, nom: m.nom, numero: m.numero }))} />
+        </section>
+      )}
 
       {staff && (
         <>

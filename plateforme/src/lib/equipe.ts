@@ -1,7 +1,7 @@
 /* ═══ Équipe : calendrier, convocations, présences ═══
    Calculs purs, partagés par les pages et les tests. Aucune donnée de forme ici. */
 
-export type RoleEquipe = "entraineur" | "adjoint" | "prepa" | "media" | "president" | "dirigeant" | "joueur";
+export type RoleEquipe = "entraineur" | "adjoint" | "prepa" | "media" | "president" | "dirigeant" | "joueur" | "parent";
 export type TypeEvenement = "entrainement" | "match" | "rdv";
 export type Reponse = "oui" | "non" | "incertain";
 
@@ -23,11 +23,82 @@ export type InvitationEquipe = { code: string; role: RoleInvite; expire_le: stri
 export type Equipe = {
   id: string; nom: string; saison: string | null; code: string; cree_par: string;
   couleur1?: string | null; couleur2?: string | null; logo_path?: string | null; valeurs?: string | null;
+  telephone?: string | null; contact_nom?: string | null; reseaux?: Reseaux | null; code_parents?: string | null;
 };
-export type Membre = { id: string; user_id: string | null; nom: string; role: RoleEquipe; poste: string | null; numero: number | null; photo_path?: string | null };
+/* ─── Contact du club ─── */
+export const RESEAUX = ["instagram", "facebook", "tiktok", "youtube", "x", "site"] as const;
+export type Reseau = (typeof RESEAUX)[number];
+export type Reseaux = Partial<Record<Reseau, string>>;
+/** Garde seulement des liens https propres (pas de javascript:, pas d'autre protocole) */
+export function nettoyerReseaux(brut: Record<string, unknown>): Reseaux {
+  const r: Reseaux = {};
+  for (const k of RESEAUX) {
+    const v = String(brut[k] ?? "").trim();
+    if (!v) continue;
+    try { const u = new URL(v); if (u.protocol === "https:" && v.length <= 300) r[k] = u.toString(); } catch { /* lien ignoré */ }
+  }
+  return r;
+}
+export const telephoneValide = (t: string) => /^\+?[0-9 .()-]{6,20}$/.test(t);
+export const LIGNES = ["gardien", "defense", "milieu", "attaque"] as const;
+export type Ligne = (typeof LIGNES)[number];
+export type Membre = { id: string; user_id: string | null; nom: string; role: RoleEquipe; poste: string | null; numero: number | null; photo_path?: string | null; ligne?: Ligne | null };
+/** Effectif rangé : joueurs, staff, dirigeants, président (les parents ne sont qu'un nombre) */
+export function groupesEffectif(membres: Membre[]) {
+  return {
+    joueurs: membres.filter((m) => m.role === "joueur"),
+    staff: membres.filter((m) => estStaff(m.role) || m.role === "media"),
+    dirigeants: membres.filter((m) => m.role === "dirigeant"),
+    president: membres.filter((m) => m.role === "president"),
+    parents: membres.filter((m) => m.role === "parent").length,
+  };
+}
 export type Evenement = {
   id: string; type: TypeEvenement; titre: string | null; debut: string; lieu: string | null;
   adversaire: string | null; domicile: boolean | null; score_pour: number | null; score_contre: number | null; resume: string | null;
+  convoques?: string[] | null; duree?: number | null;
+};
+/** Convoqué : liste vide ou absente = toute l'équipe (comme avant) */
+export const estConvoque = (e: Pick<Evenement, "convoques">, membreId: string) => !e.convoques || e.convoques.includes(membreId);
+
+/* ─── Feuille de match ─── */
+export type TypeFait = "but" | "jaune" | "rouge" | "remplacement";
+export type MatchFait = { id: string; evenement_id: string; type: TypeFait; membre_id: string; membre2_id: string | null; minute: number | null };
+
+/** Temps de jeu : un titulaire joue jusqu'à sa sortie (remplacement ou rouge), un remplaçant depuis son entrée */
+export function tempsDeJeu(titulaires: string[], faits: MatchFait[], duree = 90): Record<string, number> {
+  const entree = new Map<string, number>(titulaires.map((id) => [id, 0]));
+  const sortie = new Map<string, number>();
+  const tries = [...faits].sort((a, b) => (a.minute ?? duree) - (b.minute ?? duree));
+  for (const f of tries) {
+    const min = Math.max(0, Math.min(duree, f.minute ?? duree));
+    if (f.type === "remplacement" && f.membre2_id) {
+      if (entree.has(f.membre_id) && !sortie.has(f.membre_id)) sortie.set(f.membre_id, min);
+      if (!entree.has(f.membre2_id)) entree.set(f.membre2_id, min);
+    }
+    if (f.type === "rouge" && entree.has(f.membre_id) && !sortie.has(f.membre_id)) sortie.set(f.membre_id, min);
+  }
+  return Object.fromEntries([...entree].map(([id, d]) => [id, Math.max(0, (sortie.get(id) ?? duree) - d)]));
+}
+
+/** Buts, passes décisives et cartons par joueur */
+export function statsJoueurs(faits: MatchFait[]): Record<string, { buts: number; passes: number; jaunes: number; rouges: number }> {
+  const s: Record<string, { buts: number; passes: number; jaunes: number; rouges: number }> = {};
+  const de = (id: string) => (s[id] ??= { buts: 0, passes: 0, jaunes: 0, rouges: 0 });
+  for (const f of faits) {
+    if (f.type === "but") { de(f.membre_id).buts++; if (f.membre2_id) de(f.membre2_id).passes++; }
+    if (f.type === "jaune") de(f.membre_id).jaunes++;
+    if (f.type === "rouge") de(f.membre_id).rouges++;
+  }
+  return s;
+}
+
+/* ─── Tactique ─── */
+export type GenreTactique = "principe" | "consigne" | "video";
+export type CibleTactique = "equipe" | "ligne" | "joueur";
+export type Tactique = {
+  id: string; genre: GenreTactique; cible: CibleTactique; ligne: Ligne | null; membre_id: string | null;
+  titre: string; texte: string | null; url: string | null; auteur_nom: string; cree_le: string;
 };
 export type Presence = { evenement_id: string; membre_id: string; reponse: Reponse | null; present: boolean | null; minutes: number | null };
 
@@ -258,7 +329,7 @@ export const POSTES: Record<Formation, Poste[]> = {
   "4-5-1": [G, ...DEF4, { p: "MG", x: 10, y: 44 }, { p: "MC", x: 30, y: 50 }, { p: "MOC", x: 50, y: 40 }, { p: "MC", x: 70, y: 50 }, { p: "MD", x: 90, y: 44 }, ...BU1],
 };
 
-export type Composition = { formation: Formation; titulaires: Record<string, string>; remplacants: string[]; publiee: boolean };
+export type Composition = { formation: Formation; titulaires: Record<string, string>; remplacants: string[]; publiee: boolean; positions?: Record<string, { x: number; y: number }> };
 export const MAX_REMPLACANTS = 9;
 
 /** Composition propre : un joueur n'apparaît qu'une fois, seulement des membres de l'équipe, postes existants */
@@ -271,7 +342,15 @@ export function nettoyerComposition(c: Composition, idsMembres: Set<string>): Co
     if (Number.isInteger(i) && i >= 0 && i < 11 && idsMembres.has(id) && !vus.has(id)) { titulaires[String(i)] = id; vus.add(id); }
   });
   const remplacants = (c.remplacants ?? []).filter((id) => idsMembres.has(id) && !vus.has(id) && (vus.add(id), true)).slice(0, MAX_REMPLACANTS);
-  return { formation, titulaires, remplacants, publiee: !!c.publiee };
+  /* Placement libre : coordonnées en % du terrain, bornées */
+  const positions: Record<string, { x: number; y: number }> = {};
+  Object.entries(c.positions ?? {}).forEach(([k, p]) => {
+    const i = Number(k);
+    if (Number.isInteger(i) && i >= 0 && i < 11 && p && Number.isFinite(p.x) && Number.isFinite(p.y)) {
+      positions[String(i)] = { x: Math.round(Math.max(4, Math.min(96, p.x)) * 10) / 10, y: Math.round(Math.max(4, Math.min(96, p.y)) * 10) / 10 };
+    }
+  });
+  return { formation, titulaires, remplacants, publiee: !!c.publiee, positions };
 }
 
 /** Changement de schéma : on garde les joueurs, poste par poste dans l'ordre (gardien, défense, milieu, attaque) */
@@ -285,4 +364,22 @@ export function texteSur(hex: string | null | undefined): string {
   const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255);
   const l = 0.2126 * r + 0.7152 * g + 0.0722 * b;
   return l > 0.6 ? "#111111" : "#ffffff";
+}
+
+/** Les événements de ce week-end (samedi et dimanche, heure de Paris) — pour l'espace parents */
+export function ceWeekend(evenements: Evenement[], now = Date.now()): Evenement[] {
+  const wd = new Intl.DateTimeFormat("en-US", { timeZone: "Europe/Paris", weekday: "short" }).format(new Date(now));
+  const i = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].indexOf(wd);
+  const samedi = dateParis(now + Math.max(0, 5 - i) * 864e5), dimanche = dateParis(now + (6 - i) * 864e5);
+  return evenements.filter((e) => {
+    const d = dateParis(Date.parse(e.debut));
+    return d >= samedi && d <= dimanche && Date.parse(e.debut) >= now - 3 * 3600e3;
+  });
+}
+
+/** Événements regroupés par mois (heure de Paris), dans l'ordre */
+export function parMois(evenements: Evenement[]): { mois: string; liste: Evenement[] }[] {
+  const g = new Map<string, Evenement[]>();
+  for (const e of evenements) { const k = dateParis(Date.parse(e.debut)).slice(0, 7); g.set(k, [...(g.get(k) ?? []), e]); }
+  return [...g].map(([mois, liste]) => ({ mois, liste }));
 }

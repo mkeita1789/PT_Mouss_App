@@ -30,6 +30,7 @@ export default async function Page({ searchParams }: PageProps<"/equipe">) {
     <section className="panel" key="rejoindre">
       <div className="section-title" style={{ marginBottom: 12 }}>{E.rejoindre}</div>
       <FormRejoindreEquipe code={code} />
+      <p className="meta" style={{ marginTop: 10, fontSize: 13 }}>{T.club.rejoindreAideParent}</p>
     </section>
   );
 

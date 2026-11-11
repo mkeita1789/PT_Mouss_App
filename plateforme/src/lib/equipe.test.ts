@@ -1,6 +1,7 @@
 /* Tests du module équipe — sans framework : npx tsx src/lib/equipe.test.ts */
 import assert from "node:assert/strict";
 import {
+  tempsDeJeu, statsJoueurs, ceWeekend, nettoyerReseaux, estConvoque,
   absencesDeSuite, dateParis, minutesRecentes, momentEvenement, resumeSemaine, semaineParis,
   type Evenement, type Membre, type Presence,
 } from "./equipe";
@@ -162,3 +163,25 @@ test("moment de l'événement : ce soir, aujourd'hui, plus tard (heure de Paris)
 });
 
 console.log(`\n${ok} tests passés`);
+
+/* ─── Temps de jeu et stats ─── */
+{
+  const f = (type: "but" | "jaune" | "rouge" | "remplacement", m: string, m2: string | null, minute: number | null) => ({ id: type + m + minute, evenement_id: "e", type, membre_id: m, membre2_id: m2, minute });
+  const t = tempsDeJeu(["a", "b", "c"], [f("remplacement", "a", "d", 60), f("rouge", "b", null, 75), f("remplacement", "d", "e", 85)], 90);
+  assert.deepEqual(t, { a: 60, b: 75, c: 90, d: 25, e: 5 });
+  const s = statsJoueurs([f("but", "a", "b", 10), f("but", "a", null, 20), f("jaune", "b", null, 30)]);
+  assert.deepEqual(s.a, { buts: 2, passes: 0, jaunes: 0, rouges: 0 });
+  assert.deepEqual(s.b, { buts: 0, passes: 1, jaunes: 1, rouges: 0 });
+  assert.deepEqual(nettoyerReseaux({ instagram: "https://instagram.com/club", facebook: "javascript:alert(1)", site: "http://x.fr" }), { instagram: "https://instagram.com/club" });
+  assert.equal(estConvoque({ convoques: null }, "x"), true);
+  assert.equal(estConvoque({ convoques: ["y"] }, "x"), false);
+  console.log("ok temps de jeu, stats, réseaux, convocation");
+}
+{
+  // mercredi 11 nov. 2026 12:00 Paris
+  const now = Date.parse("2026-11-11T11:00:00Z");
+  const ev = (id: string, iso: string) => ({ id, type: "match", titre: null, debut: iso, lieu: null, adversaire: null, domicile: null, score_pour: null, score_contre: null, resume: null }) as Evenement;
+  const r = ceWeekend([ev("jeu", "2026-11-12T18:00:00Z"), ev("sam", "2026-11-14T14:00:00Z"), ev("dim", "2026-11-15T09:00:00Z"), ev("lun", "2026-11-16T18:00:00Z")], now);
+  assert.deepEqual(r.map((e) => e.id), ["sam", "dim"]);
+  console.log("ok ce week-end : samedi et dimanche seulement");
+}

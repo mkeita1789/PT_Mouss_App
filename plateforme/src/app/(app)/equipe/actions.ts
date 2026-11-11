@@ -7,7 +7,7 @@ import { getUtilisateur } from "@/lib/data";
 import { locale, ui, type Lang } from "@/lib/i18n";
 import { getLang } from "@/lib/i18n/serveur";
 import { envoyerApres, type Abonnement } from "@/lib/push";
-import { nettoyerComposition, parisVersISO, ROLES_INVITES, serieHebdo, type CibleMessage, type Composition, type Reponse, type RoleEquipe, type TypeEvenement } from "@/lib/equipe";
+import { LIGNES, nettoyerComposition, nettoyerReseaux, parisVersISO, ROLES_INVITES, serieHebdo, telephoneValide, tempsDeJeu, type CibleMessage, type Composition, type MatchFait, type Reponse, type RoleEquipe, type TypeEvenement } from "@/lib/equipe";
 
 /* La sécurité réelle est dans la base (migration 0013) : seul le staff écrit,
    un joueur ne fait que répondre à ses convocations. Ici on valide la forme. */
@@ -67,7 +67,7 @@ export async function ajouterEvenement(equipeId: string, prev: EtatEquipe, f: Fo
   if (error) return { erreur: T.erreur };
 
   /* Les joueurs qui ont un compte et les notifications sont prévenus */
-  const { data: abos } = await supabase.rpc("abonnements_equipe", { p_equipe: equipeId });
+  const { data: abos } = await supabase.rpc("abonnements_equipe", { p_equipe: equipeId, p_parents: true });
   envoyerApres((abos ?? []) as Abonnement[], (lg) => {
     const E = ui(lg).equipe;
     const nom = type === "match" && ligne.adversaire ? `${E.types.match} ${E.contre(ligne.adversaire)}` : ligne.titre || E.types[type];
@@ -310,4 +310,177 @@ export async function accepterSuiviEquipe(equipeId: string, proMembreId: string)
   revalidatePath(`/equipe/${equipeId}`);
   revalidatePath("/profil");
   return { ok: T.suiviAccepte };
+}
+
+
+/* ═══ Club complet (migration 0018) ═══ */
+const nomEvenement = (e: { type: string; adversaire: string | null; titre: string | null } | null, lg: Lang) => {
+  const E = ui(lg).equipe;
+  return e?.type === "match" && e.adversaire ? `${E.types.match} ${E.contre(e.adversaire)}` : e?.titre || E.types[(e?.type as TypeEvenement) ?? "match"];
+};
+
+/** Contact du club : numéro à appeler, qui répond, réseaux sociaux */
+export async function modifierContact(equipeId: string, _: EtatEquipe, f: FormData): Promise<EtatEquipe> {
+  await getUtilisateur();
+  const C = ui(await getLang()).club;
+  if (!UUID.test(equipeId)) return { erreur: C.telInvalide };
+  const tel = txt(f, "telephone", 20);
+  if (tel && !telephoneValide(tel)) return { erreur: C.telInvalide };
+  const reseaux = nettoyerReseaux(Object.fromEntries(f.entries()));
+  const supabase = await createClient();
+  const { error } = await supabase.from("equipes").update({ telephone: tel || null, contact_nom: txt(f, "contact_nom", 60) || null, reseaux }).eq("id", equipeId);
+  if (error) return { erreur: ui(await getLang()).equipe.erreur };
+  revalidatePath(`/equipe/${equipeId}`);
+  return { ok: C.contactEnregistre };
+}
+
+/** Code parents (créé à la première demande) */
+export async function obtenirCodeParents(equipeId: string): Promise<{ code?: string; erreur?: string }> {
+  await getUtilisateur();
+  if (!UUID.test(equipeId)) return { erreur: "?" };
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("code_parents", { p_equipe: equipeId });
+  if (error || typeof data !== "string") return { erreur: ui(await getLang()).equipe.erreur };
+  revalidatePath(`/equipe/${equipeId}`);
+  return { code: data };
+}
+
+/** Ligne de jeu d'un joueur (pour les consignes par ligne) */
+export async function changerLigne(equipeId: string, membreId: string, ligne: string) {
+  await getUtilisateur();
+  if (!UUID.test(equipeId) || !UUID.test(membreId)) return;
+  const supabase = await createClient();
+  await supabase.from("equipe_membres").update({ ligne: (LIGNES as readonly string[]).includes(ligne) ? ligne : null }).eq("id", membreId).eq("equipe_id", equipeId);
+  revalidatePath(`/equipe/${equipeId}`);
+}
+
+/** Convocation : liste des joueurs convoqués ; les nouveaux convoqués sont prévenus */
+export async function convoquer(equipeId: string, evenementId: string, membres: string[]): Promise<EtatEquipe> {
+  await getUtilisateur();
+  const lang = await getLang();
+  const T = ui(lang);
+  if (!UUID.test(equipeId) || !UUID.test(evenementId)) return { erreur: T.equipe.erreur };
+  const supabase = await createClient();
+  const { data: joueurs } = await supabase.from("equipe_membres").select("id").eq("equipe_id", equipeId).eq("role", "joueur");
+  const valides = new Set((joueurs ?? []).map((m) => m.id));
+  const liste = [...new Set(membres)].filter((m) => valides.has(m)).slice(0, 60);
+  const { data: avant } = await supabase.from("evenements").select("convoques, type, adversaire, titre, debut").eq("id", evenementId).eq("equipe_id", equipeId).maybeSingle();
+  if (!avant) return { erreur: T.equipe.erreur };
+  const { error } = await supabase.from("evenements").update({ convoques: liste }).eq("id", evenementId).eq("equipe_id", equipeId);
+  if (error) return { erreur: T.equipe.erreur };
+  const nouveaux = liste.filter((m) => !(avant.convoques ?? []).includes(m));
+  if (nouveaux.length) {
+    const { data: abos } = await supabase.rpc("abonnements_membres", { p_equipe: equipeId, p_membres: nouveaux });
+    envoyerApres((abos ?? []) as Abonnement[], (lg) => ({
+      titre: ui(lg).club.notifConvocation(nomEvenement(avant, lg)), corps: quand(avant.debut, lg),
+      url: `/equipe/${equipeId}/${evenementId}`, tag: `convoc-${evenementId}`,
+    }));
+  }
+  revalidatePath(`/equipe/${equipeId}/${evenementId}`);
+  revalidatePath(`/equipe/${equipeId}`);
+  return { ok: T.club.convocationEnvoyee(liste.length) };
+}
+
+/* Temps de jeu recalculé depuis la composition du match et les remplacements (le staff peut toujours corriger) */
+async function recalculerTempsDeJeu(supabase: Awaited<ReturnType<typeof createClient>>, equipeId: string, evenementId: string) {
+  const [{ data: compo }, { data: faits }, { data: e }] = await Promise.all([
+    supabase.from("compositions").select("titulaires").eq("equipe_id", equipeId).eq("evenement_id", evenementId).maybeSingle(),
+    supabase.from("match_faits").select("id, evenement_id, type, membre_id, membre2_id, minute").eq("evenement_id", evenementId),
+    supabase.from("evenements").select("duree").eq("id", evenementId).maybeSingle(),
+  ]);
+  if (!compo) return;
+  const titulaires = Object.values((compo.titulaires ?? {}) as Record<string, string>);
+  const minutes = tempsDeJeu(titulaires, (faits ?? []) as MatchFait[], e?.duree ?? 90);
+  const lignes = Object.entries(minutes).map(([membre_id, m]) => ({ evenement_id: evenementId, membre_id, equipe_id: equipeId, minutes: m, present: true, maj_le: new Date().toISOString() }));
+  if (lignes.length) await supabase.from("presences").upsert(lignes, { onConflict: "evenement_id,membre_id" });
+}
+
+/** Feuille de match : un fait (but, carton, remplacement) ; un carton prévient le joueur et le staff */
+export async function ajouterFait(equipeId: string, evenementId: string, _: EtatEquipe, f: FormData): Promise<EtatEquipe> {
+  const moi = await getUtilisateur();
+  const T = ui(await getLang());
+  const type = String(f.get("type"));
+  const m1 = String(f.get("membre") ?? ""), m2 = String(f.get("membre2") ?? "");
+  const minute = Number(f.get("minute"));
+  if (!UUID.test(equipeId) || !UUID.test(evenementId) || !["but", "jaune", "rouge", "remplacement"].includes(type) || !UUID.test(m1)) return { erreur: T.equipe.erreur };
+  if (type === "remplacement" && (!UUID.test(m2) || m2 === m1)) return { erreur: T.equipe.erreur };
+  const supabase = await createClient();
+  const { data, error } = await supabase.from("match_faits").insert({
+    equipe_id: equipeId, evenement_id: evenementId, type, membre_id: m1,
+    membre2_id: (type === "but" || type === "remplacement") && UUID.test(m2) && m2 !== m1 ? m2 : null,
+    minute: Number.isInteger(minute) && minute >= 0 && minute <= 130 ? minute : null, cree_par: moi.id,
+  }).select("id").single();
+  if (error || !data) return { erreur: T.equipe.erreur };
+  if (type === "jaune" || type === "rouge") {
+    const [{ data: abos }, { data: j }, { data: e }] = await Promise.all([
+      supabase.rpc("abonnements_carton", { p_fait: data.id }),
+      supabase.from("equipe_membres").select("nom").eq("id", m1).maybeSingle(),
+      supabase.from("evenements").select("type, adversaire, titre").eq("id", evenementId).maybeSingle(),
+    ]);
+    envoyerApres((abos ?? []) as Abonnement[], (lg) => {
+      const C = ui(lg).club;
+      return { titre: C.notifCarton(C.types[type], j?.nom ?? "", nomEvenement(e, lg)), corps: Number.isInteger(minute) ? `${minute}'` : "", url: `/equipe/${equipeId}/${evenementId}`, tag: `carton-${data.id}` };
+    });
+  }
+  if (type === "remplacement" || type === "rouge") await recalculerTempsDeJeu(supabase, equipeId, evenementId);
+  revalidatePath(`/equipe/${equipeId}/${evenementId}`);
+  revalidatePath(`/equipe/${equipeId}`);
+  return { ok: T.club.faitAjoute };
+}
+
+export async function supprimerFait(equipeId: string, evenementId: string, faitId: string) {
+  await getUtilisateur();
+  if (!UUID.test(equipeId) || !UUID.test(evenementId) || !UUID.test(faitId)) return;
+  const supabase = await createClient();
+  await supabase.from("match_faits").delete().eq("id", faitId).eq("equipe_id", equipeId);
+  await recalculerTempsDeJeu(supabase, equipeId, evenementId);
+  revalidatePath(`/equipe/${equipeId}/${evenementId}`);
+  revalidatePath(`/equipe/${equipeId}`);
+}
+
+/** Durée du match (pour le temps de jeu) */
+export async function changerDuree(equipeId: string, evenementId: string, duree: number) {
+  await getUtilisateur();
+  if (!UUID.test(equipeId) || !UUID.test(evenementId) || !Number.isInteger(duree) || duree < 20 || duree > 130) return;
+  const supabase = await createClient();
+  await supabase.from("evenements").update({ duree }).eq("id", evenementId).eq("equipe_id", equipeId);
+  await recalculerTempsDeJeu(supabase, equipeId, evenementId);
+  revalidatePath(`/equipe/${equipeId}/${evenementId}`);
+}
+
+/** Tactique : principe de jeu, consigne ou séquence vidéo (lien) pour l'équipe, une ligne ou un joueur */
+export async function ajouterTactique(equipeId: string, _: EtatEquipe, f: FormData): Promise<EtatEquipe> {
+  const moi = await getUtilisateur();
+  const T = ui(await getLang());
+  const genre = String(f.get("genre")), cible = String(f.get("cible"));
+  const ligne = String(f.get("ligne") ?? ""), membre = String(f.get("membre") ?? "");
+  const titre = txt(f, "titre", 80), texte = txt(f, "texte", 3000), url = txt(f, "url", 500);
+  if (!UUID.test(equipeId) || !["principe", "consigne", "video"].includes(genre) || !["equipe", "ligne", "joueur"].includes(cible) || !titre) return { erreur: T.equipe.erreur };
+  if (cible === "ligne" && !(LIGNES as readonly string[]).includes(ligne)) return { erreur: T.equipe.erreur };
+  if (cible === "joueur" && !UUID.test(membre)) return { erreur: T.equipe.erreur };
+  let lien: string | null = null;
+  if (url) { try { const u = new URL(url); if (u.protocol !== "https:") throw 0; lien = u.toString(); } catch { return { erreur: T.club.lienInvalide }; } }
+  if (genre === "video" && !lien) return { erreur: T.club.lienInvalide };
+  const supabase = await createClient();
+  const { data: auteur } = await supabase.from("equipe_membres").select("nom").eq("equipe_id", equipeId).eq("user_id", moi.id).maybeSingle();
+  const { data, error } = await supabase.from("tactiques").insert({
+    equipe_id: equipeId, genre, cible, ligne: cible === "ligne" ? ligne : null, membre_id: cible === "joueur" ? membre : null,
+    titre, texte: texte || null, url: lien, auteur_nom: auteur?.nom ?? moi.prenom ?? "Staff", cree_par: moi.id,
+  }).select("id").single();
+  if (error || !data) return { erreur: T.equipe.erreur };
+  const { data: abos } = await supabase.rpc("abonnements_tactique", { p_id: data.id });
+  envoyerApres((abos ?? []) as Abonnement[], (lg) => {
+    const C = ui(lg).club;
+    return { titre: C.notifTactique(C.genres[genre], titre), corps: texte.slice(0, 120), url: `/equipe/${equipeId}?vue=tactique`, tag: `tactique-${data.id}` };
+  });
+  revalidatePath(`/equipe/${equipeId}`);
+  return { ok: T.club.tactiqueAjoutee };
+}
+
+export async function supprimerTactique(equipeId: string, id: string) {
+  await getUtilisateur();
+  if (!UUID.test(equipeId) || !UUID.test(id)) return;
+  const supabase = await createClient();
+  await supabase.from("tactiques").delete().eq("id", id).eq("equipe_id", equipeId);
+  revalidatePath(`/equipe/${equipeId}`);
 }

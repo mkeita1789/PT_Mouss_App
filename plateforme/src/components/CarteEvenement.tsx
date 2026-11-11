@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Icon } from "./Icon";
 import { BoutonsReponse } from "./Equipe";
-import { appelFait, bilanReponses, type Evenement, type Membre, type Presence } from "@/lib/equipe";
+import { appelFait, bilanReponses, type Evenement, type Membre, type Presence, estConvoque } from "@/lib/equipe";
 import { locale, type Lang } from "@/lib/i18n";
 import type { TextesUI } from "@/lib/i18n/ui";
 
@@ -15,9 +15,11 @@ export const dateEvenement = (iso: string, lang: Lang) =>
   new Date(iso).toLocaleString(locale(lang), { weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit", timeZone: "Europe/Paris" });
 
 /** Une ligne du calendrier : date, titre, lieu ; réponses ou présences ; boutons du joueur */
-export function CarteEvenement({ e, equipeId, joueurs, presences, moi, staff, lang, E, passe }: {
+export function CarteEvenement({ e, equipeId, joueurs: effectif, presences, moi, staff, lang, E, passe }: {
   e: Evenement; equipeId: string; joueurs: Membre[]; presences: Presence[]; moi: Membre | null; staff: boolean; lang: Lang; E: TextesUI["equipe"]; passe: boolean;
 }) {
+  /* Seuls les convoqués comptent (et répondent) */
+  const joueurs = effectif.filter((j) => estConvoque(e, j.id));
   const d = new Date(e.debut);
   const jour = d.toLocaleDateString(locale(lang), { day: "numeric", timeZone: "Europe/Paris" });
   const mois = d.toLocaleDateString(locale(lang), { month: "short", timeZone: "Europe/Paris" }).replace(".", "");
@@ -53,7 +55,7 @@ export function CarteEvenement({ e, equipeId, joueurs, presences, moi, staff, la
         ) : (
           <span className="meta" style={{ fontSize: 12.5 }}>{E.reponses(r.oui.length, r.non.length, r.incertain.length, r.sans.length)}</span>
         )}
-        {!passe && moi && !staff && <BoutonsReponse equipeId={equipeId} evenementId={e.id} actuelle={maReponse} />}
+        {!passe && moi && !staff && estConvoque(e, moi.id) && <BoutonsReponse equipeId={equipeId} evenementId={e.id} actuelle={maReponse} />}
       </div>
     </article>
   );

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useMemo, useRef, useState, useTransition } from "react";
 import { enregistrerComposition, type EtatEquipe } from "@/app/(app)/equipe/actions";
 import { FORMATIONS, MAX_REMPLACANTS, POSTES, texteSur, type Composition as Compo, type Formation, type Reponse } from "@/lib/equipe";
 import { Icon } from "./Icon";
@@ -22,6 +22,32 @@ export function Composition({ equipeId, evenementId, joueurs, initial, editable,
   const [etat, setEtat] = useState<EtatEquipe>();
   const [pending, start] = useTransition();
   const postes = POSTES[c.formation];
+  /* Placement libre : chaque poste peut être déplacé sur le terrain */
+  const libre = Object.keys(c.positions ?? {}).length > 0;
+  const terrain = useRef<HTMLDivElement>(null);
+  const glisse = useRef<{ i: number; x0: number; y0: number; bouge: boolean } | null>(null);
+  const pos = (i: number) => c.positions?.[String(i)] ?? postes[i];
+  const basculerLibre = () => modifier((x) => ({ ...x, positions: libre ? {} : Object.fromEntries(postes.map((p, i) => [String(i), { x: p.x, y: p.y }])) }));
+  const debut = (i: number, e: React.PointerEvent) => {
+    if (!editable || !libre) return;
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    glisse.current = { i, x0: e.clientX, y0: e.clientY, bouge: false };
+  };
+  const bouger = (e: React.PointerEvent) => {
+    const g = glisse.current, r = terrain.current?.getBoundingClientRect();
+    if (!g || !r) return;
+    if (!g.bouge && Math.hypot(e.clientX - g.x0, e.clientY - g.y0) < 6) return;
+    g.bouge = true;
+    const x = Math.max(4, Math.min(96, ((e.clientX - r.left) / r.width) * 100));
+    const y = Math.max(4, Math.min(96, ((e.clientY - r.top) / r.height) * 100));
+    setC((v) => ({ ...v, positions: { ...v.positions, [String(g.i)]: { x, y } } }));
+    setEtat(undefined);
+  };
+  const fin = () => {
+    const g = glisse.current;
+    glisse.current = null;
+    if (g && !g.bouge) toucherPoste(g.i);
+  };
   const parId = useMemo(() => new Map(joueurs.map((j) => [j.id, j])), [joueurs]);
   const surTerrain = new Set(Object.values(c.titulaires));
   const auBanc = new Set(c.remplacants);
@@ -63,7 +89,7 @@ export function Composition({ equipeId, evenementId, joueurs, initial, editable,
   };
   const versBanc = (id: string) => modifier((x) => (x.remplacants.length >= MAX_REMPLACANTS ? x : { ...x, remplacants: [...x.remplacants, id] }));
   const horsBanc = (id: string) => modifier((x) => ({ ...x, remplacants: x.remplacants.filter((r) => r !== id) }));
-  const changerSchema = (f: Formation) => { modifier((x) => ({ ...x, formation: f })); setSel(null); };
+  const changerSchema = (f: Formation) => { modifier((x) => ({ ...x, formation: f, positions: {} })); setSel(null); };
   const enregistrer = (publier: boolean) => start(async () => {
     const r = await enregistrerComposition(equipeId, evenementId, { ...c, publiee: publier || c.publiee });
     setEtat(r);
@@ -86,6 +112,12 @@ export function Composition({ equipeId, evenementId, joueurs, initial, editable,
   return (
     <div className="compo" style={style}>
       {editable && (
+        <div className="chips" style={{ marginBottom: 10 }} role="radiogroup" aria-label={T.club.placementLibre}>
+          <button type="button" role="radio" aria-checked={!libre} className={`chip ${!libre ? "on" : ""}`} onClick={() => libre && basculerLibre()}>{T.club.placementSchema}</button>
+          <button type="button" role="radio" aria-checked={libre} className={`chip ${libre ? "on" : ""}`} onClick={() => !libre && basculerLibre()}>{T.club.placementLibre}</button>
+        </div>
+      )}
+      {editable && (
         <div className="compo-schemas" role="radiogroup" aria-label={E.formation}>
           {FORMATIONS.map((f) => (
             <button key={f} type="button" role="radio" aria-checked={c.formation === f} className={`chip num ${c.formation === f ? "on" : ""}`} onClick={() => changerSchema(f)}>{f}</button>
@@ -94,18 +126,19 @@ export function Composition({ equipeId, evenementId, joueurs, initial, editable,
       )}
 
       <div className="compo-entete">
-        <span className="num compo-schema">{c.formation}</span>
+        <span className="num compo-schema">{c.formation}{libre ? ` · ${T.club.personnalise}` : ""}</span>
         <span className="meta">{E.nTitulaires(n)}</span>
         {editable && <span className={`pill ${c.publiee ? "pill-ok" : "pill-neutre"}`} style={{ fontSize: 12 }}>{c.publiee ? E.publiee : E.nonPubliee}</span>}
       </div>
 
-      <div className="terrain" aria-label={E.titulaires}>
+      <div className={`terrain ${libre && editable ? "terrain-libre" : ""}`} ref={terrain} aria-label={E.titulaires}>
         <span className="terrain-ligne" /><span className="terrain-rond" /><span className="terrain-surface haut" /><span className="terrain-surface bas" />
         {postes.map((p, i) => {
           const j = parId.get(c.titulaires[String(i)]);
           return (
             <button key={`${c.formation}-${i}`} type="button" className={`poste ${sel === i ? "sel" : ""} ${j ? "" : "vide"}`}
-              style={{ left: `${p.x}%`, top: `${p.y}%` }} onClick={() => toucherPoste(i)} disabled={!editable}
+              style={{ left: `${pos(i).x}%`, top: `${pos(i).y}%` }} onClick={() => !libre && toucherPoste(i)} disabled={!editable}
+              onPointerDown={(e) => debut(i, e)} onPointerMove={bouger} onPointerUp={fin} onPointerCancel={() => (glisse.current = null)}
               aria-label={j ? `${p.p} : ${j.nom}` : `${p.p} : ${E.posteVide}`} aria-pressed={sel === i}>
               {j ? <Carte j={j} /> : <span className="compo-visage vide"><Icon nom="plus" taille={16} /></span>}
               <span className="poste-label">{p.p}</span>
@@ -114,7 +147,7 @@ export function Composition({ equipeId, evenementId, joueurs, initial, editable,
         })}
       </div>
 
-      {editable && <p className="meta" style={{ marginTop: 10 }}>{sel !== null ? E.choisirJoueur(postes[sel].p) : E.compoAide}</p>}
+      {editable && <p className="meta" style={{ marginTop: 10 }}>{sel !== null ? E.choisirJoueur(postes[sel].p) : libre ? T.club.libreAide : E.compoAide}</p>}
       {editable && sel !== null && c.titulaires[String(sel)] && (
         <button type="button" className="btn btn-ghost btn-sm" style={{ marginTop: 8 }} onClick={vider}>{E.vider}</button>
       )}

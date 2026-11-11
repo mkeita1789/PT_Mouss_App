@@ -163,10 +163,15 @@ export const demo = {
     const staff = ROLE === "coach" || ["entraineur", "prepa", "coach"].includes(METIER);
     const moiId = staff ? "m0" : "m1";
     const evts = EVENEMENTS();
+    /* PTMOUSS_DEMO_EQROLE=parent|president… : voir l'équipe avec un autre rôle */
+    const roleForce = process.env.PTMOUSS_DEMO_EQROLE as RoleEquipe | undefined;
+    const moi = membres.find((m) => m.id === moiId) ?? null;
     return {
-      equipe: { id: EQUIPE, nom: "FC Vincennes — Seniors B", saison: "2026-27", code: "K7MPQ3", cree_par: COACH, couleur1: "#1e3a8a", couleur2: "#facc15", logo_path: null, valeurs: "Respect, travail, solidarité. On joue pour le maillot, on gagne ensemble." },
+      equipe: { id: EQUIPE, nom: "FC Vincennes — Seniors B", saison: "2026-27", code: "K7MPQ3", cree_par: COACH, couleur1: "#1e3a8a", couleur2: "#facc15", logo_path: null, valeurs: "Respect, travail, solidarité. On joue pour le maillot, on gagne ensemble.",
+        telephone: "01 43 28 00 00", contact_nom: "Secrétariat du club", code_parents: staff ? "P4RNT2" : null,
+        reseaux: { instagram: "https://www.instagram.com/", facebook: "https://www.facebook.com/", site: "https://example.org/" } },
       photos: {} as Record<string, string>, logo: null,
-      moi: membres.find((m) => m.id === moiId) ?? null,
+      moi: moi && roleForce ? { ...moi, role: roleForce } : moi,
       membres, evenements: evts, presences: PRESENCES(evts, membres),
     };
   },
@@ -176,6 +181,19 @@ export const demo = {
     remplacants: [] as string[],
     publiee: evenementId !== null,
   }),
+  faits: () => [
+    { id: "f1", evenement_id: EV(3), type: "but" as const, membre_id: "m7", membre2_id: "m1", minute: 34 },
+    { id: "f2", evenement_id: EV(3), type: "jaune" as const, membre_id: "m4", membre2_id: null, minute: 51 },
+    { id: "f3", evenement_id: EV(3), type: "remplacement" as const, membre_id: "m6", membre2_id: "m11", minute: 65 },
+    { id: "f4", evenement_id: EV(3), type: "but" as const, membre_id: "m1", membre2_id: "m10", minute: 78 },
+    { id: "f5", evenement_id: EV(6), type: "jaune" as const, membre_id: "m4", membre2_id: null, minute: 40 },
+  ],
+  tactiques: () => [
+    { id: "t1", genre: "principe" as const, cible: "equipe" as const, ligne: null, membre_id: null, titre: "Pressing à la perte", texte: "5 secondes pour récupérer le ballon après la perte. Le plus proche presse, les deux suivants ferment les lignes de passe.", url: null, auteur_nom: "Moustapha", cree_le: iso(12) },
+    { id: "t2", genre: "principe" as const, cible: "ligne" as const, ligne: "defense" as const, membre_id: null, titre: "Ligne haute et coulissement", texte: "La défense monte ensemble sur une passe en retrait adverse. Distance de 10 m entre les lignes.", url: null, auteur_nom: "Karim", cree_le: iso(10) },
+    { id: "t3", genre: "consigne" as const, cible: "joueur" as const, ligne: null, membre_id: "m1", titre: "Contre Saint-Mandé", texte: "Décroche entre leurs deux milieux pour orienter le jeu vers Lucas.", url: null, auteur_nom: "Moustapha", cree_le: iso(1) },
+    { id: "t4", genre: "video" as const, cible: "joueur" as const, ligne: null, membre_id: "m1", titre: "Tes prises de balle orientées", texte: "Regarde 0:42 et 1:15.", url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ", auteur_nom: "Moustapha", cree_le: iso(3) },
+  ],
   messagesEquipe: () => [
     { id: "msg1", auteur_id: COACH, auteur_nom: "Moustapha", auteur_role: "entraineur" as const, cible: "tous" as const, destinataires: [] as string[], texte: "Rendez-vous samedi 14 h au stade, tenue noire. On joue pour le maillot.", cree_le: iso(1) },
     { id: "msg2", auteur_id: "00000000-0000-4000-8000-0000000000d1", auteur_nom: "M. Diallo", auteur_role: "president" as const, cible: "joueurs" as const, destinataires: [] as string[], texte: "Bravo pour la victoire contre Montreuil. Le club est fier de vous.", cree_le: iso(8) },
@@ -208,14 +226,18 @@ export const demo = {
 /* ─── Équipe de démo ─── */
 function MEMBRES(): Membre[] {
   const j = (id: string, nom: string, numero: number | null, poste: string | null, user_id: string | null = null): Membre => ({ id, user_id, nom, role: "joueur", poste, numero });
-  return [
+  const liste: Membre[] = [
     { id: "m0", user_id: ROLE === "coach" ? COACH : CLIENTE, nom: "Moustapha", role: "entraineur", poste: null, numero: null },
     { id: "ma", user_id: null, nom: "Karim", role: "adjoint", poste: null, numero: null },
     j("m1", "Yanis", 10, "Milieu", ROLE === "coach" ? JOUEUR : CLIENTE),
     j("m2", "Bilal", 1, "Gardien"), j("m3", "Hugo", 4, "Défenseur"), j("m4", "Sékou", 5, "Défenseur"),
     j("m5", "Mehdi", 8, "Milieu"), j("m6", "Lucas", 7, "Ailier"), j("m7", "Omar", 9, "Attaquant"),
-    j("m8", "Théo", 3, "Latéral"), j("m9", "Adama", 6, "Milieu"), j("m10", "Nathan", 11, "Ailier"),
+    j("m8", "Théo", 3, "Latéral"), j("m9", "Adama", 6, "Milieu"), j("m10", "Nathan", 11, "Ailier"), j("m11", "Ilyes", 14, "Ailier"),
+    { id: "md", user_id: null, nom: "Sylvie", role: "dirigeant", poste: null, numero: null },
+    { id: "mp", user_id: null, nom: "M. Diallo", role: "president", poste: null, numero: null },
+    { id: "mq", user_id: null, nom: "Parent", role: "parent", poste: null, numero: null },
   ];
+  return liste.map((m): Membre => ({ ...m, ligne: m.poste === "Gardien" ? "gardien" : ["Défenseur", "Latéral"].includes(m.poste ?? "") ? "defense" : m.poste === "Milieu" ? "milieu" : ["Ailier", "Attaquant"].includes(m.poste ?? "") ? "attaque" : null }));
 }
 const EV = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
 function EVENEMENTS(): Evenement[] {
@@ -234,7 +256,9 @@ function EVENEMENTS(): Evenement[] {
     ev(EV(7), "entrainement", 1, 19),
     ev(EV(8), "rdv", 2, 18, { titre: "Réunion d'avant-match", lieu: "Club-house" }),
     ev(EV(9), "entrainement", 3, 19),
-    ev(EV(10), "match", 5, 15, { adversaire: "RC Saint-Mandé", domicile: true, lieu: "Stade Léo-Lagrange" }),
+    ev(EV(10), "match", 5, 15, { adversaire: "RC Saint-Mandé", domicile: true, lieu: "Stade Léo-Lagrange", convoques: ["m1", "m2", "m3", "m4", "m5", "m6", "m7", "m8", "m9", "m10", "m11"] }),
+    ev(EV(12), "match", 19, 15, { adversaire: "FC Nogent", domicile: false, lieu: "Stade Sous-la-Lune" }),
+    ev(EV(13), "match", 33, 15, { adversaire: "ES Vitry", domicile: true, lieu: "Stade Léo-Lagrange" }),
   ];
 }
 function PRESENCES(evts: Evenement[], membres: Membre[]): Presence[] {
