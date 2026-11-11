@@ -1,8 +1,11 @@
+import Link from "next/link";
 import { Avatar } from "@/components/Avatar";
+import { joursDepuis } from "@/lib/coaching/alertes";
+import { lundiCourant } from "@/lib/coaching/programme";
 import { Icon } from "@/components/Icon";
 import { Inviter } from "@/components/Inviter";
 import { rompre } from "../profil/liens";
-import { exigerPro, getCodeInvitation, getMesSportifs } from "@/lib/data";
+import { exigerPro, getBilans, getCodeInvitation, getMesSportifs, getSeancesTousClients } from "@/lib/data";
 import { locale, ui } from "@/lib/i18n";
 import { getLang } from "@/lib/i18n/serveur";
 import { estPro } from "@/lib/profils";
@@ -17,6 +20,10 @@ export default async function Page() {
   const M = T.metiers;
   const [sportifs, code] = await Promise.all([getMesSportifs(user.id), getCodeInvitation()]);
   const sante = metier === "kine" || metier === "osteo";
+  /* Coach et préparateur physique ouvrent la fiche des sportifs qui les ont acceptés comme tels */
+  const suivables = sportifs.filter((s) => s.metierPro === "coach" || s.metierPro === "prepa").map((s) => s.id);
+  const [seances, bilans] = suivables.length ? await Promise.all([getSeancesTousClients(), getBilans(suivables)]) : [{}, {}];
+  const lundi = lundiCourant();
   const aVenir = sante ? M.aVenir.sante : M.aVenir[metier];
   const jour = (d: string) => new Date(d).toLocaleDateString(locale(lang), { day: "numeric", month: "long", timeZone: "Europe/Paris" });
 
@@ -38,18 +45,33 @@ export default async function Page() {
           ) : (
             <>
               <div className="meta">{M.nPersonnes(sportifs.length)}</div>
-              {sportifs.map((s) => (
-                <div key={s.id} className="panel lie-row">
-                  <Avatar url={null} nom={s.prenom || "?"} />
-                  <div style={{ minWidth: 0 }}>
-                    <div className="row-title" style={{ fontSize: 16 }}>{s.prenom || T.coach.sansPrenom}</div>
-                    <div className="row-sub">{M.noms[s.metier]} · {M.depuis(jour(s.depuis))}</div>
+              {sportifs.map((s) => {
+                const ouvert = suivables.includes(s.id);
+                const hist = (seances as Record<string, { realisee_le: string }[]>)[s.id] ?? [];
+                const b = (bilans as Record<string, { freq?: string; prenom?: string }>)[s.id];
+                const j = joursDepuis(hist[0]?.realisee_le);
+                const semaine = hist.filter((h) => new Date(h.realisee_le) >= lundi).length;
+                const nom = s.prenom || b?.prenom || T.coach.sansPrenom;
+                return (
+                  <div key={s.id} className="panel lie-row">
+                    <Avatar url={null} nom={nom} />
+                    {ouvert ? (
+                      <Link href={`/coach/${s.id}`} className="lie-lien" aria-label={`${M.voirFiche} : ${nom}`}>
+                        <div className="row-title" style={{ fontSize: 16 }}>{nom}</div>
+                        <div className="row-sub">{b ? M.cetteSemaine(semaine, b.freq ?? "–") : M.noms[s.metier]} · {j === null ? M.aucuneSeance : M.derniere(j)}</div>
+                      </Link>
+                    ) : (
+                      <div style={{ minWidth: 0 }}>
+                        <div className="row-title" style={{ fontSize: 16 }}>{nom}</div>
+                        <div className="row-sub">{M.noms[s.metier]} · {M.depuis(jour(s.depuis))}</div>
+                      </div>
+                    )}
+                    <form action={rompre.bind(null, s.id, "pro")}>
+                      <button type="submit" className="link" style={{ fontSize: 13, color: "var(--muted)" }}>{M.retirer}</button>
+                    </form>
                   </div>
-                  <form action={rompre.bind(null, s.id, "pro")}>
-                    <button type="submit" className="link" style={{ fontSize: 13, color: "var(--muted)" }}>{M.retirer}</button>
-                  </form>
-                </div>
-              ))}
+                );
+              })}
             </>
           )}
         </section>

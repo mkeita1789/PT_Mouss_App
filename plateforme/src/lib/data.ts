@@ -145,8 +145,21 @@ export const getCheckinDuJour = cache(async (userId: string): Promise<Checkin | 
 /** Garde : réservé au coach */
 export async function exigerCoach(): Promise<Utilisateur> {
   const user = await getUtilisateur();
-  if (user.role !== "coach") redirect("/");
+  if (user.role !== "coach") redirect(estPro(user.metier) ? "/pro" : "/");
   return user;
+}
+
+/** Peut-on suivre ce sportif ? Le coach historique, ou un coach / préparateur qu'il a accepté.
+    (Les règles de la base vérifient la même chose : ceci ne sert qu'à afficher la bonne page.) */
+export async function exigerAccesSportif(sportifId: string): Promise<Utilisateur & { admin: boolean }> {
+  const user = await getUtilisateur();
+  if (user.role === "coach") return { ...user, admin: true };
+  if (!estPro(user.metier)) redirect("/");
+  if (DEMO) return { ...user, admin: false };
+  const supabase = await createClient();
+  const { data } = await supabase.from("suivis").select("sportif_id").eq("pro_id", user.id).eq("sportif_id", sportifId).in("metier_pro", ["coach", "prepa"]).maybeSingle();
+  if (!data) redirect("/pro");
+  return { ...user, admin: false };
 }
 
 export type ClientResume = {
@@ -466,4 +479,13 @@ export async function getInvitation(code: string): Promise<{ prenom: string; met
   const { data } = await supabase.rpc("invitation_info", { p_code: code });
   const l = Array.isArray(data) ? data[0] : null;
   return l && estPro(lireMetier(l.metier)) ? { prenom: l.prenom ?? "", metier: l.metier as MetierPro } : null;
+}
+
+/** Bilans de plusieurs sportifs (fréquence visée, prénom) — limités par les règles de la base */
+export async function getBilans(ids: string[]): Promise<Record<string, Bilan>> {
+  if (!ids.length) return {};
+  if (DEMO) return Object.fromEntries(ids.map((id) => [id, demo.bilan(id)?.reponses]).filter(([, b]) => b)) as Record<string, Bilan>;
+  const supabase = await createClient();
+  const { data } = await supabase.from("bilans").select("user_id, reponses").in("user_id", ids);
+  return Object.fromEntries((data ?? []).map((b) => [b.user_id, b.reponses as Bilan]));
 }

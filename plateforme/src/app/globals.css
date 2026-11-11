@@ -321,6 +321,9 @@ input, textarea, select { font: inherit; color: inherit; }
 .code-pro { margin-top: 10px; font-family: var(--font-oswald); font-size: 34px; font-weight: 600; letter-spacing: 0.2em; color: var(--gold-text); user-select: all; }
 .lie-row { display: grid; grid-template-columns: 44px 1fr auto; gap: 14px; align-items: center; padding: 14px 18px; }
 .lie-row .avatar { width: 44px; height: 44px; font-size: 16px; }
+.lie-lien { min-width: 0; display: block; border-radius: 8px; }
+.lie-lien:hover .row-title { color: var(--gold-text); }
+.lie-lien:focus-visible { outline: 2px solid var(--gold); outline-offset: 4px; }
 .input:focus { border-color: var(--gold); box-shadow: 0 0 0 4px rgb(var(--a) / 0.12); }
 .form-err { color: var(--ko); font-size: 13.5px; margin: 12px 0 0; }
 .form-ok { color: var(--ok); font-size: 13.5px; margin: 12px 0 0; }

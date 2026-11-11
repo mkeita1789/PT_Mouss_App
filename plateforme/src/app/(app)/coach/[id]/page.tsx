@@ -9,7 +9,7 @@ import { lundiDe } from "@/lib/coaching/motivation";
 import { Icon } from "@/components/Icon";
 import { supprimerMot } from "../actions";
 import { HistoriqueSeances, ProgressionCharges } from "@/components/Progression";
-import { exigerCoach, getChargesImposees, getCheckinsRecents, getClient, getHistorique, getMots, getPhotos, getReath, getReathSeances } from "@/lib/data";
+import { exigerAccesSportif, getChargesImposees, getCheckinsRecents, getClient, getHistorique, getMots, getPhotos, getReath, getReathSeances } from "@/lib/data";
 import { alertesCoach } from "@/lib/coaching/alertes";
 import { buildProgram, lundiCourant, phaseFor } from "@/lib/coaching/programme";
 import { locale, tc, traduireProgramme, ui } from "@/lib/i18n";
@@ -21,9 +21,11 @@ const NOTE = { ko: "note-ko", gold: "note-gold", ok: "note-ok" } as const;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export default async function Page({ params }: PageProps<"/coach/[id]">) {
-  await exigerCoach();
   const { id } = await params;
   if (!UUID.test(id)) notFound();
+  /* Le coach historique voit tout ; un coach ou préparateur, seulement les sportifs qui l'ont accepté */
+  const moi = await exigerAccesSportif(id);
+  const admin = moi.admin;
 
   const client = await getClient(id);
   if (!client) notFound();
@@ -58,8 +60,8 @@ export default async function Page({ params }: PageProps<"/coach/[id]">) {
   return (
     <div className="reveal">
       <header className="page-head">
-        <Link href="/coach" className="meta" style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
-          <Icon nom="retour" taille={16} /> {T.coach.retour}
+        <Link href={admin ? "/coach" : "/pro"} className="meta" style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+          <Icon nom="retour" taille={16} /> {admin ? T.coach.retour : T.metiers.retour}
         </Link>
         <div style={{ display: "flex", alignItems: "center", gap: 16, marginTop: 10 }}>
           <Avatar url={client.avatar} nom={client.prenom || "?"} className="avatar-lg" />
@@ -121,10 +123,12 @@ export default async function Page({ params }: PageProps<"/coach/[id]">) {
         </section>
       )}
 
-      <section className="section">
-        <div className="section-head"><h2 className="section-title">{T.reath.programmes}</h2></div>
-        <ReathCoach clientId={id} reath={reath} seances={reathSeances} lang={lang} />
-      </section>
+      {admin && (
+        <section className="section">
+          <div className="section-head"><h2 className="section-title">{T.reath.programmes}</h2></div>
+          <ReathCoach clientId={id} reath={reath} seances={reathSeances} lang={lang} />
+        </section>
+      )}
 
       <section className="section">
         <div className="section-head"><h2 className="section-title">{T.mot.titre}</h2></div>
@@ -167,7 +171,7 @@ export default async function Page({ params }: PageProps<"/coach/[id]">) {
         </section>
       )}
 
-      {photos.length > 0 && (
+      {admin && photos.length > 0 && (
         <section className="section">
           <div className="section-head"><h2 className="section-title">{T.photos.coachTitre}</h2><span className="section-note">{T.photos.meta}</span></div>
           <Comparaison photos={photos} lang={lang} P={T.photos} />

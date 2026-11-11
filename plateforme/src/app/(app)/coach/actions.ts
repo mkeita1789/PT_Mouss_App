@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { exigerCoach } from "@/lib/data";
+import { exigerAccesSportif, exigerCoach } from "@/lib/data";
 import { ui } from "@/lib/i18n";
 import { getLang } from "@/lib/i18n/serveur";
 import { createClient } from "@/lib/supabase/server";
@@ -12,10 +12,11 @@ export type EtatMot = { erreur?: string; ok?: string; n?: number } | undefined;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export async function envoyerMot(clientId: string, prev: EtatMot, formData: FormData): Promise<EtatMot> {
-  const coach = await exigerCoach();
   const T = ui(await getLang());
+  if (!UUID.test(clientId)) return { erreur: T.mot.erreur };
+  const coach = await exigerAccesSportif(clientId);
   const texte = String(formData.get("texte") ?? "").trim();
-  if (!UUID.test(clientId) || !texte) return { erreur: T.mot.erreur };
+  if (!texte) return { erreur: T.mot.erreur };
   if (texte.length > 600) return { erreur: T.mot.trop };
   const supabase = await createClient();
   const { error } = await supabase.from("mots_coach").insert({ client_id: clientId, texte });
@@ -36,8 +37,8 @@ export async function envoyerMot(clientId: string, prev: EtatMot, formData: Form
 }
 
 export async function supprimerMot(id: string, clientId: string) {
-  await exigerCoach();
   if (!UUID.test(id) || !UUID.test(clientId)) return;
+  await exigerAccesSportif(clientId);
   const supabase = await createClient();
   await supabase.from("mots_coach").delete().eq("id", id);
   revalidatePath(`/coach/${clientId}`);
@@ -93,8 +94,9 @@ export async function supprimerDefi(id: string) {
 export type CellulePlan = { exercice: string; jour_code: string | null; lundi: string; charge: number | null };
 
 export async function enregistrerPlan(clientId: string, semaines: string[], cellules: CellulePlan[]): Promise<{ erreur?: string; ok?: string }> {
-  await exigerCoach();
   const T = ui(await getLang());
+  if (!UUID.test(clientId)) return { erreur: T.plan.erreur };
+  await exigerAccesSportif(clientId);
   const LUNDI = /^\d{4}-\d{2}-\d{2}$/;
   const lundis = semaines.filter((l) => LUNDI.test(l) && new Date(l + "T12:00:00Z").getUTCDay() === 1);
   if (!UUID.test(clientId) || !lundis.length || lundis.length > 26 || cellules.length > 500) return { erreur: T.plan.erreur };
