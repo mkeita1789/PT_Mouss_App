@@ -47,7 +47,7 @@ export default async function Page() {
     );
 
   const uf = volumeUF(brut);
-  const gaugeCol = uf > P.zone[1] + 10 ? "var(--ko)" : uf >= P.zone[0] ? "var(--ok)" : "var(--gold)";
+  const gaugeCol = P.deload ? "var(--muted)" : uf > P.zone[1] + 10 ? "var(--ko)" : uf >= P.zone[0] ? "var(--ok)" : "var(--gold)";
   const titreAssiette = tc(lang, N.t).replace(/^(Côté assiette — |On your plate — )/, "");
 
   return (
@@ -130,6 +130,8 @@ export default async function Page() {
               <i style={{ width: `${Math.min((uf / 50) * 100, 100)}%`, background: gaugeCol }} />
             </div>
             <div className="chart-axis"><span>0</span><span>{T.programme.zone(P.zone[0], P.zone[1])}</span><span>50</span></div>
+            {P.deload && <p className="meta" style={{ marginTop: 10 }}>{T.programme.volumeAllege}</p>}
+            <p className="meta" style={{ marginTop: 10 }}>{T.programme.ufAide}</p>
             <p className="meta" style={{ marginTop: 14 }}>
               {T.programme.categories[0]}<span className="cat cat-S">S</span>{T.programme.categories[1]}<span className="cat cat-A">A</span>{T.programme.categories[2]}<span className="cat cat-P">P</span>{T.programme.categories[3]}
             </p>

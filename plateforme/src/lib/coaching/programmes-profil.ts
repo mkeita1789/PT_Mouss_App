@@ -74,7 +74,7 @@ export function perfFoot(p: Bilan, x: Contexte): Programme {
     { n: "Bonds horizontaux", s: adjS(3), r: "5", rir: "-", c: "-", note: "pieds joints, réception stable" }] };
   const appuisTerrain: Jour = { d: "APPUIS", f: "Terrain — changements de direction · VMA", ex: [
     { n: "Test 505 / changements de direction", s: adjS(6), r: "1", rir: "-", c: "-", note: "appui bas, regard devant, récup 1 min" },
-    { n: "Course 15-15", s: 2, r: "8 min", rir: "-", c: "-", note: `15 s vite / 15 s trot — ${p.allure || "ta VMA"}` },
+    { n: "Course 15-15", s: 2, r: "8 min", rir: "-", c: "-", note: "15 s vite / 15 s trot, à ta VMA" },
     { n: "Nordic ischio-jambiers", s: adjS(3), r: x.deb ? "3-4" : "5", rir: "-", c: "-", note: "🔴 avec un partenaire qui tient les chevilles" }] };
   const forceMaison: Jour = { d: "FORCE MAISON", f: "Force poids du corps · prévention", ex: [
     { n: "DB Split Squat", s: adjS(4), r: "8/j", rir, c: "S", note: "sac à dos lesté si trop facile" },

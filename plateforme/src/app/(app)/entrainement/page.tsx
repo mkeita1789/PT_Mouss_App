@@ -46,7 +46,7 @@ export default async function Page() {
     const phase = phaseFor(bilan.reponses, bilan.debut);
     sousProgramme = phase ? `${tc(lang, phase.n)} · ${lang === "en" ? "week" : "semaine"} ${phase.week}/${phase.len}` : tc(lang, P.proto);
     const jour = P.repos ? null : P.days[indexJourSuivant(P.days, historique)];
-    sousSeance = jour ? `${jour.d} · ${tc(lang, jour.f)}` : T.accueil.reposImpose;
+    sousSeance = jour ? `${tc(lang, jour.d)} · ${tc(lang, jour.f)}` : T.accueil.reposImpose;
   }
 
   return (

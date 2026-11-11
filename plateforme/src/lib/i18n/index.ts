@@ -58,7 +58,7 @@ export function traduireProgramme(P: Programme, lang: Lang): Programme {
       ...d,
       d: tc(lang, d.d),
       f: tc(lang, d.f),
-      ex: d.ex.map((e) => ({ ...e, note: tc(lang, e.note), r: tc(lang, e.r) })),
+      ex: d.ex.map((e) => ({ ...e, note: tc(lang, e.note), r: tc(lang, e.r).replace(/(\d)\/j\b/g, "$1/leg").replace(/\/côté/g, "/side").replace(/\/bras/g, "/arm").replace(/ pas$/, " steps") })),
     })),
   };
 }

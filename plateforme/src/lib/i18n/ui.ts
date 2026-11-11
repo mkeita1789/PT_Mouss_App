@@ -78,6 +78,8 @@ export const UI_FR = {
     tesSeances: "Tes séances",
     parSemaine: (n: number) => `${n} par semaine`,
     dropSet: "drop set",
+    volumeAllege: "Semaine allégée : le volume est volontairement sous la zone habituelle.",
+    ufAide: "UF = unités de volume. Chaque série compte selon l'exercice : 1 pour un gros mouvement (S), 0,7 pour un intermédiaire (A), 0,4 pour une isolation (P).",
     volume: "Volume de la semaine",
     zone: (a: number, b: number) => `Zone visée ${a} à ${b}`,
     categories: ["Repère des catégories : ", " gros mouvement, ", " intermédiaire, ", " isolation."],
@@ -534,6 +536,7 @@ export const UI_FR = {
     confidentialite: "Aucune donnée de forme ni de santé ici : seulement le calendrier, les réponses et les présences.",
     notifTitre: (t: string) => `Convocation : ${t}`, notifSerie: (n: number) => `${n} entraînements ajoutés au calendrier`,
   },
+  erreurPage: { titre: "Quelque chose a coincé", texte: "Cette page n'a pas pu s'afficher. Tes données sont en sécurité : réessaie, ou reviens à l'accueil.", reessayer: "Réessayer", accueil: "Retour à l'accueil" },
   importer: {
     surCeTel: "Ton historique sur ce téléphone",
     titre: "Reprendre ton historique",
@@ -632,6 +635,8 @@ export const UI_EN: TextesUI = {
     tesSeances: "Your sessions",
     parSemaine: (n: number) => `${n} per week`,
     dropSet: "drop set",
+    volumeAllege: "Light week: volume is deliberately below the usual range.",
+    ufAide: "UF = volume units. Each set counts by exercise: 1 for a big lift (S), 0.7 for an intermediate one (A), 0.4 for isolation (P).",
     volume: "Weekly volume",
     zone: (a: number, b: number) => `Target zone ${a} to ${b}`,
     categories: ["Category guide: ", " big lift, ", " intermediate, ", " isolation."],
@@ -1065,6 +1070,7 @@ export const UI_EN: TextesUI = {
     confidentialite: "No fitness or health data here: only the calendar, answers and attendance.",
     notifTitre: (t: string) => `Call-up: ${t}`, notifSerie: (n: number) => `${n} training sessions added to the calendar`,
   },
+  erreurPage: { titre: "Something got stuck", texte: "This page couldn't load. Your data is safe: try again, or go back home.", reessayer: "Try again", accueil: "Back to home" },
   importer: {
     surCeTel: "Your history on this phone",
     titre: "Bring back your history",

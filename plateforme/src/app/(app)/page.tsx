@@ -98,9 +98,9 @@ export default async function Accueil() {
               </div>
               <div className="section-head" style={{ marginBottom: 10 }}>
                 <span className="section-title" style={{ fontSize: 14 }}>{T.accueil.taSemaine}</span>
-                <span className="meta"><b className="num" style={{ color: "var(--ink)", fontSize: 15 }}>{semaine.length}</b> / {target} {T.accueil.seances}</span>
+                <span className="meta"><b className="num" style={{ color: "var(--ink)", fontSize: 15 }}>{motiv.serie.cetteSemaine}</b> / {motiv.serie.objectif} {T.accueil.seances}</span>
               </div>
-              <div className="week" aria-label={`${semaine.length} / ${target} ${T.accueil.seances}`}>
+              <div className="week" aria-label={`${motiv.serie.cetteSemaine} / ${motiv.serie.objectif} ${T.accueil.seances}`}>
                 {jours.map((j) => (
                   <div key={j.lb} className={`week-day ${j.fait ? "done" : ""} ${j.auj ? "today" : ""}`}>
                     <span className="week-mark"><Icon nom="check" taille={16} /></span>
