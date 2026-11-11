@@ -10,6 +10,9 @@ export type MetierPro = Exclude<Metier, "sportif" | "joueur">;
 export const lireMetier = (v: unknown): Metier => (METIERS.includes(v as Metier) ? (v as Metier) : "sportif");
 export const estPro = (m: Metier): m is MetierPro => m !== "sportif" && m !== "joueur";
 
+/** Joueur, entraîneur et préparateur physique ont un bilan et des programmes de football */
+export const familleDe = (m: Metier): "forme" | "foot" => (m === "joueur" || m === "entraineur" || m === "prepa" ? "foot" : "forme");
+
 /** Onglets de la barre du bas, dans l'ordre (5 au plus) */
 export type CleNav = "accueil" | "entrainement" | "seance" | "suivi" | "profil" | "coach" | "pro" | "exercices" | "equipe";
 

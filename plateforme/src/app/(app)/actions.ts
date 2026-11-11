@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getBilan, getChargesImposees, getHistorique, getUtilisateur, jourParis, type Ecart } from "@/lib/data";
+import { familleDe } from "@/lib/profils";
 import { lundiDe, nouveauxRecords, type NouveauRecord } from "@/lib/coaching/motivation";
 import { CHECKIN_Q, OBJECTIFS, phaseFor, questionsBilan } from "@/lib/coaching/programme";
 import { parseKg } from "@/lib/coaching/amrap";
@@ -22,7 +23,8 @@ export async function enregistrerBilan(reponses: Partial<Bilan>, recommencer: bo
 
   /* Chaque réponse doit appartenir aux choix proposés */
   const propre: Partial<Bilan> = {};
-  for (const q of questionsBilan(reponses)) {
+  const famille = familleDe(user.metier);
+  for (const q of questionsBilan(reponses, famille)) {
     const v = reponses[q.k];
     if (q.type === "text") {
       const txt = String(v ?? "").trim().slice(0, 40);

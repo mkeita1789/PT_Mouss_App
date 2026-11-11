@@ -3,16 +3,16 @@
    Port fidèle de app.js (PWA). Les valeurs des réponses restent
    en FR : ce sont des identifiants que buildProgram() teste.
    ═══════════════════════════════════════════════ */
-import type { Bilan, Checkin, Jour, Objectif, Phase, PhaseCourante, Programme } from "./types";
+import type { Bilan, Checkin, Famille, Jour, Objectif, Phase, PhaseCourante, Programme } from "./types";
+import { CYCLE_FOOT, CYCLE_PRESA, CYCLE_TONIQUE, fessiersMaison, lieu, maintienSaison, perfFoot, preparerSaison, tonifier, type Contexte } from "./programmes-profil";
 
 /* ═══ BILAN ═══ */
-export const OBJECTIFS: Objectif[] = [
-  "Développer mes fessiers 🍑",
-  "Prendre du muscle",
-  "Perdre du gras",
-  "Performance sportive ⚽",
-  "Me sentir mieux",
-];
+/** Objectifs proposés selon le profil */
+export const OBJECTIFS_FORME: Objectif[] = ["Développer mes fessiers 🍑", "Perdre du gras", "Tonifier mon corps ✨", "Prendre du muscle", "Me sentir mieux"];
+export const OBJECTIFS_FOOT: Objectif[] = ["Performance foot ⚡", "Maintien en saison 🔁", "Préparer la saison 📅"];
+/** Tous les objectifs reconnus (y compris l'ancien objectif foot des bilans déjà faits) */
+export const OBJECTIFS: Objectif[] = [...OBJECTIFS_FORME, ...OBJECTIFS_FOOT, "Performance sportive ⚽"];
+const FOOT = (o?: string) => o === "Performance foot ⚡" || o === "Maintien en saison 🔁" || o === "Préparer la saison 📅";
 
 export type QuestionBilan = {
   k: keyof Bilan;
@@ -22,10 +22,27 @@ export type QuestionBilan = {
   o?: string[];
 };
 
-export function questionsBilan(a: Partial<Bilan>): QuestionBilan[] {
+const ALLURE: QuestionBilan = { k: "allure", q: "Ton allure de footing ?", o: ["14 km/h (4'20)", "13 km/h (4'40)", "12 km/h (5'00)", "11 km/h ou moins"] };
+const SOMMEIL: QuestionBilan = { k: "sommeil", q: "Tu dors combien ?", o: ["Moins de 6 h", "6-7 h", "7-8 h", "Plus de 8 h"] };
+
+/** Questions du bilan : celles d'un joueur ne sont pas celles de quelqu'un qui vient pour la forme */
+export function questionsBilan(a: Partial<Bilan>, famille: Famille = "forme"): QuestionBilan[] {
+  if (famille === "foot" && a.objectif !== "Performance sportive ⚽") {
+    const q: QuestionBilan[] = [
+      { k: "prenom", type: "text", q: "Comment tu t'appelles ?", ph: "Ton prénom" },
+      { k: "objectif", q: "Ton objectif foot ?", o: OBJECTIFS_FOOT },
+      { k: "niveau", q: "Ton niveau de jeu ?", o: ["Loisir", "District / Régional", "National / semi-pro", "Pro / centre de formation"] },
+      { k: "freq", q: "Combien de séances en plus du club, par semaine ?", o: ["1", "2", "3", "4"] },
+      { k: "materiel", q: "Où t'entraînes-tu ?", o: ["Sur le terrain", "En salle", "Terrain + salle", "À la maison"] },
+      { k: "sante", q: "Un point de vigilance ?", o: ["Aucun", "Chevilles", "Genoux", "Ischios / adducteurs", "Dos sensible"] },
+      SOMMEIL,
+    ];
+    if (a.objectif !== "Maintien en saison 🔁") q.splice(5, 0, ALLURE);
+    return q;
+  }
   const q: QuestionBilan[] = [
     { k: "prenom", type: "text", q: "Comment tu t'appelles ?", ph: "Ton prénom" },
-    { k: "objectif", q: "Ton objectif principal ?", o: OBJECTIFS },
+    { k: "objectif", q: "Qu'est-ce qui t'amène ?", o: a.objectif === "Performance sportive ⚽" ? [...OBJECTIFS_FORME, "Performance sportive ⚽"] : OBJECTIFS_FORME },
     { k: "niveau", q: "Où tu en es ?", o: ["Je débute", "J'ai déjà pratiqué", "Je m'entraîne régulièrement", "Niveau avancé"] },
     { k: "freq", q: "Combien de séances par semaine ?", o: ["2", "3", "4", "5 ou +"] },
     { k: "materiel", q: "Où t'entraînes-tu ?", o: ["En salle", "À la maison", "Les deux"] },
@@ -37,7 +54,7 @@ export function questionsBilan(a: Partial<Bilan>): QuestionBilan[] {
       3,
       0,
       { k: "periode", q: "Tu es dans quelle période ?", o: ["Coupure / vacances", "Pré-saison", "En saison", "Pas de compétition"] },
-      { k: "allure", q: "Ton allure de footing ?", o: ["14 km/h (4'20)", "13 km/h (4'40)", "12 km/h (5'00)", "11 km/h ou moins"] },
+      ALLURE,
     );
   return q;
 }
@@ -70,6 +87,10 @@ export const CYCLE_BIEN: Phase[] = [
 
 export function cycleFor(p: Bilan): Phase[] | null {
   if (p.objectif === "Perdre du gras") return CYCLE_GRAS;
+  if (p.objectif === "Tonifier mon corps ✨") return CYCLE_TONIQUE;
+  if (p.objectif === "Performance foot ⚡") return CYCLE_FOOT;
+  if (p.objectif === "Préparer la saison 📅") return CYCLE_PRESA;
+  if (p.objectif === "Maintien en saison 🔁") return null;
   if (p.objectif === "Me sentir mieux") return CYCLE_BIEN;
   if (p.objectif === "Performance sportive ⚽") return null;
   return CYCLE_JIGI;
@@ -100,6 +121,8 @@ export function phaseFor(p: Bilan, start: string | Date | null | undefined, now?
 export function warmup(p: Bilan) {
   if (p.objectif === "Développer mes fessiers 🍑")
     return { t: "Le rituel JIGI (10-15 min) — jamais sauté", ex: ["Glute Bridge — 2×15", "Lateral Band Walk — 2×20", "Donkey Kicks — 2×12/jambe", "Fire Hydrant — 2×12/jambe", "Hip Flexor Stretch — 30 s/côté", "90/90 — 30 s/côté", "Deep Squat Hold — 30 s"] };
+  if (FOOT(p.objectif))
+    return { t: "Échauffement foot (10 min)", ex: ["Footing léger — 3 min", "Gammes : montées de genoux, talons-fesses, pas chassés — 2×20 m", "Fentes marchées avec rotation — ×8", "Balancés de jambe avant/côté — ×10", "2 accélérations progressives — 20 m"] };
   if (p.objectif === "Performance sportive ⚽")
     return { t: "Déverrouillage articulaire (2 tours)", ex: ["Rotations chevilles — 5/sens", "Montées pointes — ×10", "Rotations genoux, bassin, rachis", "Squats complets — ×10", "Rotations épaules + cervicales"] };
   if (p.objectif === "Me sentir mieux")
@@ -112,7 +135,7 @@ export function nutri(p: Bilan) {
   const plate = "🍗 Protéines à chaque repas · 🥦 moitié de l'assiette en légumes · 🍚 glucides à ta faim · 🫒 un peu de bon gras · 💧 eau toute la journée";
   if (p.objectif === "Perdre du gras")
     return { t: "Côté assiette — perte de gras", pts: [plate, "🚶 8-12 000 pas/jour : le levier n°1, devant le cardio", "🍽️ Volume : légumes et fibres pour la satiété", "⚖️ Pesée 1×/semaine MAX. La balance ment — la force stable, c'est ça la victoire", "🚫 Aucun aliment interdit. Des quantités, des fréquences."] };
-  if (p.objectif === "Performance sportive ⚽")
+  if (p.objectif === "Performance sportive ⚽" || FOOT(p.objectif))
     return { t: "L'entraînement invisible", pts: ["😴 Sommeil 8-9 h — le premier facteur anti-blessure", "🍚 Glucides autour des séances et des matchs", "🍽️ Repas complet 3-4 h avant le match, collation 1-2 h avant", "🥤 Dans les 30-60 min après : glucides + protéines", "💧 Hydratation stricte, plus s'il fait chaud"] };
   if (p.objectif === "Me sentir mieux")
     return { t: "Côté assiette — sans compter", pts: [plate, "🕐 Des repas à heures régulières — la base", "🔋 Ce qu'on regarde : ton énergie, ton sommeil, ton humeur. Pas le poids.", "☝️ Une habitude à la fois."] };
@@ -123,7 +146,8 @@ export function nutri(p: Bilan) {
 export const SRA: Record<string, number> = { S: 1.0, A: 0.71, P: 0.43 };
 
 export function buildProgram(p: Bilan, start: string | Date | null | undefined, now?: Date): Programme {
-  const deb = p.niveau === "Je débute", av = p.niveau === "Niveau avancé";
+  const deb = p.niveau === "Je débute" || p.niveau === "Loisir";
+  const av = p.niveau === "Niveau avancé" || p.niveau === "National / semi-pro" || p.niveau === "Pro / centre de formation";
   const dos = p.sante === "Dos sensible", gen = p.sante === "Genoux";
   const freq = parseInt(p.freq) || 3;
   const ph = phaseFor(p, start, now);
@@ -132,9 +156,21 @@ export function buildProgram(p: Bilan, start: string | Date | null | undefined, 
   const drop = ph ? ph.drop && !deb : !deb;
   const mult = ph?.mult ?? 1;
   const adjS = (s: number) => Math.max(2, Math.round(s * mult));
+  const ctx: Contexte = { rir, reps, adjS, drop, deb, av, dos, gen, freq };
   let base: Programme;
 
-  if (p.objectif === "Développer mes fessiers 🍑") {
+  if (p.objectif === "Performance foot ⚡") base = perfFoot(p, ctx);
+  else if (p.objectif === "Maintien en saison 🔁") return maintienSaison(p, ctx);
+  else if (p.objectif === "Préparer la saison 📅") base = preparerSaison(p, ctx);
+  else if (p.objectif === "Tonifier mon corps ✨") base = tonifier(p, ctx);
+  else if (p.objectif === "Développer mes fessiers 🍑" && lieu(p).maison) {
+    base = {
+      proto: "FESSIERS", icon: "🍑", officiel: true,
+      cle: "Version maison : élastique, haltères ou sac lesté. Le Hip Thrust ouvre chaque jour fessiers, isolation en fin.",
+      marqueur: "Les charges qui montent", zone: [20, 30],
+      days: fessiersMaison(ctx),
+    };
+  } else if (p.objectif === "Développer mes fessiers 🍑") {
     const hinge = dos
       ? { n: "Cable Pull Through", c: "P" as const, r: reps("12-15"), note: "remplace le RDL (dos sensible)" }
       : { n: "RDL", c: "S" as const, r: reps(deb ? "10-12" : "8-10"), note: "dos neutre, étirement ischios" };

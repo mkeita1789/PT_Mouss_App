@@ -24,7 +24,11 @@ const COACH = "00000000-0000-4000-8000-0000000000c0";
 
 const BILANS: Record<string, { reponses: Bilan; debut: string }> = {
   [CLIENTE]: {
-    reponses: { prenom: "Inès", objectif: "Développer mes fessiers 🍑", niveau: "J'ai déjà pratiqué", freq: "3", materiel: "En salle", sante: "Aucun", sommeil: "7-8 h" },
+    /* PTMOUSS_DEMO_OBJ / PTMOUSS_DEMO_LIEU : voir le programme d'un autre objectif */
+    reponses: {
+      prenom: "Inès", objectif: (process.env.PTMOUSS_DEMO_OBJ as Bilan["objectif"]) || "Développer mes fessiers 🍑", niveau: "J'ai déjà pratiqué",
+      freq: process.env.PTMOUSS_DEMO_OBJ ? "4" : "3", materiel: process.env.PTMOUSS_DEMO_LIEU || "En salle", sante: "Aucun", sommeil: "7-8 h", allure: "13 km/h (4'40)",
+    },
     debut: iso(23),
   },
   [JOUEUR]: {

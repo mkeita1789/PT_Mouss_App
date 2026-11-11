@@ -4,11 +4,21 @@
 export type Categorie = "S" | "A" | "P" | "-";
 
 export type Objectif =
+  /* Forme (sportif, coach, kiné, ostéo) */
   | "Développer mes fessiers 🍑"
-  | "Prendre du muscle"
   | "Perdre du gras"
-  | "Performance sportive ⚽"
-  | "Me sentir mieux";
+  | "Tonifier mon corps ✨"
+  | "Prendre du muscle"
+  | "Me sentir mieux"
+  /* Football (joueur, entraîneur, préparateur physique) */
+  | "Performance foot ⚡"
+  | "Maintien en saison 🔁"
+  | "Préparer la saison 📅"
+  /* Ancien objectif foot, gardé pour les bilans déjà faits */
+  | "Performance sportive ⚽";
+
+/** Famille de bilan : les questions et les programmes proposés dépendent du profil */
+export type Famille = "forme" | "foot";
 
 /** Réponses du bilan (valeurs FR = identifiants figés, comme dans la PWA) */
 export type Bilan = {

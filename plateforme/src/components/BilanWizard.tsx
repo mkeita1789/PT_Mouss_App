@@ -4,12 +4,12 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { enregistrerBilan } from "@/app/(app)/actions";
 import { questionsBilan } from "@/lib/coaching/programme";
-import type { Bilan } from "@/lib/coaching/types";
+import type { Bilan, Famille } from "@/lib/coaching/types";
 import { Icon } from "./Icon";
 import { ChoixLangue, useLang } from "./Langue";
 import { tc } from "@/lib/i18n";
 
-export function BilanWizard({ initial, existe }: { initial: Partial<Bilan>; existe: boolean }) {
+export function BilanWizard({ initial, existe, famille }: { initial: Partial<Bilan>; existe: boolean; famille: Famille }) {
   const router = useRouter();
   const { lang, T } = useLang();
   const [rep, setRep] = useState<Partial<Bilan>>(initial);
@@ -18,7 +18,7 @@ export function BilanWizard({ initial, existe }: { initial: Partial<Bilan>; exis
   const [erreur, setErreur] = useState("");
   const [pending, start] = useTransition();
 
-  const QS = questionsBilan(rep);
+  const QS = questionsBilan(rep, famille);
   const q = QS[Math.min(idx, QS.length - 1)];
   const val = rep[q.k];
   const ok = q.type === "text" ? String(val ?? "").trim().length > 0 : !!val;
