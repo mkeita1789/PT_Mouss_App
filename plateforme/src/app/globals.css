@@ -865,3 +865,58 @@ button.link { min-height: 36px; padding: 0 4px; }
 .temps-valeur { flex: none; display: flex; align-items: baseline; gap: 6px; white-space: nowrap; }
 .temps-valeur .row-sub { margin-top: 0; }
 .point-aide { margin-top: 10px; font-size: 12.5px; line-height: 1.45; }
+
+/* ═══ Identité du club ═══ */
+.club-titre { display: flex; align-items: center; gap: 14px; margin-top: 10px; }
+.logo-club { flex: none; width: 56px; height: 56px; border-radius: 16px; display: grid; place-items: center; overflow: hidden; background: var(--club1, var(--surface-2)); color: var(--club1-texte, var(--ink)); border: 2px solid var(--club2, var(--line)); }
+.logo-club img { width: 100%; height: 100%; object-fit: cover; }
+.club-bande { display: block; height: 6px; border-radius: 3px; margin-top: 14px; background: linear-gradient(90deg, var(--club1) 0 60%, var(--club2) 60% 100%); max-width: 220px; }
+.valeurs-club { margin-top: 14px; border-left: 4px solid var(--club1, var(--gold)); }
+.valeurs-club p { margin-top: 6px; font-size: 15px; line-height: 1.5; white-space: pre-wrap; }
+.couleurs { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; margin-top: 4px; }
+.couleurs label { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--ink-2); }
+.couleurs input[type="color"] { width: 44px; height: 44px; padding: 0; border: 1px solid var(--line-strong); border-radius: 12px; background: none; cursor: pointer; }
+.maillot { width: 44px; height: 44px; border-radius: 12px; border: 1px solid var(--line-strong); }
+.joueur-cellule { display: flex; align-items: center; gap: 10px; }
+.photo-membre { position: relative; }
+.photo-mini { width: 36px; height: 36px; flex: none; border-radius: 50%; display: grid; place-items: center; overflow: hidden; object-fit: cover; background: var(--surface-2); border: 1px solid var(--line-strong); color: var(--muted); padding: 0; }
+.photo-mini img { width: 100%; height: 100%; object-fit: cover; }
+.photo-membre-panneau { position: absolute; z-index: 5; top: 42px; left: 0; width: min(300px, 80vw); padding: 14px; border-radius: 14px; background: var(--surface); border: 1px solid var(--line-strong); box-shadow: 0 12px 30px rgb(0 0 0 / 0.35); }
+
+/* ═══ Composition façon FIFA ═══ */
+.compo-schemas { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 12px; scrollbar-width: none; }
+.compo-schemas .chip { flex: none; }
+.chip.on { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.compo-entete { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+.compo-schema { font-size: 22px; font-weight: 600; color: var(--ink); }
+.terrain { position: relative; width: 100%; max-width: 520px; margin: 0 auto; aspect-ratio: 68 / 92; border-radius: 18px; overflow: hidden;
+  background: repeating-linear-gradient(180deg, #1f6b3a 0 9.09%, #1a5f33 9.09% 18.18%); border: 2px solid rgb(255 255 255 / 0.25); }
+.terrain-ligne { position: absolute; left: 0; right: 0; top: 50%; height: 2px; background: rgb(255 255 255 / 0.35); }
+.terrain-rond { position: absolute; left: 50%; top: 50%; width: 26%; aspect-ratio: 1; transform: translate(-50%, -50%); border: 2px solid rgb(255 255 255 / 0.35); border-radius: 50%; }
+.terrain-surface { position: absolute; left: 22%; right: 22%; height: 14%; border: 2px solid rgb(255 255 255 / 0.35); }
+.terrain-surface.haut { top: -2px; border-top: 0; }
+.terrain-surface.bas { bottom: -2px; border-bottom: 0; }
+.poste { position: absolute; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 2px; width: 74px; padding: 0; background: none; border: 0; color: #fff; cursor: pointer; }
+.poste:disabled { cursor: default; }
+.poste:focus-visible { outline: 2px solid #fff; outline-offset: 2px; border-radius: 12px; }
+.poste-label { font-size: 10px; font-weight: 700; letter-spacing: 0.04em; padding: 1px 6px; border-radius: 6px; background: rgb(0 0 0 / 0.45); }
+.poste.sel .compo-visage { box-shadow: 0 0 0 3px #fff, 0 0 0 6px var(--club1); }
+.compo-carte { display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 0; }
+.compo-visage { position: relative; width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center; background: var(--club1); color: var(--club1-texte); border: 2px solid var(--club2); font-weight: 700; font-size: 15px; }
+.compo-visage img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+.compo-visage.vide { background: rgb(0 0 0 / 0.25); border: 2px dashed rgb(255 255 255 / 0.6); color: #fff; }
+.compo-num { position: absolute; right: -6px; bottom: -4px; min-width: 20px; height: 20px; padding: 0 4px; border-radius: 10px; display: grid; place-items: center; font-size: 12px; background: var(--club2); color: var(--club1); border: 1px solid var(--club1); }
+.compo-nom { max-width: 74px; font-size: 11.5px; font-weight: 600; line-height: 1.15; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 0 1px 2px rgb(0 0 0 / 0.8); }
+.compo-carte.mini { flex-direction: row; gap: 10px; }
+.compo-carte.mini .compo-visage { width: 36px; height: 36px; font-size: 13px; }
+.compo-carte.mini .compo-nom { max-width: none; font-size: 14px; color: var(--ink); text-shadow: none; text-align: left; }
+.compo-listes { display: grid; gap: 18px; margin-top: 18px; }
+@media (min-width: 760px) { .compo-listes { grid-template-columns: 1fr 1fr; } }
+.compo-titre { display: flex; align-items: baseline; gap: 8px; font-size: 15px; font-weight: 600; margin-bottom: 8px; }
+.compo-banc { display: flex; flex-direction: column; gap: 4px; }
+.compo-ligne { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 6px 4px; border-bottom: 1px solid var(--line); }
+.compo-choix { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; padding: 0; background: none; border: 0; color: inherit; text-align: left; cursor: pointer; }
+.compo-choix:disabled { cursor: default; }
+.compo-rep { margin-left: auto; font-size: 12px; color: var(--muted); }
+.rep-oui .compo-rep { color: var(--ok); }
+.rep-non { opacity: 0.55; }

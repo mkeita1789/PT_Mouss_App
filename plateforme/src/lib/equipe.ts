@@ -1,15 +1,20 @@
 /* ═══ Équipe : calendrier, convocations, présences ═══
    Calculs purs, partagés par les pages et les tests. Aucune donnée de forme ici. */
 
-export type RoleEquipe = "entraineur" | "adjoint" | "prepa" | "joueur";
+export type RoleEquipe = "entraineur" | "adjoint" | "prepa" | "media" | "joueur";
 export type TypeEvenement = "entrainement" | "match" | "rdv";
 export type Reponse = "oui" | "non" | "incertain";
 
 export const ROLES_STAFF: RoleEquipe[] = ["entraineur", "adjoint", "prepa"];
 export const estStaff = (r: RoleEquipe | null | undefined) => !!r && ROLES_STAFF.includes(r);
+/** Le staff et le responsable média gèrent les photos */
+export const gerePhotos = (r: RoleEquipe | null | undefined) => estStaff(r) || r === "media";
 
-export type Equipe = { id: string; nom: string; saison: string | null; code: string; cree_par: string };
-export type Membre = { id: string; user_id: string | null; nom: string; role: RoleEquipe; poste: string | null; numero: number | null };
+export type Equipe = {
+  id: string; nom: string; saison: string | null; code: string; cree_par: string;
+  couleur1?: string | null; couleur2?: string | null; logo_path?: string | null; valeurs?: string | null;
+};
+export type Membre = { id: string; user_id: string | null; nom: string; role: RoleEquipe; poste: string | null; numero: number | null; photo_path?: string | null };
 export type Evenement = {
   id: string; type: TypeEvenement; titre: string | null; debut: string; lieu: string | null;
   adversaire: string | null; domicile: boolean | null; score_pour: number | null; score_contre: number | null; resume: string | null;
@@ -216,4 +221,58 @@ export function momentEvenement(e: Evenement, now: Date = new Date()): "ceSoir" 
   if (dateParis(t) !== dateParis(now)) return "plusTard";
   const heure = Number(new Intl.DateTimeFormat("en-US", { timeZone: "Europe/Paris", hour: "2-digit", hourCycle: "h23" }).format(new Date(t)));
   return heure >= 17 ? "ceSoir" : "aujourdhui";
+}
+
+/* ═══ Compositions (façon FIFA) ═══
+   Chaque schéma = 11 postes placés sur le terrain (x, y en % ; l'attaque en haut). */
+export const FORMATIONS = ["4-4-2", "4-3-3", "4-2-3-1", "3-5-2", "3-4-3", "5-3-2", "4-1-4-1", "4-5-1"] as const;
+export type Formation = (typeof FORMATIONS)[number];
+export type Poste = { p: string; x: number; y: number };
+
+const G: Poste = { p: "G", x: 50, y: 90 };
+const DEF4: Poste[] = [{ p: "DG", x: 13, y: 70 }, { p: "DC", x: 37, y: 74 }, { p: "DC", x: 63, y: 74 }, { p: "DD", x: 87, y: 70 }];
+const DEF3: Poste[] = [{ p: "DC", x: 24, y: 73 }, { p: "DC", x: 50, y: 76 }, { p: "DC", x: 76, y: 73 }];
+const DEF5: Poste[] = [{ p: "DG", x: 9, y: 62 }, { p: "DC", x: 29, y: 74 }, { p: "DC", x: 50, y: 77 }, { p: "DC", x: 71, y: 74 }, { p: "DD", x: 91, y: 62 }];
+const BU2: Poste[] = [{ p: "BU", x: 34, y: 20 }, { p: "BU", x: 66, y: 20 }];
+const ATT3: Poste[] = [{ p: "AG", x: 17, y: 24 }, { p: "BU", x: 50, y: 17 }, { p: "AD", x: 83, y: 24 }];
+const BU1: Poste[] = [{ p: "BU", x: 50, y: 17 }];
+
+export const POSTES: Record<Formation, Poste[]> = {
+  "4-4-2": [G, ...DEF4, { p: "MG", x: 13, y: 46 }, { p: "MC", x: 37, y: 50 }, { p: "MC", x: 63, y: 50 }, { p: "MD", x: 87, y: 46 }, ...BU2],
+  "4-3-3": [G, ...DEF4, { p: "MC", x: 26, y: 48 }, { p: "MDC", x: 50, y: 55 }, { p: "MC", x: 74, y: 48 }, ...ATT3],
+  "4-2-3-1": [G, ...DEF4, { p: "MDC", x: 34, y: 57 }, { p: "MDC", x: 66, y: 57 }, { p: "MG", x: 15, y: 36 }, { p: "MOC", x: 50, y: 38 }, { p: "MD", x: 85, y: 36 }, ...BU1],
+  "3-5-2": [G, ...DEF3, { p: "MG", x: 10, y: 44 }, { p: "MC", x: 30, y: 52 }, { p: "MOC", x: 50, y: 40 }, { p: "MC", x: 70, y: 52 }, { p: "MD", x: 90, y: 44 }, ...BU2],
+  "3-4-3": [G, ...DEF3, { p: "MG", x: 12, y: 48 }, { p: "MC", x: 37, y: 52 }, { p: "MC", x: 63, y: 52 }, { p: "MD", x: 88, y: 48 }, ...ATT3],
+  "5-3-2": [G, ...DEF5, { p: "MC", x: 27, y: 47 }, { p: "MC", x: 50, y: 51 }, { p: "MC", x: 73, y: 47 }, ...BU2],
+  "4-1-4-1": [G, ...DEF4, { p: "MDC", x: 50, y: 59 }, { p: "MG", x: 13, y: 40 }, { p: "MC", x: 37, y: 43 }, { p: "MC", x: 63, y: 43 }, { p: "MD", x: 87, y: 40 }, ...BU1],
+  "4-5-1": [G, ...DEF4, { p: "MG", x: 10, y: 44 }, { p: "MC", x: 30, y: 50 }, { p: "MOC", x: 50, y: 40 }, { p: "MC", x: 70, y: 50 }, { p: "MD", x: 90, y: 44 }, ...BU1],
+};
+
+export type Composition = { formation: Formation; titulaires: Record<string, string>; remplacants: string[]; publiee: boolean };
+export const MAX_REMPLACANTS = 9;
+
+/** Composition propre : un joueur n'apparaît qu'une fois, seulement des membres de l'équipe, postes existants */
+export function nettoyerComposition(c: Composition, idsMembres: Set<string>): Composition {
+  const formation = (FORMATIONS as readonly string[]).includes(c.formation) ? c.formation : "4-4-2";
+  const vus = new Set<string>();
+  const titulaires: Record<string, string> = {};
+  Object.entries(c.titulaires ?? {}).forEach(([k, id]) => {
+    const i = Number(k);
+    if (Number.isInteger(i) && i >= 0 && i < 11 && idsMembres.has(id) && !vus.has(id)) { titulaires[String(i)] = id; vus.add(id); }
+  });
+  const remplacants = (c.remplacants ?? []).filter((id) => idsMembres.has(id) && !vus.has(id) && (vus.add(id), true)).slice(0, MAX_REMPLACANTS);
+  return { formation, titulaires, remplacants, publiee: !!c.publiee };
+}
+
+/** Changement de schéma : on garde les joueurs, poste par poste dans l'ordre (gardien, défense, milieu, attaque) */
+export function changerFormation(c: Composition, f: Formation): Composition {
+  return { ...c, formation: f };
+}
+
+/** Couleur de texte lisible sur une couleur de club */
+export function texteSur(hex: string | null | undefined): string {
+  if (!hex || !/^#[0-9a-f]{6}$/i.test(hex)) return "#ffffff";
+  const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255);
+  const l = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  return l > 0.6 ? "#111111" : "#ffffff";
 }

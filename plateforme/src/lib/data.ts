@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import type { Bilan, Categorie, Checkin } from "@/lib/coaching/types";
 import { DEMO, demo } from "@/lib/demo";
 import { estPro, lireMetier, type Metier, type MetierPro } from "@/lib/profils";
-import type { Equipe, Evenement, Membre, Presence, RoleEquipe } from "@/lib/equipe";
+import type { Composition, Equipe, Evenement, Formation, Membre, Presence, RoleEquipe } from "@/lib/equipe";
 import { avancementDefi, badges, records, serieSemaines, type AvancementDefi, type Badge, type Defi, type RecordExo, type Serie } from "@/lib/coaching/motivation";
 
 /* ═══ Couche d'accès aux données ═══
@@ -21,7 +21,7 @@ export type Utilisateur = {
   photosAccord: string | null;    // date de l'accord pour les photos de progression
 };
 
-export type Bucket = "avatars" | "progression";
+export type Bucket = "avatars" | "progression" | "equipes";
 const DUREE_LIEN = 3600;
 
 /** Liens signés de courte durée pour des fichiers privés (RLS vérifiée par Supabase) */
@@ -512,21 +512,24 @@ export async function getMesEquipes(userId: string): Promise<EquipeResume[]> {
   }));
 }
 
-export type EquipeComplete = { equipe: Equipe; moi: Membre | null; membres: Membre[]; evenements: Evenement[]; presences: Presence[] };
+export type EquipeComplete = { equipe: Equipe; moi: Membre | null; membres: Membre[]; evenements: Evenement[]; presences: Presence[]; photos: Record<string, string>; logo: string | null };
 
 /** Tout ce qu'il faut pour la page d'une équipe (null si je n'en fais pas partie) */
 export async function getEquipe(equipeId: string, userId: string): Promise<EquipeComplete | null> {
   if (DEMO) return demo.equipe(equipeId);
   const supabase = await createClient();
   const [{ data: equipe }, { data: membres }, { data: evenements }, { data: presences }] = await Promise.all([
-    supabase.from("equipes").select("id, nom, saison, code, cree_par").eq("id", equipeId).maybeSingle(),
-    supabase.from("equipe_membres").select("id, user_id, nom, role, poste, numero").eq("equipe_id", equipeId).order("numero", { nullsFirst: false }).order("nom"),
+    supabase.from("equipes").select("id, nom, saison, code, cree_par, couleur1, couleur2, logo_path, valeurs").eq("id", equipeId).maybeSingle(),
+    supabase.from("equipe_membres").select("id, user_id, nom, role, poste, numero, photo_path").eq("equipe_id", equipeId).order("numero", { nullsFirst: false }).order("nom"),
     supabase.from("evenements").select("id, type, titre, debut, lieu, adversaire, domicile, score_pour, score_contre, resume").eq("equipe_id", equipeId).order("debut").limit(1000),
     supabase.from("presences").select("evenement_id, membre_id, reponse, present, minutes").eq("equipe_id", equipeId).limit(20000),
   ]);
   if (!equipe) return null;
   const liste = (membres ?? []) as Membre[];
+  const liens = await signer("equipes", [equipe.logo_path, ...liste.map((m) => m.photo_path)]);
   return {
+    photos: Object.fromEntries(liste.filter((m) => m.photo_path && liens[m.photo_path]).map((m) => [m.id, liens[m.photo_path!]])),
+    logo: equipe.logo_path ? liens[equipe.logo_path] ?? null : null,
     equipe,
     moi: liste.find((m) => m.user_id === userId) ?? null,
     membres: liste,
@@ -551,4 +554,14 @@ export async function getAuteursCharges(clientId: string): Promise<Record<string
   const supabase = await createClient();
   const { data } = await supabase.rpc("auteurs_charges", { p_client: clientId });
   return Object.fromEntries(((data ?? []) as { id: string; prenom: string; metier: string }[]).map((a) => [a.id, { prenom: a.prenom, metier: lireMetier(a.metier) }]));
+}
+
+/** Composition d'un match (ou composition type si evenementId est null) ; null si aucune ou pas encore publiée pour un joueur */
+export async function getComposition(equipeId: string, evenementId: string | null): Promise<Composition | null> {
+  if (DEMO) return demo.composition(evenementId);
+  const supabase = await createClient();
+  let q = supabase.from("compositions").select("formation, titulaires, remplacants, publiee").eq("equipe_id", equipeId);
+  q = evenementId ? q.eq("evenement_id", evenementId) : q.is("evenement_id", null);
+  const { data } = await q.maybeSingle();
+  return data ? { formation: data.formation as Formation, titulaires: data.titulaires as Record<string, string>, remplacants: data.remplacants as string[], publiee: data.publiee } : null;
 }

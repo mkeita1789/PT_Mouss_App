@@ -5,8 +5,10 @@ import { ChoixRole, FormEvenement, FormFiche, InviterEquipe } from "@/components
 import { EncartSemaine } from "@/components/EquipeStaff";
 import { Icon } from "@/components/Icon";
 import { retirerMembre } from "../actions";
-import { getEquipe, getUtilisateur } from "@/lib/data";
-import { bilanSaison, compteurs, estStaff, resumeSemaine, separer } from "@/lib/equipe";
+import { getComposition, getEquipe, getUtilisateur } from "@/lib/data";
+import { Composition } from "@/components/Composition";
+import { FormClub, PhotoMembre } from "@/components/Club";
+import { bilanSaison, compteurs, estStaff, gerePhotos, resumeSemaine, separer, texteSur } from "@/lib/equipe";
 import { ui } from "@/lib/i18n";
 import { getLang } from "@/lib/i18n/serveur";
 
@@ -23,24 +25,35 @@ export default async function Page({ params, searchParams }: PageProps<"/equipe/
   const E = T.equipe;
   const data = await getEquipe(id, user.id);
   if (!data) notFound();
-  const { equipe, moi, membres, evenements, presences } = data;
+  const { equipe, moi, membres, evenements, presences, photos, logo } = data;
+  const photosOk = gerePhotos(moi?.role);
   const staff = estStaff(moi?.role);
   const joueurs = membres.filter((m) => m.role === "joueur");
   const encadrement = membres.filter((m) => m.role !== "joueur");
   const { aVenir, passes } = separer(evenements);
   const montrerPasses = tout === "1" ? passes : passes.slice(0, 5);
   const saison = bilanSaison(evenements);
-  const effectif = vue === "effectif";
+  const onglet = vue === "effectif" || vue === "compo" || (vue === "club" && estStaff(moi?.role)) ? vue : "calendrier";
+  const effectif = onglet === "effectif";
+  const compo = onglet === "compo" ? await getComposition(id, null) : null;
   const prochain = aVenir[0];
-  const semaine = staff && !effectif ? resumeSemaine(evenements, joueurs, presences) : null;
+  const semaine = staff && onglet === "calendrier" ? resumeSemaine(evenements, joueurs, presences) : null;
+  const club = { "--club1": equipe.couleur1 || "var(--gold)", "--club2": equipe.couleur2 || "var(--surface-2)", "--club1-texte": texteSur(equipe.couleur1) } as React.CSSProperties;
 
   return (
-    <div className="reveal">
+    <div className="reveal" style={club}>
       <header className="page-head">
         <Link href="/equipe" className="meta" style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
           <Icon nom="retour" taille={16} /> {E.mesEquipes}
         </Link>
-        <h1 className="page-title" style={{ marginTop: 10 }}>{equipe.nom}</h1>
+        <div className="club-titre">
+          <span className="logo-club">
+            {/* eslint-disable-next-line @next/next/no-img-element -- lien signé temporaire */}
+            {logo ? <img src={logo} alt={E.logo} /> : <Icon nom="ballon" taille={28} />}
+          </span>
+          <h1 className="page-title">{equipe.nom}</h1>
+        </div>
+        {(equipe.couleur1 || equipe.couleur2) && <span className="club-bande" aria-hidden />}
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 12 }}>
           {equipe.saison && <span className="pill">{E.saison} {equipe.saison}</span>}
           {moi && <span className={`pill ${staff ? "pill-gold" : ""}`}>{E.roles[moi.role]}</span>}
@@ -71,12 +84,34 @@ export default async function Page({ params, searchParams }: PageProps<"/equipe/
         </Link>
       )}
 
+      {onglet === "calendrier" && equipe.valeurs && (
+        <section className="panel valeurs-club">
+          <div className="today-kicker">{E.nosValeurs}</div>
+          <p>{equipe.valeurs}</p>
+        </section>
+      )}
+
       <nav className="lang-switch segments" aria-label={E.onglets.calendrier}>
-        <Link href={`/equipe/${id}`} className={!effectif ? "on" : ""} aria-current={!effectif ? "page" : undefined}>{E.onglets.calendrier}</Link>
-        <Link href={`/equipe/${id}?vue=effectif`} className={effectif ? "on" : ""} aria-current={effectif ? "page" : undefined}>{E.onglets.effectif}</Link>
+        {([["calendrier", E.onglets.calendrier], ["effectif", E.onglets.effectif], ["compo", E.compo], ...(staff ? [["club", E.club]] : [])] as [string, string][]).map(([k, lb]) => (
+          <Link key={k} href={k === "calendrier" ? `/equipe/${id}` : `/equipe/${id}?vue=${k}`} className={onglet === k ? "on" : ""} aria-current={onglet === k ? "page" : undefined}>{lb}</Link>
+        ))}
       </nav>
 
-      {!effectif ? (
+      {onglet === "compo" ? (
+        <section className="panel">
+          <div className="section-head"><h2 className="section-title">{E.compoType}</h2></div>
+          {staff && <p className="meta" style={{ marginBottom: 12 }}>{E.compoTypeAide}</p>}
+          {staff || compo?.publiee ? (
+            <Composition equipeId={id} evenementId={null} editable={staff} initial={compo} couleur1={equipe.couleur1} couleur2={equipe.couleur2}
+              joueurs={joueurs.map((m) => ({ id: m.id, nom: m.nom, numero: m.numero, poste: m.poste, photo: photos[m.id] ?? null, reponse: null }))} />
+          ) : <p className="meta">{E.pasDeCompo}</p>}
+        </section>
+      ) : onglet === "club" ? (
+        <section className="panel" style={{ maxWidth: 640 }}>
+          <div className="section-head"><h2 className="section-title">{E.personnaliser}</h2></div>
+          <FormClub equipe={equipe} logo={logo} />
+        </section>
+      ) : !effectif ? (
         <div className="grid-2 equipe-grille" style={{ alignItems: "start" }}>
           <div className="stack">
             {semaine && <EncartSemaine r={semaine} equipeId={id} sansJoueur={joueurs.length === 0} lang={lang} E={E} />}
@@ -121,8 +156,17 @@ export default async function Page({ params, searchParams }: PageProps<"/equipe/
                   return (
                     <tr key={m.id}>
                       <td>
-                        <b style={{ fontWeight: 600 }}>{m.numero !== null && <span className="num muted">{m.numero} </span>}{m.nom}</b>
-                        <div className="row-sub">{[m.poste, m.user_id ? null : E.sansCompte].filter(Boolean).join(" · ")}</div>
+                        <div className="joueur-cellule">
+                          {photosOk ? <PhotoMembre equipeId={id} membreId={m.id} nom={m.nom} url={photos[m.id] ?? null} />
+                            : photos[m.id] ? (
+                              // eslint-disable-next-line @next/next/no-img-element -- lien signé temporaire
+                              <img className="photo-mini" src={photos[m.id]} alt="" />
+                            ) : null}
+                          <div>
+                            <b style={{ fontWeight: 600 }}>{m.numero !== null && <span className="num muted">{m.numero} </span>}{m.nom}</b>
+                            <div className="row-sub">{[m.poste, m.user_id ? null : E.sansCompte].filter(Boolean).join(" · ")}</div>
+                          </div>
+                        </div>
                       </td>
                       <td className="num">{c.entrainements}/{c.entrainementsTotal}{c.taux !== null && <span className="muted" style={{ fontSize: 12 }}> · {c.taux} %</span>}</td>
                       <td className="num">{c.matchs}</td>

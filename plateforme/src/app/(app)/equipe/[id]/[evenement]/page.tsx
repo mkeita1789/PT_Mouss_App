@@ -5,7 +5,8 @@ import { BoutonsReponse, FeuillePresence } from "@/components/Equipe";
 import { PointAvant } from "@/components/EquipeStaff";
 import { Icon } from "@/components/Icon";
 import { supprimerEvenement } from "../../actions";
-import { getEquipe, getUtilisateur } from "@/lib/data";
+import { getComposition, getEquipe, getUtilisateur } from "@/lib/data";
+import { Composition } from "@/components/Composition";
 import { bilanReponses, estAVenir, estCommence, estStaff, type Membre } from "@/lib/equipe";
 import { ui } from "@/lib/i18n";
 import { getLang } from "@/lib/i18n/serveur";
@@ -22,7 +23,7 @@ export default async function Page({ params }: PageProps<"/equipe/[id]/[evenemen
   const data = await getEquipe(id, user.id);
   const e = data?.evenements.find((x) => x.id === eid);
   if (!data || !e) notFound();
-  const { moi, membres, presences, evenements } = data;
+  const { moi, membres, presences, evenements, photos, equipe } = data;
   const staff = estStaff(moi?.role);
   const joueurs = membres.filter((m) => m.role === "joueur");
   const avenir = estAVenir(e);
@@ -30,6 +31,10 @@ export default async function Page({ params }: PageProps<"/equipe/[id]/[evenemen
   const maReponse = moi ? presences.find((p) => p.evenement_id === e.id && p.membre_id === moi.id)?.reponse ?? null : null;
   const noms = (l: Membre[]) => l.map((m) => m.nom).join(", ");
   const score = e.type === "match" && e.score_pour !== null && e.score_contre !== null;
+  /* Composition du match : sinon, pour le staff, on part de la composition type (en brouillon) */
+  const compoMatch = e.type === "match" ? await getComposition(id, e.id) : null;
+  const compoType = e.type === "match" && staff && !compoMatch ? await getComposition(id, null) : null;
+  const compo = compoMatch ?? (compoType ? { ...compoType, publiee: false } : null);
 
   return (
     <div className="reveal" style={{ maxWidth: 820 }}>
@@ -76,6 +81,15 @@ export default async function Page({ params }: PageProps<"/equipe/[id]/[evenemen
           )}
         </div>
       </section>}
+
+      {e.type === "match" && (staff || compo?.publiee) && (
+        <section className="panel" style={{ marginBottom: 16 }}>
+          <div className="section-head"><h2 className="section-title">{E.composition}</h2></div>
+          <Composition equipeId={id} evenementId={e.id} editable={staff} initial={compo} couleur1={equipe.couleur1} couleur2={equipe.couleur2}
+            joueurs={joueurs.map((m) => ({ id: m.id, nom: m.nom, numero: m.numero, poste: m.poste, photo: photos[m.id] ?? null, reponse: presences.find((p) => p.evenement_id === e.id && p.membre_id === m.id)?.reponse ?? null }))} />
+        </section>
+      )}
+      {e.type === "match" && !staff && !compo?.publiee && <p className="meta" style={{ marginBottom: 16 }}>{E.pasDeCompo}</p>}
 
       {staff && (
         <>

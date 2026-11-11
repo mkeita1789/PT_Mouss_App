@@ -7,7 +7,7 @@ import { getUtilisateur } from "@/lib/data";
 import { locale, ui, type Lang } from "@/lib/i18n";
 import { getLang } from "@/lib/i18n/serveur";
 import { envoyerApres, type Abonnement } from "@/lib/push";
-import { parisVersISO, serieHebdo, type Reponse, type RoleEquipe, type TypeEvenement } from "@/lib/equipe";
+import { nettoyerComposition, parisVersISO, serieHebdo, type Composition, type Reponse, type RoleEquipe, type TypeEvenement } from "@/lib/equipe";
 
 /* La sécurité réelle est dans la base (migration 0013) : seul le staff écrit,
    un joueur ne fait que répondre à ses convocations. Ici on valide la forme. */
@@ -150,7 +150,7 @@ export async function ajouterFiche(equipeId: string, prev: EtatEquipe, f: FormDa
 
 export async function changerRole(equipeId: string, membreId: string, role: RoleEquipe) {
   await getUtilisateur();
-  if (!UUID.test(equipeId) || !UUID.test(membreId) || !["entraineur", "adjoint", "prepa", "joueur"].includes(role)) return;
+  if (!UUID.test(equipeId) || !UUID.test(membreId) || !["entraineur", "adjoint", "prepa", "media", "joueur"].includes(role)) return;
   const supabase = await createClient();
   await supabase.from("equipe_membres").update({ role }).eq("id", membreId).eq("equipe_id", equipeId);
   revalidatePath(`/equipe/${equipeId}`);
@@ -164,4 +164,85 @@ export async function retirerMembre(equipeId: string, membreId: string, moiMeme:
   revalidatePath(`/equipe/${equipeId}`);
   revalidatePath("/equipe");
   if (moiMeme) redirect("/equipe");
+}
+
+/* ─── Identité du club (staff) ─── */
+const HEX = /^#[0-9a-fA-F]{6}$/;
+export async function modifierClub(equipeId: string, _: EtatEquipe, f: FormData): Promise<EtatEquipe> {
+  await getUtilisateur();
+  const T = ui(await getLang()).equipe;
+  const nom = txt(f, "nom", 60);
+  const c1 = String(f.get("couleur1") ?? ""), c2 = String(f.get("couleur2") ?? "");
+  if (!UUID.test(equipeId) || !nom) return { erreur: T.erreur };
+  const supabase = await createClient();
+  const { error } = await supabase.from("equipes").update({
+    nom, saison: txt(f, "saison", 20) || null,
+    couleur1: HEX.test(c1) ? c1 : null, couleur2: HEX.test(c2) ? c2 : null,
+    valeurs: txt(f, "valeurs", 1000) || null,
+  }).eq("id", equipeId);
+  if (error) return { erreur: T.erreur };
+  revalidatePath(`/equipe/${equipeId}`);
+  revalidatePath("/equipe");
+  return { ok: T.clubEnregistre };
+}
+
+/** Logo déjà envoyé dans le stockage (dossier de l'équipe) : on l'enregistre, ou on le retire (chemin null) */
+export async function definirLogo(equipeId: string, chemin: string | null): Promise<{ erreur?: string }> {
+  await getUtilisateur();
+  const T = ui(await getLang()).equipe;
+  if (!UUID.test(equipeId) || (chemin !== null && !new RegExp(`^${equipeId}/logo-[0-9a-f-]{36}\\.(jpg|png)$`).test(chemin))) return { erreur: T.erreur };
+  const supabase = await createClient();
+  const { data: avant } = await supabase.from("equipes").select("logo_path").eq("id", equipeId).maybeSingle();
+  const { error } = await supabase.from("equipes").update({ logo_path: chemin }).eq("id", equipeId);
+  if (error) return { erreur: T.erreur };
+  if (avant?.logo_path && avant.logo_path !== chemin) await supabase.storage.from("equipes").remove([avant.logo_path]);
+  revalidatePath(`/equipe/${equipeId}`);
+  return {};
+}
+
+/** Photo d'un membre (staff ou responsable média), avec l'accord de la personne */
+export async function definirPhotoMembre(equipeId: string, membreId: string, chemin: string | null, accord: boolean): Promise<{ erreur?: string }> {
+  await getUtilisateur();
+  const T = ui(await getLang()).equipe;
+  if (!UUID.test(equipeId) || !UUID.test(membreId)) return { erreur: T.erreur };
+  if (chemin !== null && (!accord || !new RegExp(`^${equipeId}/membres/${membreId}-[0-9a-f-]{36}\\.jpg$`).test(chemin))) return { erreur: T.erreur };
+  const supabase = await createClient();
+  const { data: avant } = await supabase.from("equipe_membres").select("photo_path").eq("id", membreId).maybeSingle();
+  const { error } = await supabase.rpc("definir_photo_membre", { p_membre: membreId, p_chemin: chemin, p_accord: accord });
+  if (error) return { erreur: T.erreur };
+  if (avant?.photo_path && avant.photo_path !== chemin) await supabase.storage.from("equipes").remove([avant.photo_path]);
+  revalidatePath(`/equipe/${equipeId}`);
+  return {};
+}
+
+/* ─── Composition (staff) ─── */
+export async function enregistrerComposition(equipeId: string, evenementId: string | null, c: Composition): Promise<EtatEquipe> {
+  await getUtilisateur();
+  const lang = await getLang();
+  const T = ui(lang).equipe;
+  if (!UUID.test(equipeId) || (evenementId !== null && !UUID.test(evenementId))) return { erreur: T.erreur };
+  const supabase = await createClient();
+  const { data: membres } = await supabase.from("equipe_membres").select("id").eq("equipe_id", equipeId);
+  const propre = nettoyerComposition(c, new Set((membres ?? []).map((m) => m.id)));
+  const { data: avant } = evenementId
+    ? await supabase.from("compositions").select("publiee").eq("equipe_id", equipeId).eq("evenement_id", evenementId).maybeSingle()
+    : await supabase.from("compositions").select("publiee").eq("equipe_id", equipeId).is("evenement_id", null).maybeSingle();
+  const { error } = await supabase.from("compositions").upsert(
+    { equipe_id: equipeId, evenement_id: evenementId, ...propre, maj_le: new Date().toISOString() },
+    { onConflict: "equipe_id,evenement_id" },
+  );
+  if (error) return { erreur: T.erreur };
+
+  /* Première publication d'une compo de match : les joueurs sont prévenus */
+  if (propre.publiee && !avant?.publiee && evenementId) {
+    const { data: e } = await supabase.from("evenements").select("type, adversaire, titre, debut").eq("id", evenementId).maybeSingle();
+    const { data: abos } = await supabase.rpc("abonnements_equipe", { p_equipe: equipeId });
+    envoyerApres((abos ?? []) as Abonnement[], (lg) => {
+      const E = ui(lg).equipe;
+      const nom = e?.type === "match" && e.adversaire ? `${E.types.match} ${E.contre(e.adversaire)}` : e?.titre || E.types[(e?.type as TypeEvenement) ?? "match"];
+      return { titre: E.notifCompo(nom), corps: e ? quand(e.debut, lg) : "", url: `/equipe/${equipeId}/${evenementId}`, tag: `compo-${evenementId}` };
+    });
+  }
+  revalidatePath(evenementId ? `/equipe/${equipeId}/${evenementId}` : `/equipe/${equipeId}`);
+  return { ok: propre.publiee ? T.compoPubliee : T.compoEnregistree };
 }

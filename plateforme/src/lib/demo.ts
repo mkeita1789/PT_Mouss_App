@@ -164,11 +164,18 @@ export const demo = {
     const moiId = staff ? "m0" : "m1";
     const evts = EVENEMENTS();
     return {
-      equipe: { id: EQUIPE, nom: "FC Vincennes — Seniors B", saison: "2026-27", code: "K7MPQ3", cree_par: COACH },
+      equipe: { id: EQUIPE, nom: "FC Vincennes — Seniors B", saison: "2026-27", code: "K7MPQ3", cree_par: COACH, couleur1: "#1e3a8a", couleur2: "#facc15", logo_path: null, valeurs: "Respect, travail, solidarité. On joue pour le maillot, on gagne ensemble." },
+      photos: {} as Record<string, string>, logo: null,
       moi: membres.find((m) => m.id === moiId) ?? null,
       membres, evenements: evts, presences: PRESENCES(evts, membres),
     };
   },
+  composition: (evenementId: string | null) => ({
+    formation: "4-4-2" as const,
+    titulaires: { "0": "m2", "1": "m8", "2": "m3", "3": "m4", "4": "m9", "5": "m6", "6": "m5", "7": "m1", "8": "m10", "9": "m7" } as Record<string, string>,
+    remplacants: [] as string[],
+    publiee: evenementId !== null,
+  }),
   defis: () => {
     const j = (n: number) => new Date(Date.now() + n * 864e5).toISOString().slice(0, 10);
     return [
