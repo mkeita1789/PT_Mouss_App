@@ -808,7 +808,7 @@ details.session .row-main { min-width: 0; }
 .reponse:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 .reponse-oui.on { background: var(--ok-soft); border-color: rgba(76, 195, 138, 0.55); color: var(--ok); }
 .reponse-non.on { background: var(--ko-soft); border-color: color-mix(in srgb, var(--ko) 55%, transparent); color: var(--ko); }
-.reponse-incertain.on { background: var(--gold-soft); border-color: var(--gold-line); color: var(--gold-text); }
+.reponse-incertain.on { background: var(--surface-2); border-color: rgb(var(--fg-rgb) / 0.4); color: var(--ink); }
 
 /* Feuille de présence */
 .feuille-ligne { gap: 12px; }
@@ -818,6 +818,10 @@ details.session .row-main { min-width: 0; }
 .minutes .kg { width: 58px; height: 40px; text-align: center; }
 .score-saisie { display: flex; align-items: center; gap: 10px; margin-top: 18px; }
 .score-saisie .kg { width: 58px; height: 46px; text-align: center; font-size: 20px; }
+.score-case { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 12px; color: var(--muted); }
+.score-saisie { align-items: flex-end; }
+.pill-neutre { color: var(--ink); border-color: rgb(var(--fg-rgb) / 0.3); }
+button.link { min-height: 36px; padding: 0 4px; }
 .fiche-grille { display: grid; grid-template-columns: 1.6fr 1.2fr 0.6fr; gap: 10px; }
 .role-select { width: auto; height: 34px; padding: 0 30px 0 10px; font-size: 13px; }
 .effectif td { vertical-align: middle; }

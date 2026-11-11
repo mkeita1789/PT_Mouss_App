@@ -95,6 +95,9 @@ export function bilanSaison(evenements: Evenement[], now: Date = new Date()) {
 /** Un événement reste « à venir » jusqu'à 3 h après son début (le temps du match ou de la séance) */
 export const estAVenir = (e: Evenement, now: Date = new Date()) => Date.parse(e.debut) > now.getTime() - 3 * 36e5;
 
+/** L'événement a-t-il commencé ? (la feuille de présence ne s'ouvre qu'à partir de là) */
+export const estCommence = (e: Evenement, now: Date = new Date()) => Date.parse(e.debut) <= now.getTime();
+
 /** Calendrier coupé en deux : à venir (le plus proche d'abord), passés (le plus récent d'abord) */
 export function separer(evenements: Evenement[], now: Date = new Date()) {
   return {

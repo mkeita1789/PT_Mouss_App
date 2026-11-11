@@ -6,7 +6,7 @@ import { PointAvant } from "@/components/EquipeStaff";
 import { Icon } from "@/components/Icon";
 import { supprimerEvenement } from "../../actions";
 import { getEquipe, getUtilisateur } from "@/lib/data";
-import { bilanReponses, estAVenir, estStaff, type Membre } from "@/lib/equipe";
+import { bilanReponses, estAVenir, estCommence, estStaff, type Membre } from "@/lib/equipe";
 import { ui } from "@/lib/i18n";
 import { getLang } from "@/lib/i18n/serveur";
 
@@ -60,11 +60,11 @@ export default async function Page({ params }: PageProps<"/equipe/[id]/[evenemen
       {staff && avenir && <PointAvant e={e} joueurs={joueurs} presences={presences} evenements={evenements} E={E} />}
 
       {!(staff && avenir) && <section className="panel" style={{ marginBottom: 16 }}>
-        <div className="section-head"><h2 className="section-title">{E.qui}</h2><span className="section-note">{E.reponses(r.oui.length, r.non.length, r.incertain.length, r.sans.length)}</span></div>
+        <div className="section-head"><h2 className="section-title">{avenir ? E.qui : E.quiPasse}</h2><span className="section-note">{E.reponses(r.oui.length, r.non.length, r.incertain.length, r.sans.length)}</span></div>
         <div className="rows">
           {([["oui", r.oui], ["incertain", r.incertain], ["non", r.non]] as const).map(([k, l]) => l.length > 0 && (
             <div key={k} className="row-item" style={{ alignItems: "flex-start" }}>
-              <span className={`pill pill-${k === "oui" ? "ok" : k === "non" ? "ko" : "gold"}`} style={{ fontSize: 12, flex: "none" }}>{E[k]}</span>
+              <span className={`pill pill-${k === "oui" ? "ok" : k === "non" ? "ko" : "neutre"}`} style={{ fontSize: 12, flex: "none" }}>{E[k]}</span>
               <div className="row-main" style={{ fontSize: 14.5 }}>{noms(l)}</div>
             </div>
           ))}
@@ -79,7 +79,7 @@ export default async function Page({ params }: PageProps<"/equipe/[id]/[evenemen
 
       {staff && (
         <>
-          <FeuillePresence equipeId={id} evenement={e} joueurs={joueurs} presences={presences.filter((p) => p.evenement_id === e.id)} />
+          {estCommence(e) && <FeuillePresence equipeId={id} evenement={e} joueurs={joueurs} presences={presences.filter((p) => p.evenement_id === e.id)} />}
           <form action={supprimerEvenement.bind(null, id, e.id)} style={{ marginTop: 16 }}>
             <button type="submit" className="btn btn-ghost btn-sm"><Icon nom="poubelle" taille={16} /> {E.supprimer}</button>
           </form>

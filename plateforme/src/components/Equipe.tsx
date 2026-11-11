@@ -188,9 +188,9 @@ export function FeuillePresence({ equipeId, evenement, joueurs, presences }: { e
       {match && (
         <div className="score-saisie">
           <span className="meta">{E.score}</span>
-          <label><span className="sr-only">{E.nous}</span><input className="input kg" inputMode="numeric" value={pour} onChange={(e) => setPour(e.target.value.replace(/\D/g, "").slice(0, 2))} aria-label={E.nous} /></label>
+          <label className="score-case"><span>{E.nous}</span><input className="input kg" inputMode="numeric" value={pour} onChange={(e) => setPour(e.target.value.replace(/\D/g, "").slice(0, 2))} aria-label={E.nous} /></label>
           <span className="num">–</span>
-          <label><span className="sr-only">{E.eux}</span><input className="input kg" inputMode="numeric" value={contre} onChange={(e) => setContre(e.target.value.replace(/\D/g, "").slice(0, 2))} aria-label={E.eux} /></label>
+          <label className="score-case"><span>{E.eux}</span><input className="input kg" inputMode="numeric" value={contre} onChange={(e) => setContre(e.target.value.replace(/\D/g, "").slice(0, 2))} aria-label={E.eux} /></label>
         </div>
       )}
       <label className="field"><span>{match ? E.resumeMatch : E.resume}</span>
