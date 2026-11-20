@@ -5,6 +5,11 @@ const s = (n: number) => (n > 1 ? "s" : "");
 
 export const UI_FR = {
   langue: "Langue",
+  introuvable: {
+    titre: "Cette page n'existe pas",
+    texte: "Le lien est peut-être ancien, ou l'adresse a une faute de frappe. Rien de grave : ton compte et tes données sont intacts.",
+    accueil: "Revenir à l'accueil",
+  },
   club: {
     /* Effectif */
     joueurs: "Joueurs", staff: "Staff", dirigeants: "Dirigeants", president: "Président", nParents: (n: number) => `${n} parent${n > 1 ? "s" : ""} suivent le calendrier`,
@@ -693,6 +698,11 @@ export type TextesUI = typeof UI_FR;
 
 export const UI_EN: TextesUI = {
   langue: "Language",
+  introuvable: {
+    titre: "This page doesn't exist",
+    texte: "The link may be old, or the address has a typo. Nothing to worry about: your account and your data are safe.",
+    accueil: "Back to home",
+  },
   club: {
     joueurs: "Players", staff: "Staff", dirigeants: "Club officials", president: "President", nParents: (n: number) => `${n} parent${n > 1 ? "s" : ""} follow the calendar`,
     ligne: "Line", lignes: { gardien: "Goalkeepers", defense: "Defence", milieu: "Midfield", attaque: "Attack" } as Record<string, string>,

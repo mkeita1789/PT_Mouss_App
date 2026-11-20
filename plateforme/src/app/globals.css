@@ -1031,3 +1031,15 @@ a.saison-ligne:hover .saison-titre b { color: var(--gold-text); }
 /* Composition : placement libre */
 .terrain-libre .poste { touch-action: none; cursor: grab; }
 .terrain-libre .poste:active { cursor: grabbing; }
+
+/* Charge imposée : une ligne discrète tant que tout va bien */
+.plan-hint-calme { background: none; padding: 6px 0 0; margin-top: 8px; color: var(--muted); border: 0; }
+.plan-hint-calme .link { color: var(--muted); }
+
+/* Page introuvable */
+.page-introuvable {
+  min-height: 100dvh; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center; padding: 32px 22px; position: relative; isolation: isolate; background: var(--bg); color: var(--ink);
+}
+.introuvable-code { font-size: 88px; font-weight: 700; color: var(--gold); letter-spacing: 0.04em; line-height: 1; margin-bottom: 14px; }
+.introuvable-terrain { position: absolute; z-index: -1; inset: auto 0 0 0; width: 100%; height: 40%; opacity: 0.4; transform: perspective(600px) rotateX(48deg); transform-origin: bottom; }

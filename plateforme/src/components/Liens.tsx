@@ -4,6 +4,7 @@ import { useActionState, useState, useTransition } from "react";
 import { changerMetier, rejoindre, type EtatLien } from "@/app/(app)/profil/liens";
 import { estPro, METIERS, type Metier } from "@/lib/profils";
 import { useLang } from "./Langue";
+import { useApp } from "./AppContexte";
 
 /** Choix du profil : enregistré dès qu'on touche une carte */
 export function ChoixMetier({ actuel }: { actuel: Metier }) {
@@ -22,7 +23,11 @@ export function ChoixMetier({ actuel }: { actuel: Metier }) {
       if (r?.erreur) setMetier(avant);
     });
   };
-  const groupes: [string, Metier[]][] = [[M.jePratique, METIERS.filter((m) => !estPro(m))], [M.jeSuisPro, METIERS.filter(estPro)]];
+  /* Chaque appli ne propose que ses rôles (le rôle actuel reste visible même s'il vient de l'autre appli) */
+  const foot = useApp() === "foot";
+  const garder = (m: Metier) => m === metier || (foot ? m !== "coach" : m !== "entraineur");
+  const pratique = (foot ? (["joueur", "sportif"] as Metier[]) : (["sportif", "joueur"] as Metier[])).filter(garder);
+  const groupes: [string, Metier[]][] = [[foot ? T.foot.auClub : M.jePratique, pratique], [M.jeSuisPro, METIERS.filter(estPro).filter(garder)]];
   return (
     <fieldset className="metiers" style={{ marginTop: 0 }} disabled={pending}>
       <legend className="sr-only">{M.question}</legend>

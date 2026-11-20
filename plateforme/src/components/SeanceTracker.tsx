@@ -240,10 +240,8 @@ export function SeanceTracker(props: {
               </div>
 
               {l.imposee !== null ? (
-                <div className="hint hint-gold plan-hint">
-                  <span>🔒 {T.plan.imposee}{lang === "fr" ? " : " : ": "}<b className="num">{kg(l.imposee)} kg</b>
-                    {st.ecart && <> · <span className="ko">{T.plan.raisons[st.ecart]}</span></>}
-                  </span>
+                <div className={`hint plan-hint ${st.ecart ? "hint-gold" : "plan-hint-calme"}`}>
+                  <span>🔒 {st.ecart ? <>{T.plan.prevu(kg(l.imposee))} · <span className="ko">{T.plan.raisons[st.ecart]}</span></> : T.plan.imposee}</span>
                   {st.ecart ? (
                     <button type="button" className="link" onClick={() => { maj(i, { ecart: null, charge: kg(l.imposee) }); setRaisonOuverte(null); }}>{T.plan.annuler}</button>
                   ) : raisonOuverte !== i ? (
